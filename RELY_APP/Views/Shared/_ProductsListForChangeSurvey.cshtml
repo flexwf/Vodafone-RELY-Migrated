@@ -1,0 +1,142 @@
+﻿
+<script>
+    $(document).ready(function () {
+        var LProductId = '';
+        //Binding event
+        var LProductName = '';
+        $("#jqxPopupgridForSurvey").on("bindingcomplete", function (event) {
+                var GridRows = $('#jqxPopupgridForSurvey').jqxGrid('getrows')
+                    
+                    var rowboundindex = $('#jqxPopupgridForSurvey').jqxGrid('getrowboundindexbyid', LProductId);
+                    $('#jqxPopupgridForSurvey').jqxGrid('selectrow', rowboundindex);
+                   // LProductName = GridRows[rowboundindex].Name;
+                    SelectedProductId = LProductId;
+                    SelectedProduct = LProductName;
+                    UpdatedSurveyId = SelectedProductId;
+        });
+        //Section ends here
+    });
+
+    //save Selected LProduct from Grid
+    function FnSaveSelectedLProduct() {
+            var item = $('#jqxPopupgridForSurvey').jqxGrid('getselectedrowindex');
+            var LProductdata = $('#jqxPopupgridForSurvey').jqxGrid('getrowdata', item);
+            LProductId = LProductdata.Id;
+            UpdatedSurveyId = LProductId;
+            FnUpdateSurveyDetails(true, UpdatedSurveyId);
+    }
+
+    //Load LProduct Grid in a Popup
+    function FnLoadLProductGrid() {
+
+        $.ajax({
+            data: { CurrentProductId: '@Model.Id' },
+            cache: false,
+            url: "/LProducts/GetByCompanyCodeForChangeSurveyCounts",
+            dataType: "json",
+            type: "POST",
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'int' },
+                        { name: 'SourceProductId', type: 'int' },
+                        { name: 'ProductCode', type: 'string' },
+                        { name: 'Name', type: 'string' },
+                        { name: 'SysCat', type: 'string' },
+                        { name: 'Product', type: 'string' },
+                        { name: 'SysCatId', type: 'int' },
+
+                    ],
+                    id: "Id",
+                    data: { CurrentProductId: '@Model.Id' },
+                    url: "/LProducts/GetByCompanyCodeForChangeSurvey",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                       // $("#jqxPopupgridForSurvey").jqxGrid('clear');
+                        $('#jqxPopupgridForSurvey').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxPopupgridForSurvey').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                       // $("#jqxPopupgridForSurvey").jqxGrid('clear');
+                        $('#jqxPopupgridForSurvey').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxPopupgridForSurvey').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    },
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxPopupgridForSurvey").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxPopupgridForSurvey").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxPopupgridForSurvey').jqxGrid({
+                        source: ParentdataAdapter,
+                        width: '100%',
+                        height: '50%',
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: true,
+                        altrows: true,
+                        pageable: true,
+                        pagesize: 200,
+                        pagesizeoptions: ['50', '100', '200', '500', '1000'],
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        showstatusbar: false,
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return ParentdataAdapter.records;
+                        },
+                        columns: [
+                            { text: 'Name', datafield: 'Name' },
+                            { text: 'ProductCode', datafield: 'ProductCode' },
+                            //{ text: 'SysCat', datafield: 'SysCat' },
+                            //{ text: 'Product', datafield: 'Product' },
+                        ]
+                    });
+                }
+            }
+        });
+    }
+
+    function FnLoadProductsPopup() {
+        FnLoadLProductGrid();
+        $('#LProductModal').modal();
+    }
+
+</script>
+
+<!-- This code displays a popup to get Selected LProducts-->
+<div class="modal fade" id="LProductModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="PopupHeader">
+                        Select a row from below dropdown and click on Import button to import the selected survey (along with it's data) to the target product
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div id="jqxPopupgridForSurvey"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red pull-left" onclick="FnSaveSelectedLProduct();" data-dismiss="modal">Import</button>&ensp;
+                <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+

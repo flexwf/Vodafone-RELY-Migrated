@@ -1,0 +1,125 @@
+﻿
+<script type="text/javascript">
+    var SelectedWFType = '';
+
+    $(document).ready(function () {
+        //fnRequestPerStatus();
+        fnGetWftypesDropDown();
+    });
+
+
+    function fnGetWftypesDropDown() {
+        var sourceWftypes = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'WFType', type: 'string' },
+            ],
+            data: { BaseTableName: 'LRequests' },
+            url: "/Reports/GetWfTypes"
+        };
+        var dataAdapterWftypes = new $.jqx.dataAdapter(sourceWftypes)
+        $('#WftypesDropdownlist').jqxDropDownList({
+            filterable: true,
+            source: dataAdapterWftypes,
+            searchMode: 'containsignorecase',
+            width: '150px',
+            height: '25px',
+            displayMember: "WFType",
+            valueMember: "WFType"
+        });
+
+        $('#WftypesDropdownlist').on('change', function (event) {
+            var args = event.args;
+            if (args) {
+                // index represents the item's index.
+                var index = args.index;
+                var item = args.item;
+                // get item's label and value.
+                var label = item.label;
+                var value = item.value;
+                SelectedWFType = label;
+                //fnRequestPerStatus(label);
+            }
+        });
+    }
+
+    function fnShowRequestPerStatus() {
+        if (SelectedWFType == '' || SelectedWFType == null) {
+            alert("Plese select System.");
+            return;
+        }
+        fnRequestPerStatus(SelectedWFType);
+    }
+
+    
+    function DownloadRequestPerStatus() {
+        var wftype = SelectedWFType;
+       
+        window.location.href = '/Reports/DownloadRequestPerStatus?wftype=' + wftype;
+    }
+
+    function fnRequestPerStatus(WFType) {
+
+        var sourceRequestPerStatus = {
+            dataType: "json",
+            cache:false,
+            dataFields: [
+                { name: 'Name', type: 'string' },
+                { name: 'Request', type: 'int' }
+            ],
+            data: { WFType: WFType },
+            url: "/Reports/GetRequestPerStatus"
+        };
+        var dataAdapterRequestPerStatus = new $.jqx.dataAdapter(sourceRequestPerStatus);
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterRequestPerStatus,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            pagesizeoptions: ['50', '100', '200', '500', '1000'],
+            ready: function () {
+            },
+            columns: [
+
+                { text: 'Workflow Step', datafield: 'Name' },
+                { text: 'Request', datafield: 'Request' }
+            ]
+        });
+    }
+</script>
+<div class="col-md-12 col-lg-12">
+    <div class="boxes" style="min-height:90px;">
+        <div class="col-md-12 col-lg-12 rely-labels">
+            <br />
+            @*<div class="col-md-offset-1 pull-left" style="padding-right:0px;">*@
+            <div class="col-md-1 col-lg-1">
+                System:
+            </div>
+            <div id="WftypesDropdownlist" class="col-lg-1" style="background:white !important;"></div>&nbsp;
+            <input type="button" class="btn btn-red " value="Go" onclick="fnShowRequestPerStatus();" style="height:29px; text-align: center;" />
+            <input type="button" class="btn btn-red" value="Download" onclick="DownloadRequestPerStatus();" style="height:29px; text-align: center;" />
+
+            @*<input type="button" id="csvExport" class="btn-red" value="Download" style="height:25px; text-align: center;" />*@
+            @*<i id="csvExport" onclick="DownloadRequestPerStatus();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i>&ensp;*@
+
+            @*</div>*@
+        </div>
+        
+        <div id="jqxgrid"></div>
+    </div>
+</div>
+
+

@@ -1,0 +1,399 @@
+﻿@model RELY_APP.ViewModel.GCopaDimensionViewModel
+
+@{
+
+    var ValidData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ValidData);
+    var ErrorData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ErrorData);
+}
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<div class="boxes">
+
+    <a class="top_links" href="#" id="FileUpload" @*onclick="fileupload()"*@>Upload </a>
+    <a class="top_links" href="#" id="csvExport" onclick="DownloadCopaDimensions();">Download  </a>
+    <a class="top_links" href="#" id="DownloadTemplate" onclick="DownloadTemplate();">Download Template </a>
+    <div id="jqxgrid">
+    </div>
+</div>
+@Scripts.Render("~/bundles/jqxgridbundle")
+<div id="dialog" style="display: none;width:100%" align="center">
+
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+
+@Scripts.Render("~/bundles/jQuery-File-Upload")
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+<script>
+    // $.noConflict();
+    $(function () {
+        $("#dialog").dialog({
+            modal: true,
+            autoOpen: false,
+            title: "FileUpload Dialog Box",
+            width: 900,
+            height: 500,
+            //position: 'center',
+            dialogClass: "custom-dialog"
+        });
+        $("#FileUpload").click(function () {
+            $('#dialog').dialog('open');
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    var IsHideButton='@ViewBag.HideButton';
+        //Vijay Code in script
+
+        //End Code Vijay
+
+    $(document).ready(function () {
+        var PopUpErrorMessage = '@ViewBag.PopUpErrorMessage';
+        if (PopUpErrorMessage) {
+            alert(PopUpErrorMessage);
+            window.location.reload();
+        }
+         var ValidDataGrid=@Html.Raw(Json.Encode(ValidData));
+         var ErrorDataGrid=@Html.Raw(Json.Encode(ErrorData));
+
+         $("#jqxgridInvalidRecords").hide();
+         $("#jqxgridValidRecords").hide();
+         $("#HeadingValid").hide();
+         $("#HeadingInValid").hide();
+
+        if (IsHideButton == 1 )
+        {
+             $("#HeadingInValid").show();
+             $("#HeadingValid").show();
+             $("#jqxgridInvalidRecords").show();
+             $("#jqxgridValidRecords").show();
+             $("#btnSaveValidRecords").show();
+        }
+        else
+        {
+            if (ErrorDataGrid != 'null') {
+                $("#HeadingInValid").show();
+                $("#HeadingValid").show();
+                $("#jqxgridInvalidRecords").show();
+                $("#jqxgridValidRecords").show();
+            }
+            $("#btnSaveValidRecords").hide();
+        }
+
+        //Valid Grid and Invalid Grid Coding Vijay
+        var source = {
+            dataType: "json",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Class', type: 'string' },
+                { name: 'CopaValue', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'Dimension', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+                { name: 'DimentionClassDescription', type: 'string' },
+            ],
+
+            id: "Id",
+           localdata:ValidDataGrid
+        };
+
+          var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridValidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                      columns: [
+                        { text: 'Class', datafield: 'Class' },
+                        { text: 'CopaValue', datafield: 'CopaValue' },
+                        { text: 'Description', datafield: 'Description' },
+                        { text: 'Dimension', datafield: 'Dimension' },
+                        { text: 'DimentionClassDescription', datafield: 'DimentionClassDescription' },
+                    ]
+                });
+
+        //===============================================For error
+
+
+         var source = {
+            dataType: "json",
+             dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Class', type: 'string' },
+                { name: 'CopaValue', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'Dimension', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+                { name: 'DimentionClassDescription', type: 'string' },
+                { name: 'SrNo', type: 'int' },
+                { name: 'ValidationMessage', type: 'string' },
+            ],
+            localdata:ErrorDataGrid
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridInvalidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                     columns: [
+                        { text: 'Row No.', datafield: 'SrNo' },
+                        { text: 'Validation Message', datafield: 'ValidationMessage' },
+                        { text: 'Class', datafield: 'Class' },
+                        { text: 'CopaValue', datafield: 'CopaValue' },
+                        { text: 'Description', datafield: 'Description' },
+                        { text: 'Dimension', datafield: 'Dimension' },
+                        { text: 'DimentionClassDescription', datafield: 'DimentionClassDescription' },
+                    ]
+                });
+
+       //=============end error
+
+        //End Valid and Invalid Grid Vijay
+        //End code vijay
+         document.getElementById("Done").addEventListener("click", function(){
+         window.location.href="/GCopaDimensions/Index";
+        $('#dialog').dialog('close');
+    });
+
+
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            cache: false,
+            type: "post",
+            success: function (data) { },
+            error: function (respose) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        if ('@TempData["Error"]') {
+            alert('@TempData["Error"]')
+        }
+
+        var source = {
+            dataType: "json",
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Class', type: 'string' },
+                { name: 'CopaValue', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'Dimension', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+                { name: 'DimentionClassDescription', type: 'string' }
+
+            ],
+
+            id: "Id",
+            url: "/GCopaDimensions/GetAllGCopaDimensions"
+        };
+        // This function is used for displaying row details
+        var initrowdetails = function (index, parentElement, gridElement, datarecord) {
+            //var tabsdiv = null;
+            //var information = null;
+            //var Attributes = null;
+            //var Description = null;
+            // debugger;
+            //tabsdiv = $($(parentElement).children()[0]);
+            //if (tabsdiv != null) {
+            //    information = tabsdiv.find('.information');
+            //    Attributes = tabsdiv.find('.Attributes');
+            //    Description = tabsdiv.find('.Description');
+
+            //  var title = tabsdiv.find('.title');
+            //  title.text(datarecord.firstname);
+
+            //var container = $('<div style="margin: 5px;"></div>')
+            //container.appendTo($(information));
+
+            //var leftcolumn = $('<div style="float: left; width: 45%;"></div>');
+            //var rightcolumn = $('<div style="float: left; width: 40%;"></div>');
+            //container.append(leftcolumn);
+            //container.append(rightcolumn);
+            var Class = "<div style='margin: 10px;'><b>Class:</b> " + datarecord.Class + "</div>";
+            var CopaValue = "<div style='margin: 10px;'><b>CopaValue:</b> " + datarecord.CopaValue + "</div>";
+            var Description = "<div style='margin: 10px;'><b>Description:</b> " + datarecord.Description + "</div>";
+            var Dimension = "<div style='margin: 10px;'><b>Dimension:</b> " + datarecord.Dimension + "</div>";
+            var DimentionClassDescription = "<div style='margin: 10px;'><b>DimentionClassDescription:</b> " + datarecord.DimentionClassDescription + "</div>";
+
+            $().append(Class);
+            $().append(CopaValue);
+            $().append(Description);
+            $().append(Dimension);
+              $().append(DimentionClassDescription);
+
+            var CreatedBy = "<div style='margin: 10px;'><b>CreatedBy:</b> " + datarecord.CreatedBy + "</div>";
+            var CreatedDateTime = "<div style='margin: 10px;'><b>Created DateTime:</b> " + datarecord.CreatedDateTime + "</div>";
+            var UpdatedBy = "<div style='margin: 10px;'><b>UpdatedBy:</b> " + datarecord.UpdatedBy + "</div>";
+            var UpdateDateTime = "<div style='margin: 10px; '><b>Updated DateTime:</b> " + datarecord.UpdatedDateTime + "</div>";
+            $().append(CreatedBy);
+            $().append(CreatedDateTime);
+            $().append(UpdatedBy);
+            $().append(UpdateDateTime);
+
+
+            //$(Descriptionleftcolumn).append(CreatedBy);
+            //$(Descriptionleftcolumn).append(UpdatedBy);
+            //$(Descriptionleftcolumn).append(CreatedDateTime);
+            //$(Descriptionleftcolumn).append(UpdateDateTime);
+
+            //var Description = "<div style='margin: 10px;'><b>Description</b> " + datarecord.Description + "</div>";
+            //$(Descriptionrightcolumn).append(Description);
+
+            //$(tabsdiv).jqxTabs({ width: 750, height: 170 });
+        }
+   // }
+
+               var dataAdapter = new $.jqx.dataAdapter(source)
+
+                $('#jqxgrid').jqxGrid({
+
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    rowdetails: true,
+                    //rowdetailstemplate: { rowdetails: "<div style='margin: 10px;'><ul style='margin-left: 30px;'><li class='title'>WF</li><li>Attributes</li><li>Description</li></ul><div class='information'></div><div class='Attributes'></div><div class='Description'></div>", rowdetailsheight: 300 },
+                    //ready: function () {
+                    //    $("#jqxgrid").jqxGrid('showrowdetails', 0);
+                    //    $("#jqxgrid").jqxGrid('showrowdetails', 1);
+                    //},
+                    initrowdetails: initrowdetails,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    //columnsresize: true,
+                    //columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    showstatusbar: false,
+                    ready: function () {
+
+                    },
+
+                    columns: [
+                        { text: 'Class', datafield: 'Class' },
+                        { text: 'CopaValue', datafield: 'CopaValue' },
+                        { text: 'Description', datafield: 'Description' },
+                        { text: 'Dimension', datafield: 'Dimension' },
+                        { text: 'DimentionClassDescription', datafield: 'DimentionClassDescription' },
+                        { text: 'Uploaded On', datafield: 'CreatedDateTime', cellsformat: 'dd/MM/yyyy' },
+                    ]
+               });
+        // this file download only Google Chrome browser
+                //$("#csvExport").jqxButton();
+                //$("#csvExport").click(function () {
+                //    $("#jqxgrid").jqxGrid('exportdata', 'csv', 'CopaDimension');
+                //});
+            });
+
+    //To Download Template
+    function DownloadTemplate()
+    {
+      window.location.href='/GCopaDimensions/DownloadTemplate';
+    }
+
+    function SaveValidRecords()
+    {
+        var arr = [];
+        var rows = $('#jqxgridValidRecords').jqxGrid('getrows');
+        if (rows == 'undefined' || rows == null) {
+            alert("No valid records.")
+            return;
+        }
+        for (var i = 0; i < rows.length; i++)
+        {
+            arr[i] = [];
+            arr[i][0] = (rows[i].Class == null) ? '' : rows[i].Class;
+            arr[i][1] = (rows[i].CopaValue == null) ? '' : rows[i].CopaValue;
+            arr[i][2] = (rows[i].Description == null) ? '' : rows[i].Description;
+            arr[i][3] = (rows[i].Dimension == null) ? '' : rows[i].Dimension;
+            arr[i][4] = (rows[i].DimentionClassDescription == null) ? '' : rows[i].DimentionClassDescription;
+        }
+
+        $.ajax({
+            data: { GridData: arr },
+                        url: "/GCopaDimensions/SaveValidRecords",
+                        type: "POST",
+                        cache: false,
+                       // traditional: true,
+                        success: function (data) {
+                            if (data.ErrorMessage) {
+                                alert(data.ErrorMessage)
+                                window.location.href = "/GCopaDimensions/Index";
+                            } else {
+
+                                alert('Data Saved Successfully.');
+                                window.location.href = "/GCopaDimensions/Index";
+                            }
+                        },
+                        error: function (reponse) {
+                            //  alert("error : " + reponse);
+                        }
+                    });
+
+    }
+
+    function DownloadCopaDimensions() {
+        window.location.href = '/GCopaDimensions/DownloadGCopaDimensions';
+    }
+
+</script>
+<body class="jqx-layout-group-default">
+    <div id="jqxWidget" style="font-size:13px; font-family: Verdana; float: left;">
+        <div id="jqxgrid"></div>
+    </div>
+
+    <div id="VallidInvalidGrid" class="col-md-12 col-lg-12">
+
+        <div id="InValidDatadiv" class="tab-content" style="padding:10px;">
+            <h2 id="HeadingInValid">Invalid Records</h2>
+            <div id="jqxgridInvalidRecords"></div>
+        </div>
+
+        <div id="ValidDataDiv" class="tab-content" style="padding:10px;">
+            <h2 id="HeadingValid">Valid Records</h2>
+            <div id="jqxgridValidRecords"></div>
+            <br />
+            <button type="submit" class="btn btn-red btn-cons" id="btnSaveValidRecords" name="save" onclick="SaveValidRecords();"><b>Save Valid Records&nbsp;</b></button>
+
+        </div>
+
+    </div>
+    <p style="color:red;">Note :- In case validation fails for certain column(but you feel data is correct),try again after converting that excel column to TEXT type.</p>
+</body>

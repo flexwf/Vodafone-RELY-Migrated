@@ -1,0 +1,708 @@
+﻿@model RELY_APP.ViewModel.LRequestViewModel
+
+@{
+
+    var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+}
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+@*<script src="~/Scripts/jqxtabs.js"></script>*@
+<script src="~/Scripts/jqxloader.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css"  />*@
+
+<script>
+  
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    var SelectedProductId = 0;
+    var SelectedProduct = "";
+    var TransactionId=0;
+    var IsProductCreatedOnFly = false;
+    var CheckBoxAttributeValues = 'AttributeB01:@Model.AttributeB01|AttributeB02:@Model.AttributeB02|AttributeB03:@Model.AttributeB03|AttributeB04:@Model.AttributeB04|AttributeB05:@Model.AttributeB05|AttributeB06:@Model.AttributeB06|AttributeB07:@Model.AttributeB07|AttributeB08:@Model.AttributeB08|AttributeB09:@Model.AttributeB09|AttributeB10:@Model.AttributeB10';
+    var SelecterType = "";
+    var TotalProductCount = 0;
+
+    //This variable is defined to store value if form has any changes since it has loaded
+
+    $(document).ready(function () {
+        //Add JqxLoader when form is submitted to disable further clicks
+       // $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+        //The below code checks for changes in form controls and pdates the flag
+        $('input,select,textarea').change(function () {
+            isChanged = true;
+        })
+
+     var Id = '@Model.Id';
+     var CompanySpecificArray = @Html.Raw(Json.Encode(CompanySpecificData.OrderBy(p => p.OrdinalPosition)));
+     GenerateCompanySpecificForm(CompanySpecificArray, 'Requests', -1);//call this method placed in ProjectScript file to repaint the form with new labels order and validations
+
+     //get Product
+   // GetProductDropDown();
+
+    document.getElementById('SystemId').style.pointerEvents = 'none';
+    document.getElementById('SystemId').style.backgroundColor = 'lightgray';
+
+
+        // Method to load jqxtabs in view.
+    $('#jqxTabs').jqxTabs({ position: 'top' });
+         var data = new Array();
+        // source for jqxgridProduct
+        /* var source =
+             {
+                 dataFields: [
+                     { name: 'ProductCode', type: 'string' },
+                     { name: 'Name', type: 'string' },
+                     { name: 'Id', type: 'int' },
+
+                 ],
+                 cache: false,
+                 localdata: data,
+                 datatype: "array"
+             };
+         var dataAdapter = new $.jqx.dataAdapter(source,{
+                 autoBind: true,async:false,
+         })
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete(); " class="GridButton">Delete</button>';
+        };
+
+         $('#jqxgridProduct').jqxGrid({
+             source: dataAdapter,
+             width: '100%',
+             autoheight: true,
+             theme: 'bootstrap',
+             sortable: true,
+             columnsresize: true,
+             columnsreorder: false,
+             altrows: true,
+             showstatusbar: true,
+             ready: function () {
+             },
+             columns: [
+                 { text: 'Product Code', datafield: 'ProductCode' },
+                 { text: 'Name', datafield: 'Name' },
+                 { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+            ]
+         });
+        */
+    //GetFileList();
+    //Part of Upload Utility
+    var TransactionId='@Model.Id';
+    if(TransactionId)
+    {
+     FnGetSupportingDocumentList();
+    }
+    });//end document.ready
+
+    function FnGetProductAttached()
+    {
+        $.ajax({
+            type: "GET",
+            data: { RequestId: '@Model.Id' },
+            cache: false,
+            url: "/LProducts/GetProductCountAttachedToRequest",
+            success: function (data) {
+                TotalProductCount = data.ProductCount;
+                if (data.ProductCount > 0 && data.SelecterType != '' && data.SelecterType!= null) {
+                    FnObligationGrid(data.SelecterType);
+                }
+            },
+            error: function (error) {
+
+            }
+        });
+
+    }
+
+    function FnObligationGrid(SelecterType) {
+        // source for jqxgridProduct
+        var datafieldsForProductGrid = [];
+        var columnForProductGrid = [];
+        datafieldsForProductGrid.push({ name: 'ProductCode', type: 'string' }); columnForProductGrid.push({ text: 'Product Code', datafield: 'ProductCode' });
+        datafieldsForProductGrid.push({ name: 'Name', type: 'string' }); columnForProductGrid.push({ text: 'Name', datafield: 'Name' });
+        datafieldsForProductGrid.push({ name: 'Id', type: 'int' });
+        datafieldsForProductGrid.push({ name: 'SelecterType', type: 'string' });
+        if (SelecterType != null && SelecterType != '') {
+            $.ajax({
+                type: "GET",
+                cache: false,
+                data: { SelecterType: SelecterType },
+                url: "/LRequests/GetAttributesForProductGrid",
+                success: function (data) {
+                    for (var i = 0; i < data.length; ++i) {
+                        if (data[i].DataType.toLowerCase() == "bit") {
+                            datafieldsForProductGrid.push({ name: data[i].ColumnName, type: 'bool' });
+                            columnForProductGrid.push({ text: data[i].Label, datafield: data[i].ColumnName, columntype: 'checkbox' });
+                        }
+                        else if (data[i].DataType.toLowerCase() == "datetime") {
+                            datafieldsForProductGrid.push({ name: data[i].ColumnName, type: 'date' });
+                            columnForProductGrid.push({ text: data[i].Label, datafield: data[i].ColumnName, cellsformat: 'dd/MM/yyyy', columntype: 'date' });
+                        }
+                        else {
+                            datafieldsForProductGrid.push({ name: data[i].ColumnName, type: data[i].DataType });
+                            columnForProductGrid.push({ text: data[i].Label, datafield: data[i].ColumnName});
+                        }
+                    }
+                    var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                        var FormType = '@ViewBag.FormType';
+                        if (FormType == 'Review')
+                                return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Zoom</button>';
+                        else
+                            return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete(); " class="GridButton">Delete</button>';
+                    };
+
+                    columnForProductGrid.push({ text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer });
+                    var source =
+                        {
+                            dataType: "json",
+                            //dataFields: [
+                            //    { name: 'ProductCode', type: 'string' },
+                            //    { name: 'Name', type: 'string' },
+                            //    { name: 'Id', type: 'int' },
+
+                            //],
+                            dataFields: datafieldsForProductGrid,
+                            cache: false,
+                            data: { RequestId: RequestId },
+                            id: "Id",
+                            url: "/LProducts/GetByRequestId"
+                        };
+                    var dataAdapter = new $.jqx.dataAdapter(source)
+                    $('#jqxgridProduct').jqxGrid({
+                        source: dataAdapter,
+                        width: '100%',
+                        autoheight: true,
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: false,
+                        altrows: true,
+                        showstatusbar: true,
+                        ready: function () {
+                        },
+                        //columns: [
+                        //    { text: 'Product Code', datafield: 'ProductCode' },
+                        //    { text: 'Name', datafield: 'Name' },
+                        //    { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+                        //]
+                        columns: columnForProductGrid
+                    });
+
+                },
+                error: function (reponse) {
+                    Console.log(reponse);
+                    alert("error");
+                }
+            })
+        }
+
+    }
+
+
+    function FnGetASMatrix() {
+
+        var TransactionId = @Model.Id;
+
+       // window.location.href = '/LAccountingScenarios/AccountingScenarioMatrix?RequestId=' + TransactionId;
+         window.location.href = '/LAccountingScenarios/AccountingScenarioMatrix?EntityType=LRequests&EntityId=' + TransactionId;
+    }
+    //function GetProductDropDown()
+    //{
+    //   var sourceProductDropDown = {
+    //         dataType: "json",
+    //         dataFields: [
+    //                 { name: 'Id', type: 'string' },
+    //                 { name: 'Name', type: 'string' },
+    //                 { name: 'ProductCode', type: 'string' },
+    //                 { name: 'Product', type: 'string'}
+    //        ],
+    //         id: "Id",
+    //         url: "/LProducts/GetByCompanyCode"
+    //     };
+    //     var dataAdapterProductDropDown = new $.jqx.dataAdapter(sourceProductDropDown)
+    //     $("#Productdropdownlist").jqxDropDownList({
+    //         filterable: true,
+    //         source: dataAdapterProductDropDown,
+    //         searchMode: 'containsignorecase',
+    //         width: '250px',
+    //         height: '25px',
+    //         displayMember: "Product",
+    //         valueMember: "Id",
+    //     });
+    //     $('#Productdropdownlist').on('change', function (event) {
+    //         var args = event.args;
+    //         if (args) {
+    //             // index represents the item's index.
+    //             var index = args.index;
+    //             var item = args.item;
+    //             // get item's label and value.
+    //             var label = item.label;
+    //             var value = item.value;
+
+    //             //value is LocalPobId of the selected item
+    //             SelectedProductId = value;
+    //             SelectedProduct = label;
+    //         }
+    //     });
+    //}
+    function FnEdit() {
+            var StepId='@ViewBag.StepId'
+            var selectedrowindex = $('#jqxgridProduct').jqxGrid('selectedrowindex');
+            var WorkFlowId = document.getElementById('WorkFlowId').value;
+            var rowdata = $('#jqxgridProduct').jqxGrid('getrowdata', selectedrowindex);
+            var Id = rowdata.Id;
+            var url = '@Url.Action("Edit", "LProducts")?Id=' + Id  + '&Source=Request';
+            event.preventDefault();//stop refreshing parent window
+            window.open(url,'_blank');//opening the products link in new tab
+        }
+
+    function FnCreateNewProduct()
+    {
+        if(TransactionId==0)
+        {
+            if(confirm('You need to save Request before adding a Product. Do you wish to continue?'))
+            {
+                 FnSaveData(true);//save request first
+            }
+        }
+        else
+        {
+            OpenTabToSaveProduct(TransactionId);//This means request is already saved
+        }
+    }
+
+    function OpenTabToSaveProduct(transactionId)
+    {
+        @*var WorkFlowId = document.getElementById('WorkFlowId').value;
+        var StepId = @ViewBag.StepId;*@
+
+             @*var url = '@Url.Action("Create", "LProducts", new { Source = "Request" })';*@
+        @*var url = '@Url.Action("Create", "LProducts")?WorkFlowId=' + WorkFlowId + '&Source=Request&RequestId=' + transactionId +'&StepId=' + StepId;*@
+
+         var url = '@Url.Action("Create", "LProducts")?Source=Request&RequestId=' + transactionId;
+
+        var returnValue = window.open(url,'_blank');//opening the products link in new tab
+         /*returnValue.onbeforeunload = function(){
+        Add Event Listener to child Window
+        }*/
+        if(returnValue !=null){
+            if (typeof returnValue.attachEvent != "undefined") {
+                returnValue.attachEvent("onunload", ChildTabClosed);
+            } else if (typeof returnValue.addEventListener != "undefined") {
+                returnValue.addEventListener("unload", ChildTabClosed, false);
+            }
+        }
+    }
+
+    /*Once created on the fly, product is not immediately available in dropdown in request create form*/
+    function ChildTabClosed()
+    {
+    // update the dropdownlist
+    //GetProductDropDown();
+    //Get Product on Fly
+        IsProductCreatedOnFly = true;
+        if (IsProductCreatedOnFly == true) {
+            var ReqId = document.getElementById('Id').value;
+            //ajax call to get latest product
+            $.ajax({
+                data: { RequestId: ReqId },
+                cache: false,
+                url: "/LRequests/GetLatestProductCreatedOnFly",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data) {
+                        SelectedProductId = data.Id;
+                        SelectedProduct = data.Product;
+                        SelecterType = data.SelecterType;
+                        FnAddProductToGrid();
+                    }
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+
+    }
+
+
+    function FnClose(){
+         document.getElementById('ProductsDiv').style.display = 'none';
+    }
+    //This Function opens the Products div
+
+         @{
+             Html.RenderPartial("_HistoryGridPartial");
+             Html.RenderPartial("_AttachmentGridPartial");
+         }
+
+    function FnAttachComments(Comments) {
+         GlobalComment = Comments;
+         document.getElementById('Comments').value = Comments;
+     }
+    function FnAddProductToGrid()
+    {
+        if (SelectedProductId == null || SelectedProductId == 0) {
+            alert("Please select Product.")
+            return;
+        }
+        if (TotalProductCount == 0) {
+            // source for jqxgridProduct
+            var data = new Array();
+            var source =
+                {
+                    dataFields: [
+                        { name: 'ProductCode', type: 'string' },
+                        { name: 'Name', type: 'string' },
+                        { name: 'Id', type: 'int' },
+
+                    ],
+                    localdata: data,
+                    cache: false,
+                    datatype: "array"
+                };
+            var dataAdapter = new $.jqx.dataAdapter(source, {
+                autoBind: true, async: false,
+            })
+            var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete(); " class="GridButton">Delete</button>';
+            };
+
+            $('#jqxgridProduct').jqxGrid({
+                source: dataAdapter,
+                width: '100%',
+                autoheight: true,
+                theme: 'bootstrap',
+                sortable: true,
+                columnsresize: true,
+                columnsreorder: false,
+                altrows: true,
+                showstatusbar: true,
+                ready: function () {
+                },
+                columns: [
+                    { text: 'Product Code', datafield: 'ProductCode' },
+                    { text: 'Name', datafield: 'Name' },
+                    { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+                ]
+            });
+        }
+            var GridRows = $('#jqxgridProduct').jqxGrid('getrows');
+            if(GridRows != null && GridRows != '')
+            {
+                var TotalRows = GridRows.length;
+                if (GridRows.length > 0) {
+                           for (var i = 0; i < GridRows.length; i++) {              //For Row
+                             if(SelectedProductId == GridRows[i].Id ){
+                                    alert("Already added to the Grid") ;
+                                   // $("#Productdropdownlist").jqxDropDownList('clearSelection', true);
+                                    return;
+                             }
+                           }
+                 }
+
+            }
+
+            var ProductCode = '';
+            var name = '';
+            var index = SelectedProduct.indexOf('|'); //Name|ProductCode(Sys-Cat)
+
+            if (index == -1) {
+                name = SelectedProduct;
+
+            }
+            else {
+                name = SelectedProduct.slice(0, index);
+            }
+
+            var indexPC = SelectedProduct.indexOf('(');
+            if (indexPC == -1) {
+                ProductCode = ''
+
+            }
+            else {
+                ProductCode = SelectedProduct.slice(index + 1, indexPC);
+            }
+            TotalProductCount++;
+            $("#jqxgridProduct").jqxGrid('addrow', null, { ProductCode: ProductCode, Name: name, Id: SelectedProductId });
+            FnSaveData(false);
+           // $("#Productdropdownlist").jqxDropDownList('clearSelection', true);
+     }
+
+
+  function FnSaveData(IsClose)
+  {
+   if ($("#AttributeB01").length > 0){
+            if(document.getElementById("AttributeB01").checked)
+                   document.getElementById('AttributeB01').value =  true;
+        }
+        if ($("#AttributeB02").length > 0){
+            if(document.getElementById('AttributeB02').checked)
+                   document.getElementById('AttributeB02').value =  true;
+        }
+         if ($("#AttributeB03").length > 0){
+             if(document.getElementById('AttributeB03').checked)
+                   document.getElementById('AttributeB03').value =  true;
+        }
+         if ($("#AttributeB04").length > 0){
+            if(document.getElementById('AttributeB04').checked)
+                   document.getElementById('AttributeB04').value =  true;
+        }
+        if ($("#AttributeB05").length > 0){
+            if(document.getElementById('AttributeB05').checked)
+                   document.getElementById('AttributeB05').value =  true;
+        }
+    var SSPDate1 = null;
+    var SSPDate2 = null;
+    if ($("#AttributeD01").length > 0){
+        SSPDate1 = $('#AttributeD01').jqxDateTimeInput('getText');
+    }
+     if ($("#AttributeD02").length > 0){
+          SSPDate2 = $('#AttributeD02').jqxDateTimeInput('getText');
+    }
+    document.getElementById("SSPDate1").value = SSPDate1;
+    document.getElementById("SSPDate2").value = SSPDate2;
+
+
+    var AttributesList = '';
+    $("#frm").validate();
+         //store data in db
+         if ($('#frm').valid()) {
+
+    var GridArray = [];
+    //var GridRows = $('#jqxgridProduct').jqxGrid('getrows');
+    //var TotalRows = GridRows.length;
+    //        if (GridRows.length > 0) {
+    //                       for (var i = 0; i < GridRows.length; i++) {              //For Row
+    //                            GridArray[i] = [];
+    //                            GridArray[i][0] =  GridRows[i].Id;
+    //                        }
+    //        }
+            var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize() + "&GridArray=" + GridArray + "&CheckBoxAttributeValues=" + CheckBoxAttributeValues,
+                 cache: false,
+                 url: "/LRequests/SaveRequest",
+                 success: function (data) {
+                     if (data.ErrorMessage) {
+                            if(data.ErrorMessage.substring("existing one").length > 0){
+                                var r = confirm(data.ErrorMessage);
+                                if (r == false) {
+                                        document.getElementById("ContinueFlag").value = "";
+                                        return;
+                                }
+                                else {
+                                 document.getElementById("ContinueFlag").value = "Continue";
+                                }
+                            }
+                            else{
+                                alert(data.ErrorMessage);
+                            }
+                     }
+                     else {
+                         alert('Request saved sucessfully');
+    if(IsClose==false)
+    {
+        //opening Product in edit mode
+        window.location.href = "/LRequests/Edit?Id=" + data.Id;
+
+    }
+    else
+    {
+        window.location.href = '/GenericGrid/Index';
+    TransactionId=data.Id;
+   // alert(data.Id)
+    document.getElementById('Id').value=data.Id;
+    document.getElementById('CreatedById').value=data.model.CreatedById;
+    document.getElementById('CompanyCode').value=data.model.CompanyCode;
+
+    var date = new Date(data.model.CreatedDateTime);
+     document.getElementById('CreatedDateTime').value=date;
+    document.getElementById('Status').value=data.model.Status;
+    document.getElementById('WFOrdinal').value=data.model.WFOrdinal;
+    document.getElementById('WFStatus').value=data.model.WFStatus;
+    document.getElementById('WFType').value=data.model.WFType;
+    document.getElementById('WFRequesterId').value=data.model.WFRequesterId;
+    document.getElementById('WFRequesterRoleId').value=data.model.WFRequesterRoleId;
+    document.getElementById('WFAnalystId').value=data.model.WFAnalystId;
+    document.getElementById('WFManagerId').value=data.model.WFManagerId;
+    document.getElementById('WFCurrentOwnerId').value=data.model.WFCurrentOwnerId;
+    document.getElementById("ContinueFlag").value = "Continue";
+    FnGetSupportingDocumentList(TransactionId);
+    OpenTabToSaveProduct(TransactionId);
+    }
+                     }
+                 },
+                 error: function (reponse) {
+                   //  Console.log(reponse);
+                     alert("error");
+
+                 }//error block ends
+             });// ajax call ends here
+         }
+             //if block ends here.
+}
+   
+function FnChange(SystemId){
+    document.getElementById('SystemId').style.pointerEvents = 'none';
+    document.getElementById('SystemId').style.backgroundColor = 'lightgray';
+
+    }
+
+</script>
+
+
+
+<div id="jqxLoader">
+</div>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+        <h4 class="text-danger" id="ErrorMessage"></h4>
+        <h4 class="text-danger" id="ValidationMessage"></h4>
+        @Html.Hidden("SSPDate1")
+        @Html.Hidden("SSPDate2")
+        @Html.Hidden("Comments")
+        @Html.Hidden("ContinueFlag")
+        @Html.Hidden("WorkFlowId")
+        @Html.Hidden("FormType")
+        @Html.Hidden("StepId")
+        @Html.HiddenFor(m => m.CompanyCode)
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CreatedById)
+        @Html.HiddenFor(m => m.UpdatedById)
+        @Html.HiddenFor(m => m.CreatedDateTime)
+        @Html.HiddenFor(m => m.UpdatedDateTime)
+        @Html.HiddenFor(m => m.SystemId)
+        @Html.HiddenFor(m => m.Status)
+        @Html.HiddenFor(m => m.WFOrdinal)
+        @Html.HiddenFor(m => m.WFStatus)
+        @Html.HiddenFor(m => m.WFType)
+        @Html.HiddenFor(m => m.WFRequesterId)
+        @Html.HiddenFor(m => m.WFRequesterRoleId)
+        @Html.HiddenFor(m => m.WFAnalystId)
+        @Html.HiddenFor(m => m.WFManagerId)
+        @Html.HiddenFor(m => m.WFCurrentOwnerId)
+
+
+    <div class="col-md-10 col-lg-10">
+        <div class="col-md-5 col-lg-5 " style="min-height:80px;">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-5 col-lg-5 " style="min-height:80px;">
+            @Html.LabelFor(model => model.AuthorizationNumber, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels", @style = "text-align: right; " })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.AuthorizationNumber, new { htmlAttributes = new { @class = "form-control", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.AuthorizationNumber, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="col-md-12 col-lg-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels", @style = "text-align: left;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.TextAreaFor(model => model.Description, new { @class = "form-control", @style = "min-width: 730px;min-height: 100px;" })
+                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back&nbsp;</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick=" FnSaveData(false);">Save</button>
+        @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick=" FnSaveData(true);">Save&Close</button>*@
+        <label for="FileUpload" class="btn btn-borderRed-SideLayout btn-cons">Attach</label>
+        <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+        <button type="button" name="ASMatrix" id="ASMatrix" class="btn btn-borderRed-SideLayout btn-cons" onclick="FnGetASMatrix();">Acc Scn Matrix</button>
+    </div>
+        <div class="col-md-11 col-lg-11" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+            <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+                <ul class="nav nav-tabs tabs tabs-container-border ">
+                    <li style="margin-left: 30px;">Attributes</li>
+                    <li>Products</li>
+                    <li>Comments </li>
+                    <li>History</li>
+                    <li>Attached Files</li>
+                </ul>
+                <div class="tab-content" style="padding:10px;">
+                    <!--This Div is used for Attributes columns which will be populated from function GenerateCompanySpecificForm() defined in ProjectScript.cs -->
+                    <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+                    </div>
+                </div>
+                <div class="tab-content" id="Products" style="padding:10px;">
+                    @*<span style="font-size:smaller;color:chocolate;margin-left:33%">Clicking on Add Product button would save the request first.</span>
+                    <div class="col-md-12 col-lg-12 " style="display:flex;margin-bottom:10px;">
+                        <a href="#" onclick="FnLoadProductsPopup()" style="margin-left:30px;">
+                            <i class="fa fa-search" aria-hidden="true" title="zoom to select payee" style="color:#e60000;"></i>
+                        </a>
+                        <div class="col-md-3" style="min-height:30px" id="DIVPayeeId">
+                            <div class="col-md-11">
+                                @Html.Editor("LProdId", new { htmlAttributes = new { @class = "form-control", style = "display:none;" } })
+                                @Html.Editor("LProdName", new { htmlAttributes = new { @class = "form-control", style = "pointer-Events:none;background:lightgray;", title = "this.value" } })
+
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-red btn-cons" id="saveProduct" name="saveProduct" onclick="FnAddProductToGrid()"><b>Add Product&nbsp;</b></button>
+                        &ensp; OR
+                        <a href="#" style="padding-left:10px;vertical-align:top;" onclick="FnCreateNewProduct();">
+                            <span>
+                                Create New Product
+                            </span>
+                        </a>
+                    </div>
+                    <div id="jqxgridProduct"></div>*@
+
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                    @*<textarea id="Comments" name="Comments" style="min-height:120px;" class=" textarea1" onchange="FnAttachComments(this.value)"></textarea>*@
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <textarea id="History" name="History" placeholder="No History so far" style="min-height:120px;pointer-events:none;" class=" textarea1"></textarea>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="jqxgrid"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    @*<div id="dialog" style="display: none;width:100%" align="center">
+
+            @Html.Partial("_FileUploaderPartial")
+        </div>*@
+
+}
+@*Section to display list of files which are currently uploaded in system*@
+<div class="col-md-8" id="FileDiv">
+</div>
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@Html.Partial("_ProductsListForRequest")

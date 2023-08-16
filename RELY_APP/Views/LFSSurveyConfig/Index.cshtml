@@ -1,0 +1,130 @@
+﻿
+
+<script>
+    var Args = [];
+    $(document).ready(function () {
+        var selectedTab = 0;
+        // Method to load jqxtabs in view.
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+        $('#jqxTabs').on('selected', function (event) {
+            selectedTab = event.args.item;
+        });
+
+        var source = {
+            dataType: "json",
+            cache : false,
+            type: "GET",
+            dataFields: [
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'SurveyName', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'CreatedDateTime', type: 'Date' },
+                //{ name: 'CRAllowed', type: 'bool' },
+                { name: 'UpdatedDateTime', type: 'Date' }
+
+
+            ],
+            id: 'Id',
+            url: "/LFSSurveyConfig/GetSurveyData"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+
+
+    
+
+        });//End of document ready
+
+
+
+
+
+        //function fnSurveyConfigGrid() {
+
+        //    //var tooltiprenderer = function (element) {
+        //    //    $(element).jqxSurveyConfigGrid({ position: 'mouse', content: $(element).text() });
+        //    //}
+
+        //    var datafieldsSurveyConfig = new Array();
+        //    var columnsSurveyConfig = new Array();
+
+        //    datafieldsSurveyConfig.push({ name: 'CompanyCode', type: 'string' });
+        //    datafieldsSurveyConfig.push({ name: 'SurveyName', type: 'string' });
+        //    datafieldsSurveyConfig.push({ name: 'Description', type: 'string' });
+        //    datafieldsSurveyConfig.push({ name: 'CreatedDateTime', type: 'Date' });
+        //    datafieldsSurveyConfig.push({ name: 'UpdatedDateTime', type: 'Date' });
+
+
+        //    columnsSurveyConfig.push({ text: 'CompanyCode', datafield: 'CompanyCode'});
+        //    columnsSurveyConfig.push({ text: 'SurveyName', datafield: 'SurveyName'});
+        //    columnsSurveyConfig.push({ text: 'Description', datafield: 'Description'});
+        //    columnsSurveyConfig.push({ text: 'CreatedDateTime', datafield: 'CreatedDateTime'});
+        //    //columnsSurveyConfig.push({ text: 'UpdatedDateTime', datafield: 'UpdatedDateTime', rendered: tooltiprenderer });
+        //    columnsSurveyConfig.push({ text: 'UpdatedDateTime', datafield: 'UpdatedDateTime'});
+
+        //    var source = {
+        //        dataType: "json",
+        //        type: "GET",
+        //        dataFields: datafieldsSurveyConfig,
+        //        //id: 'Id',
+        //        url: "/LFSSurveyConfig/GetSurveyData"
+        //    };
+
+        //    var dataAdapter = new $.jqx.dataAdapter(source)
+
+        //    $("#jqxSurveyConfigGrid").jqxGrid({
+        //        source: dataAdapter,
+        //        width: '98%',
+        //        height: '8%',
+        //        theme: 'bootstrap',
+        //        sortable: true,
+        //        columnsautoresize: true,
+        //        //enabletooltips: true,
+        //        columnsreorder: true,
+        //       // altrows: true,
+        //        pageable: true,
+        //        pagesize: 200,
+
+        //        pagesizeoptions: ['100', '200', '500'],
+        //        keyboardnavigation: true,
+        //        filterable: true,
+
+        //        showstatusbar: false,
+        //        ready: function () {
+        //        },
+        //        columns: columnsSurveyConfig
+
+
+
+        //    });
+        //}
+
+        function FnShowNextTab() {
+
+            $('#jqxTabs').jqxTabs('select', selectedTab + 1);
+        }
+
+        function FnShowPreviousTab() {
+
+            $('#jqxTabs').jqxTabs('select', selectedTab - 1);
+        }
+
+</script>
+<div id='jqxTabs'>
+    <ul style='margin-left: 20px;'>
+        <li>Surveys</li>
+        <li>Chapters</li>
+        <li>Sections</li>
+        <li>Section Items</li>
+    </ul>
+    <div id="jqxSurveyConfigGrid"></div>
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+
+
+    <input type="button" class="btn btn-red" value="Previous" name="btnPrevious" id="btnPrevious" onclick="FnShowPreviousTab();">
+    <input type="button" class="btn btn-red" value="Next" name="btnNext" id="btnNext" onclick="FnShowNextTab();">
+

@@ -1,0 +1,330 @@
+﻿@model RELY_APP.ViewModel.FileUploaderParametersViewModel
+@Scripts.Render("~/bundles/jQuery-File-Upload")
+@Styles.Render("~/Content/jQuery-File-Upload")
+
+@*<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>*@@*SS added this line to remove error due to version difference in jquery which is not compatible with today's browsers*@
+<script>var existingFileList =  @Html.Raw(Json.Encode(@Model.ExistingFilesList));</script>
+@*<script src="~/Scripts/ProjectScripts/UploadDocuments.js"></script>*@
+<script>
+  // $.noConflict();
+    
+      $(function () {
+            $("#dialog").dialog({
+                modal: true,
+                autoOpen: false,
+                title: "FileUpload Dialog Box",
+                width: 1000,
+                height: 500,
+                dialogClass: "custom-dialog"
+            });
+            $("#FileUpload").click(function () {
+                document.getElementById("IsDataUpload").value = false;
+                //$("#dialog").css('zIndex', 9999);
+                $('#dialog').dialog('open');
+            });
+           $("#FileUploadLink").click(function () {
+               document.getElementById("IsDataUpload").value = true;
+               //$("#dialog").css('zIndex', 9999);
+                $('#dialog').dialog('open');
+            });
+
+           $('#dialog').on('dialogclose', function (event) {
+               //alert('closed');
+               FnUpdateComments();
+           });
+
+     $("#Done").click(function () {
+                $('#dialog').dialog('close');
+    GetFileList();
+            });
+     });
+
+    function FnUpdateComments() {
+        var Comments = document.getElementById('AttachedComments').value;
+        //Make an ajax call to save comments
+        $.ajax({
+            data: { Comments: Comments },
+            cache: false,
+            url: "/FileUploader/UpdateComments",
+            dataType: "json",
+            type: "get",
+            success: function (data) {
+            },
+            error: function (respose) {
+            }
+        });
+    }
+
+    function GetFileList()
+    {
+        var Comments = document.getElementById('AttachedComments').value;
+     //Make an ajax call to get list of files attached in this request
+        $.ajax({
+            data: { Comments: Comments },
+            cache: false,
+            url: "/FileUploader/GetUploadedFileList",
+            dataType: "json",
+            type: "get",
+            success: function (data) {
+     if(data)
+     {
+    var FileList='<br><ul>';
+    //var FileArray=Array.from(data);//this line throws error in IE, therefore using the below line of code.
+    var FileArray = data;
+    for(var i=0;i<FileArray.length;i++)
+    {
+    FileList+='<li><div class="col-md-3">'+FileArray[i]+'</div><div class="col-md-2"><a href="#" onclick="RemoveFile('+i+')"> <i style="color:red;" class="glyphicon glyphicon-remove"></i></a></div>'
+    }
+     FileList+='</ul>'
+    document.getElementById('FileDiv').innerHTML=FileList;
+    }
+    },
+            error: function (respose) {
+                //  alert("error : " + reponse);
+            }
+        });
+    }
+
+    function RemoveFile(FileIndex)
+    {
+   //Make an ajax call to get list of files attached in this request
+     $.ajax({
+            data:{FileIndex:FileIndex},
+            url: "/FileUploader/DeleteFileFromList",
+            dataType: "json",
+            cache:false,
+            type: "get",
+            success: function (data) {
+            GetFileList();
+    },
+            error: function (respose) {
+                //  alert("error : " + reponse);
+            }
+        });
+    }
+
+    function FnCheckForDuplicateFile() {
+        var files = Array();
+        var xx = document.getElementById('file1');
+        for (var i = 0; i < xx.files.length; i++) {
+            var name = xx.files.item(i).name;
+            if (existingFileList != null && existingFileList != 'undefined') {
+                if (existingFileList.indexOf(name) > -1) {
+                    alert("Duplicate file: " + name + " not allowed");
+                    document.getElementById('file1').value = "";
+                    return false;
+                }
+                existingFileList.push(name);
+            }
+            if (name.indexOf(',') > -1) {
+                alert("comma(,) not allowed in name of file.");
+                document.getElementById('file1').value = "";
+                return false;
+            }
+            //file type checking
+            var IsValid = FnCheckFileTypeValidity(name);
+            if (IsValid == false) {//check file type
+                document.getElementById('file1').value = "";
+                return false;
+            }
+           
+        }
+        return true;
+    }
+
+    function FnCheckFileTypeValidity(FileName) {
+        var ext = FileName.split('.').pop().toLowerCase();
+        if ($.inArray(ext, ['jpg', 'png', 'jpeg', 'xls', 'xlsx', 'ppt', 'pptx', 'doc', 'docx', 'pdf','txt','csv']) == -1) {
+            document.getElementById('file1').value = "";
+            alert('File with ' + ext + ' not allowed');
+            return false;
+        }
+        else
+            return true;
+    }
+
+</script>
+<script>
+    var $form = null;
+    $(function () {
+
+          $form = $('#fileupload').fileupload({
+             dataType: 'json'
+          });
+
+    });
+    $('#fileupload').addClass('fileupload-processing');
+    $('#fileupload').bind('fileuploaddone', function (e, data) {
+  
+    })
+
+</script>
+@Scripts.Render("~/bundles/jQuery-File-Upload") 
+
+<form id="fileupload" method="POST" enctype="multipart/form-data" data-url="@Url.Action("UploadDocuments","FileUploader")">
+    @Html.HiddenFor(m=>m.SaveFileInBucket)
+    @Html.Hidden("IsDataUpload",false)
+    <div class="row fileupload-buttonbar">
+        <div class="col-lg-12">
+            <!-- <textarea placeholder="Enter Comments" id="SDComments" name="SDComments" />-->
+            <!-- The fileinput-button span is used to style the file input field as button -->
+            <span class="btn btn-success fileinput-button">
+                <i class="glyphicon glyphicon-plus"></i>
+                <span>Add files...</span>
+                @if (Model.CanUploadMultipleFiles == true)
+                {
+                <input type="file" name="files[]" id="file1" multiple onchange="FnCheckForDuplicateFile();" >
+                }
+                else
+                {
+                 <input type="file" name="files[]" id="file1" onchange="FnCheckForDuplicateFile();" >
+             }
+            </span>
+            <button type="submit" class="btn btn-primary start">
+                <i class="glyphicon glyphicon-upload"></i>
+                <span>Start upload</span>
+            </button>
+            <button type="reset" class="btn btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>Cancel upload</span>
+            </button>
+            <button type="button" class="btn btn-danger delete">
+                <i class="glyphicon glyphicon-trash"></i>
+                <span>Delete</span>
+            </button>
+            <button type="button" id="Done" class="btn btn-danger delete">
+                <span>Done</span>
+            </button>
+
+            @*<input type="checkbox" class="toggle">*@
+            <!-- The global file processing state -->
+            <span class="fileupload-process"></span>
+
+        </div>
+        @if (Model.CanDisplayDescriptionBox == true)
+    {
+        <div class="col-md-12" style="padding:0px;margin:2px;">
+            <span>User Description</span>
+            <textarea placeholder="Enter Comments Here" id="AttachedComments" name="AttachedComments" style="width:100% !important;max-width:100% !important;"></textarea>
+        </div>
+}
+else
+{
+    <!--this is to avoid error -->
+    <div id="AttachedComments" name="AttachedComments"></div>
+}
+
+        <!-- The global progress state SS has commented this section so as to adjust Comments text Area -->
+        @*<div class="col-lg-5 fileupload-progress fade">
+            <!-- The global progress bar -->
+            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar progress-bar-success" style="width:0%;"></div>
+            </div>
+            <!-- The extended global progress state -->
+            <div class="progress-extended">&nbsp;</div>
+        </div>*@
+    </div>
+    @* The global progress state 
+    <div class="col-lg-5 fileupload-progress fade">
+        <!-- The global progress bar -->
+        <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-success" style="width:0%;"></div>
+        </div>
+        <!-- The extended global progress state -->
+        <div class="progress-extended">&nbsp;</div>
+    </div>*@
+
+    <!-- The table listing the files available for upload/download -->
+    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+</form>
+
+<br>
+<!-- The blueimp Gallery widget -->
+<div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" data-filter=":even">
+    <div class="slides"></div>
+    <h3 class="title"></h3>
+    <a class="prev">‹</a>
+    <a class="next">›</a>
+    <a class="close">×</a>
+    <a class="play-pause"></a>
+    <ol class="indicator"></ol>
+</div>
+<!-- The template to display files available for upload -->
+<script id="template-upload" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload fade">
+        <td>
+            <span class="preview"></span>
+        </td>
+        <td>
+            <p class="name">{%=file.name%}</p>
+            <strong class="error text-danger"></strong>
+        </td>
+        <td>
+            <p class="size">Processing...</p>
+            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-bar progress-bar-success" style="width:0%;"></div></div>
+        </td>
+        <td>
+            {% if (!i && !o.options.autoUpload) { %}
+            <button class="btn btn-primary start" disabled>
+                <i class="glyphicon glyphicon-upload"></i>
+                <span>Start</span>
+            </button>
+            {% } %}
+            {% if (!i) { %}
+            <button class="btn btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>Cancel</span>
+            </button>
+            {% } %}
+        </td>
+    </tr>
+    {% } %}
+</script>
+<!-- The template to display files available for download -->
+<script id="template-download" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-download fade">
+        <td>
+            <span class="preview">
+                {% if (file.thumbnailUrl) { %}
+                <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" data-gallery><img src="{%=file.thumbnailUrl%}"></a>
+                {% } %}
+            </span>
+        </td>
+        <td>
+            <p class="name">
+                {% if (file.url) { %}
+                <a href="{%=file.url%}" title="{%=file.name%}" download="{%=file.name%}" {%=file.thumbnailUrl?'data-gallery':''%}>{%=file.name%}</a>
+                {% } else { %}
+                <span>{%=file.name%}</span>
+                {% } %}
+            </p>
+            {% if (file.error) { %}
+            <div><span class="label label-danger">Error</span> {%=file.error%}</div>
+            {% } %}
+        </td>
+        <td>
+            <span class="size">{%=o.formatFileSize(file.size)%}</span>
+        </td>
+        <td>
+            {% if (file.deleteUrl) { %}
+            <button class="btn btn-danger delete" data-type="{%=file.deleteType%}" data-url="{%=file.deleteUrl%}" {% if (file.deletewithcredentials) { %} data-xhr-fields='{"withCredentials":true}' {% } %}>
+                <i class="glyphicon glyphicon-trash"></i>
+                <span>Delete</span>
+            </button>
+            <input type="checkbox" name="delete" value="1" class="toggle">
+            {% } else { %}
+            <button class="btn btn-warning cancel">
+                <i class="glyphicon glyphicon-ban-circle"></i>
+                <span>Cancel</span>
+            </button>
+            {% } %}
+        </td>
+    </tr>
+    {% } %}
+</script>
+
+
+<div id="DisclaimerDiv" style="color:red;font-size:11px;">Note: Do not use comma in file names as system will treat that as 2 separate files</div>
+

@@ -1,0 +1,94 @@
+﻿
+
+
+<script type="text/javascript">
+    var RequestName = '';
+    var RequestId = 0;
+    $(document).ready(function () {
+        GetRequestName();
+    });
+
+    function GetRequestName() {
+        var sourceRequestName = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Name', type: 'string' },
+
+            ],
+            id: "Id",
+            url: "/Reports/GetRequestName"
+        };
+        var dataAdapterRequestName = new $.jqx.dataAdapter(sourceRequestName)
+        $('#RequestNameDropdownlist').jqxDropDownList({
+            filterable: true,
+            source: dataAdapterRequestName,
+            searchMode: 'containsignorecase',
+            width: '150px',
+            height: '25px',
+            displayMember: "Name",
+            valueMember: "Id",
+        });
+
+        $('#RequestNameDropdownlist').on('change', function (event) {
+            var args = event.args;
+            if (args) {
+                // index represents the item's index.
+                var index = args.index;
+                var item = args.item;
+                // get item's label and value.
+                var label = item.label;
+                var value = item.value;
+                RequestName = label;
+                RequestId = value;
+            }
+        });
+    }
+
+    function fnDownloadRequestDetails() {
+
+        if (RequestId == 0) {
+            alert('Please choose request');
+            return;
+        }
+        //alert(RequestId);
+        DownloadRequestDetails(RequestId);
+    }
+
+    function DownloadRequestDetails(RequestId) {
+
+        window.location.href = '/Reports/DownloadRequestDetails?RequestId=' + RequestId;
+        //$.ajax({
+        //    data: { RequestId: RequestId },
+        //    url: "/Reports/DownloadRequestDetails",
+        //    //dataType: "json",
+        //    type: "POST",
+        //    success: function (data) {
+        //        alert('Successfully Download');
+        //    },
+        //    error: function (reponse) {
+
+        //        //alert(consol);
+        //        alert("error : " + reponse);
+        //    }
+        //});
+    }
+
+</script>
+<div class="col-md-12 col-lg-12 rely-labels">
+    
+    <div class="col-lg-10">
+        <div class="required col-lg-2">
+            Select Request:
+        </div>
+
+        <div id="RequestNameDropdownlist" class="col-lg-6" style="background:white !important;"></div>&nbsp;
+        @*<input type="button" class="btn-red" value="Go" onclick="fnShowRequestPerStatus();" style="height:25px; text-align: center;" />&ensp;*@
+        @*<input type="button" id="csvExport" class="btn-red" value="Download" onclick="fnDownloadRequestDetails();" style="height:25px; text-align: center;" />*@
+        @*<h class="text-danger text-capitalize"><i id="csvExport" class="fa fa-download" onclick="fnDownloadRequestDetails();" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i></h>*@
+    <div class="col-lg-2 col-md-2" >
+        <button type="button" class="btn btn-red-SideLayout btn-cons" id="csvExport" name="csvExport" onclick=" fnDownloadRequestDetails();">Download</button>
+    </div>
+    </div>
+</div>

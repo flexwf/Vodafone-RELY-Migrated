@@ -1,0 +1,493 @@
+﻿
+@model RELY_APP.ViewModel.LScenarioDemandViewModel
+@{
+
+    var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+}
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+@*@Scripts.Render("~/bundles/jQuery-File-Upload")*@
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>@*SS added this line to remove error due to version difference in jquery which is not compatible with today's browsers*@
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+
+<script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    //This variable is defined to store value if form has any changes since it has loaded
+     var isChanged = false;
+    var  dataAdapterNature =undefined;
+    var dataAdapterEvent=undefined;
+
+    $(document).ready(function () {
+
+       //not required
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        //$.ajax({
+        //    data: { path: window.location.href },
+        //    url: "/Home/SaveReturnPath",
+        //    dataType: "json",
+        //    type: "POST",
+        //    success: function (data) {
+        //    },
+        //    error: function (reponse) {
+        //        //  alert("error : " + reponse);
+        //    }
+        //});
+
+
+
+
+        //Add JqxLoader when form is submitted to disable further clicks
+        $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+        //The below code checks for changes in form controls and pdates the flag
+        $('input,select,textarea').change(function () {
+            isChanged = true;
+        })
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+
+        $("#jqxImplementationDate").jqxDateTimeInput({ width: '125px', height: '22px', placeHolder: "DD/MM/YYYY", value: null });
+         @if (Model.ImplementationDate.HasValue) {
+            @: var Connection = new Date('@Model.ImplementationDate.Value.Year', '@Model.ImplementationDate.Value.Month'-1, '@Model.ImplementationDate.Value.Day')
+            @: $('#jqxImplementationDate').jqxDateTimeInput('setDate', Connection);
+        }
+
+        //generic attributes generation
+        var CompanySpecificArray = @Html.Raw(Json.Encode(CompanySpecificData.OrderBy(p => p.OrdinalPosition)));
+        GenerateCompanySpecificForm(CompanySpecificArray, 'LScenarioDemand', null);
+//FnGetSupportingDocumentList();
+    if('@Model.Id' !=0 ){
+         fnAuditDetails();
+    }
+
+     var FormType = '@ViewBag.FormType';
+        if (FormType == 'Review') {
+            $('*', 'form').prop('disabled', true);
+            $('#BackButton').removeAttr('disabled',false);
+            $('#jqxTabs').jqxTabs({ disabled:false });
+             $('#WFComments').removeAttr('disabled',false);
+            $('#SecondaryFormButtons :button').prop('disabled', false);
+        }
+        var TransactionId='@Model.Id';
+    if(TransactionId)
+    {
+         FnGetSupportingDocumentList();
+        fnAuditDetails();
+    }
+
+        FnGetProductDetails('@Model.ProductId');
+
+        FnGetQuestionDetais('@Model.QuestionCode');
+         FnGetRequestDetails('@Model.RequestId');
+
+    });//end of document.ready
+     @{
+         Html.RenderPartial("_HistoryGridPartial");
+         Html.RenderPartial("_AttachmentGridPartial");
+      }
+
+    function FnClickBottomButtons(ActionName, StepParticipantActionId, ActionUrl)
+    {
+        var WorkflowId = @ViewBag.WorkflowId;
+    var StepId = '@ViewBag.StepId';
+        var TransactionId = @Model.Id;
+        var GlobalComment = document.getElementById("WFComments").value;
+        FnClickSecondaryButtons(ActionName, WorkflowId, StepId, null, TransactionId, GlobalComment, StepParticipantActionId, ActionUrl);
+
+    }
+
+    function FnGetProductDetails(ProductId) {
+        if (ProductId) {
+            var url = "/LProducts/GetById/";
+            $.ajax({
+                url: url,
+                data: { Id: ProductId },
+                dataType: "json",
+                cache: false,
+                type: "POST",
+                success: function (data) {
+                    document.getElementById('ProductId').value = data.Id;
+                    document.getElementById('ProductName').value = data.Name;
+                   // document.getElementById('ProductDescription').value = data.Description;
+                },
+                error: function (reponse) {
+                   // alert("error in product: " + reponse);
+                    console.log(reponse);
+                }
+            });
+        }
+    }
+    function FnGetRequestDetails(RequestId) {
+        if (RequestId) {
+            var url = "/LRequests/GetById/";
+            $.ajax({
+                url: url,
+                data: { RequestId: RequestId },
+                dataType: "json",
+                cache: false,
+                type: "POST",
+                success: function (data3) {
+                    document.getElementById('RequestId').value = data3.Id;
+                    document.getElementById('RequestName').value = data3.Name;
+                    document.getElementById('RequestNumber').value = data3.AuthorizationNumber;
+                    document.getElementById('System').value = data3.SystemName;
+
+                },
+                error: function (reponse) {
+                    //alert("error in request: " + reponse);
+                }
+            });
+        }
+    }
+
+    function FnGetQuestionDetais(QuestionCode) {
+        if (QuestionCode) {
+            var url = "/LFSQuestionBank/GetQuestionDetailsByQuestionCode/";
+            $.ajax({
+                url: url,
+                data: { QuestionCode: QuestionCode },
+                dataType: "json",
+                cache: false,
+                type: "POST",
+                success: function (data2) {
+                    if (data2) {
+                        document.getElementById('QuestionText').value = data2.QuestionText;
+                        document.getElementById('AnswerText').value = data2.Response;
+                    }
+                },
+                error: function (reponse) {
+                     // alert("error in Question : " + reponse);
+                }
+            });
+        }
+    }
+    function FnSaveData()
+    {
+        var ImplementationDate = '';
+        if ($("#jqxImplementationDate").length > 0) {
+            ImplementationDate = $('#jqxImplementationDate').jqxDateTimeInput('getText');
+        }
+        document.getElementById("ImplementationDate").value = ImplementationDate;
+
+    // var AttributesList = getContent();
+    var AttributesList = '';
+    $("#frm").validate();
+         //store data in db
+         if ($('#frm').valid()) {
+
+             var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 cache: false,
+                 data: Form.serialize()+ "&collength=0",
+                 url: "/LScenarioDemand/SaveData",
+                 success: function (data) {
+                     document.getElementById("Id").value = data.Id;
+                     if (data.ErrorMessage) {
+                         alert("Errors occured - " + data.ErrorMessage);
+                     }
+                     else {
+                         alert('Data Saved Sucessfully');
+                         //window.location.href = "/GenericGrid/Index";
+                         window.location.href = '@HttpContext.Current.Session["from"]';
+                     }
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                    // alert("error");
+                 }
+             });
+         }
+             //if block ends here.
+     }
+
+
+</script>
+
+<div id="jqxLoader">
+</div>
+
+@using (Html.BeginForm("Create", "LScenarioDemand", FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+        <h4 class="text-danger" id="ValidationMessage"></h4>
+        @Html.Hidden("ImplementationDate")
+        @Html.HiddenFor(m => m.WFStatusDateTime)
+        @Html.HiddenFor(m => m.ContactEmail)
+        @Html.HiddenFor(m => m.QuestionCode)
+        @Html.HiddenFor(m => m.ProductId)
+        @Html.HiddenFor(m => m.RequestId)
+        @Html.HiddenFor(m => m.WFIsReadyDateTime)
+        @Html.HiddenFor(m => m.CompanyCode)
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CreatedById)
+        @Html.HiddenFor(m => m.UpdatedById)
+        @Html.HiddenFor(m => m.CreatedDateTime)
+        @Html.HiddenFor(m => m.UpdatedDateTime)
+        @Html.HiddenFor(m => m.Status)
+        @Html.HiddenFor(m => m.WFOrdinal)
+        @Html.HiddenFor(m => m.WFStatus)
+        @Html.HiddenFor(m => m.WFType)
+        @Html.HiddenFor(m => m.WFRequesterId)
+        @Html.HiddenFor(m => m.WFRequesterRoleId)
+        @Html.HiddenFor(m => m.WFAnalystId)
+        @Html.HiddenFor(m => m.WFManagerId)
+        @Html.HiddenFor(m => m.WFCurrentOwnerId)
+        @Html.Hidden("Comments")
+        @Html.Hidden("FormType")
+        @Html.Hidden("EffectiveStartDate")
+        @Html.Hidden("EffectiveEndDate")
+        @Html.Hidden("WorkFlowId")
+        @Html.Hidden("ProductId")
+        <div id="ErrorMessageDetails"></div>
+        <div class="col-md-11 col-lg-11 col-sm-11">
+            <div class="col-md-5 col-lg-5 ">
+                <div class="col-md-12 col-lg-12 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.BusinessAreaId, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                    <div class="col-md-11 col-lg-11">
+                        @Html.DropDownListFor(model => Model.BusinessAreaId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;" })
+                        @Html.ValidationMessageFor(model => model.BusinessAreaId, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-12 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.ScenarioDescription, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels " })
+                    <div class="col-md-11 col-lg-11">
+                        @Html.TextAreaFor(model => model.ScenarioDescription, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                        @Html.ValidationMessageFor(model => model.ScenarioDescription, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-12 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.Standards, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                    <div class="col-md-11 col-lg-11">
+                        @Html.TextAreaFor(model => model.Standards, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                        @Html.ValidationMessageFor(model => model.Standards, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-12 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.CommentInbound, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                    <div class="col-md-11 col-lg-11">
+                        @Html.TextAreaFor(model => model.CommentInbound, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                        @Html.ValidationMessageFor(model => model.CommentInbound, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+            </div>
+            <div id="col-lg-6 col-md-6 boxes">
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.Inception, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.Inception, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.Inception, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.AddGoodService, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.AddGoodService, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.AddGoodService, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.Fulfilment, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.Fulfilment, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.Fulfilment, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.PriceChange, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.PriceChange, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.PriceChange, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.RemoveGoodService, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.RemoveGoodService, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.RemoveGoodService, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.Termination, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.Termination, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.Termination, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.BillRunReconciliation, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.BillRunReconciliation, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.BillRunReconciliation, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.ContractFreeze, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.ContractFreeze, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.ContractFreeze, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.UsageFulfillment, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.UsageFulfillment, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.UsageFulfillment, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-3 col-lg-3 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.UpdateSyncCopa, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                    <div class="col-md-8 col-lg-8">
+                        @Html.CheckBoxFor(model => model.UpdateSyncCopa, new { htmlAttributes = new { @style = "text-align: left;" } })
+                        @Html.ValidationMessageFor(model => model.UpdateSyncCopa, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                    @Html.Label("Implementation Date", htmlAttributes: new { @class = " col-md-5 col-lg-5 rely-labels", @style = "text-align: right; " })
+                    <div id="jqxImplementationDate"></div>
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12 ">
+                <div class="col-md-12 col-lg-12 " style="min-height:80px;">
+                    @Html.LabelFor(model => model.Arguments, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                    <div class="col-md-11 col-lg-11">
+                        @Html.TextAreaFor(model => model.Arguments, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                        @Html.ValidationMessageFor(model => model.Arguments, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-1 col-lg-1" style="padding:0px;">
+
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '@HttpContext.Current.Session["from"]'">Back</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick=" FnSaveData();">Save</button>
+            <label for="FileUpload" class="CustomFileUpload-SideLayout " style="font-weight:normal; padding:4px;"> Attach </label>
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+
+            <div name="SecondaryFormButtons" id="SecondaryFormButtons">
+                @Html.Raw(ViewBag.BottomButtons)
+            </div>
+        </div>
+
+
+        <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+            <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+                <ul class="nav nav-tabs tabs tabs-container-border ">
+                    <li style="margin-left: 30px;">Attributes</li>
+                    <li>Comments</li>
+                    <li>History</li>
+                    <li>Attached Files</li>
+                    <li>Context</li>
+                </ul>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+                        <br /><br />
+
+                    </div>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                </div>
+
+                <div class="tab-content" style="padding:10px;">
+                    <i class="fa fa-download" aria-hidden="true" title="Download" onclick="FnExportGrid()" style="cursor:pointer;font-size:15px !important;color:red"></i>
+                    <div id="jqxgridHistory"></div>
+                    @*<textarea id="History" name="History" placeholder="No History so far" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>*@
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="jqxgrid"></div>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="ContextData">
+                        <div class="col-md-5 col-lg-5 " style="display:flex;min-height:60px;">
+                            @Html.LabelFor(model => model.ContactEmail, htmlAttributes: new { @class = "required col-md-3 col-lg-3 rely-labels " })
+                            @Html.TextBox("ContactEmail", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-5 col-lg-5 " style="display:flex;min-height:60px;">
+                            @Html.LabelFor(model => model.PointOfContact, htmlAttributes: new { @class = "required col-md-3 col-lg-3 rely-labels " })
+                            @Html.TextBox("PointOfContact", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Request Id", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("RequestId", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Request Name", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("RequestName", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex; min-height:60px;">
+                            @Html.Label("System", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("System", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Number", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("RequestNumber", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Description", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("RequestDescription", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Product Id", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("ProductId", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Name", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("ProductName", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-4 col-lg-4 " style="display:flex;min-height:60px;">
+                            @Html.Label("Description", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("ProductDescription", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+
+                        <div class="col-md-5 col-lg-5 " style="display:flex;min-height:60px;">
+                            @Html.Label("Survey Question", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("QuestionCode", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                        <div class="col-md-5 col-lg-5 " style="display:flex;min-height:60px;">
+                            @Html.Label("Section", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                            @Html.TextBox("SectionName", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+
+                        <div class="col-md-6 col-lg-6 " style="display:flex;">
+                            @Html.TextArea("QuestionText", null, new { @class = "form-control pull-right", disabled = "disabled", @style = "min-height:90px" })
+                        </div>
+                        <div class="col-md-6 col-lg-6 " style="display:flex;">
+                            @Html.TextBox("AnswerText", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system for Upload Utility*@
+<div class="col-md-8" id="FileDiv">
+</div>
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

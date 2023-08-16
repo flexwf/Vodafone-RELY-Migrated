@@ -1,0 +1,26 @@
+﻿<script>
+    var IsLengthValid = false;
+    var IsUppercaseValid = false;
+    var IsLowercaseValid = false;
+    var IsNumberValid = false;
+    var IsSpecialCharValid = false;
+    var DefaultQuestion1Elemnt = '';
+    var DefaultQuestion2Elemnt = '';
+    var DefaultQuestion3Elemnt = '';
+
+    $(document).ready(function () {
+
+    });
+     function OnResetPasswordClick() {
+        var UserName = '@HttpContext.Current.Session["UserName"]';
+        window.location.href = '/Account/ResetPassword?Email=' + '@ViewBag.Email' +'&ResetPwdMsg=';
+
+     }
+     function OnResetLandingPage() {
+        var UserName = '@HttpContext.Current.Session["UserName"]';
+        window.location.href = '/Account/ResetUserPreference?Email=' + '@ViewBag.Email';
+     }
+</script>
+<h3 style="color:red;">Settings</h3>
+        <a href="#" onclick="OnResetLandingPage()" class="header-icon" style="padding-left: 50px;"> Set default login role </a><br/>
+        <a href="#" onclick="OnResetPasswordClick()" class="header-icon" style="padding-left: 50px;"> Change password and security questions </a>

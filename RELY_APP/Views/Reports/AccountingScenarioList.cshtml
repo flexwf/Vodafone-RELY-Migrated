@@ -1,0 +1,151 @@
+﻿@model RELY_APP.ViewModel.LAccountingScenarioViewModel
+
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+<style type="text/css">
+    .text {
+        display: block;
+        font-family: sans-serif;
+        vertical-align: middle;
+        /*line-height: 10px;*/
+        text-align: center;
+        text-decoration: none;
+        font-weight: bold;
+    }
+</style>
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript">
+
+
+
+
+    $(document).ready(function () {
+        $('#loadertext').hide();
+        //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        var sourceAccountingScenarioList = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Actions', type: 'string' },
+                { name: 'Id', type: 'int' },
+                { name: 'Reference', type: 'string' },
+                { name: 'BusinessArea', type: 'string' },
+
+                { name: 'ScenarioDescription', type: 'string' },
+                { name: 'Standards', type: 'string' },
+                { name: 'Dataset', type: 'string' },
+                { name: 'ContractType', type: 'string' },
+                { name: 'PaymentMethod', type: 'string' },
+                { name: 'ProductsIncluded', type: 'string' },
+                { name: 'Subsidies', type: 'string' },
+                //{ name: 'WFStatus', type: 'string' },
+                //{ name: 'CreatedDateTime', type: 'date' },
+                //{ name: 'WFStatusDateTime', type: 'date' },
+                //{ name: 'WFIsReadyDateTime', type: 'date' },
+
+
+            ],
+
+            url: "/Reports/GetAccountingScenarioList"
+        };
+
+        var dataAdapterAccountingScenarioList = new $.jqx.dataAdapter(sourceAccountingScenarioList);
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            if (rowdata.Id) {
+
+                return '&emsp;<a href="#" onclick="FnReview(' + rowdata.Id + ')"> <i class="fa fa-th"  style="color:#e60000;font-size:15px;" title="Review"></i> </a>';
+            }
+        }
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterAccountingScenarioList,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            //pagesizeoptions: ['50', '100', '200'],
+            ready: function () {
+            },
+            columns: [
+                { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer },
+                { text: 'Reference', datafield: 'Reference' },
+                { text: 'Business Area', datafield: 'BusinessArea' },
+
+                { text: 'Scenario Description', datafield: 'ScenarioDescription' },
+                { text: 'Standards', datafield: 'Standards' },
+                { text: 'Dataset', datafield: 'Dataset' },
+                { text: 'Contract Type', datafield: 'ContractType' },
+                { text: 'Payment Method', datafield: 'PaymentMethod' },
+                { text: 'Products Included', datafield: 'ProductsIncluded' },
+                { text: 'Subsidies', datafield: 'Subsidies', columntype: 'checkbox' },
+                //{ text: 'WFStatus', datafield: 'WFStatus' },
+                //{ text: 'Initial Date', datafield: 'CreatedDateTime', cellsformat: 'dd/MM/yyyy'},
+                //{ text: 'Status Date', datafield: 'WFStatusDateTime', cellsformat: 'dd/MM/yyyy' },
+
+                //{ text: 'IsReady Date', datafield: 'WFIsReadyDateTime', cellsformat: 'dd/MM/yyyy' }
+            ]
+        });
+    });
+
+    function FnReview(Id) {
+        //var commit = $("#jqxgrid").jqxGrid('Review', Id);
+
+
+        window.location.href = "/LAccountingScenarios/Review/" + Id;
+
+
+    }
+
+    function FnDownloadAccountingScenarioList()
+    {
+
+        //$('#loadertext').show();
+        
+
+        window.location.href = "/Reports/DownloadAccountingScenarioList";
+        
+
+    }
+
+
+</script>
+
+    <p id="loadertext" class="text">Downloading...It may take some time</p>
+    <div class="col-lg-1 col-md-1">
+        <button type="button" class="btn btn-red-SideLayout btn-cons" id="csvExport" name="csvExport" onclick=" FnDownloadAccountingScenarioList();">Download</button>
+    </div>
+@*<i class="fa fa-download " aria-hidden="true" onclick="FnDownloadAccountingScenarioList()" style="cursor:pointer;font-size:15px !important"></i>*@
+<div class="col-md-12 col-lg-12">
+
+    <div id="jqxgrid"></div>
+
+</div>
+
+

@@ -1,0 +1,259 @@
+﻿@model RELY_APP.ViewModel.LEmailTemplateViewModel
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+
+<div>
+
+   
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#EditorBody').jqxEditor({
+            height: "300px",
+            width: '600px',
+
+           
+            tools: 'bold italic underline | left center right | outdent indent | ul ol | link | clean | html | color background | format font size | PlaceHolders',
+            createCommand: function (name) {
+                switch (name) {
+                    case "PlaceHolders":
+                        return {
+                            type: 'list',
+                            tooltip: "select PlaceHolder",
+                            init: function (widget) {
+                                widget.jqxDropDownList({ placeHolder: "Select Placeholder Value", width: 200, source: ['{request-id}', '{request-name}', '{URL}', '{User-id}', '{User-name}', '{acc-scenario-id}', '{new-scenario-id}', '{Login-Email}', '{Email-OTP}', '{Email-OTPValidity}', '{Password}'], autoDropDownHeight: true });
+                            },
+                            refresh: function (widget, style) {
+                                // do something here when the selection is changed.
+                                widget.jqxDropDownList('clearSelection');
+                            },
+                            action: function (widget, editor) {
+                                var widgetValue = widget.val();
+                                var date = new Date();
+                                // return object with command and value members.
+                                
+                                return { command: "inserthtml", value: widgetValue };
+                            }
+                        }
+
+                   
+                }
+            }
+        });
+
+        
+      //Calling Partial View for Attachment File Grid
+
+         var TransactionId='@Model.Id';
+            if(TransactionId)
+            {
+            FnGetSupportingDocumentList();
+         }
+        @{
+
+            Html.RenderPartial("_AttachmentGridPartial");
+        }
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+
+    });//End of document ready
+
+
+    
+
+
+    function FnbackButton() {
+
+        window.location.href = "/LEmailTemplates/Index";
+
+    }
+
+
+
+    
+    
+    
+    function FnSaveData() {
+        // var value='';
+        var Value = $("#EditorBody").val();
+        if (Value == "<div>​</div>") {
+            alert('EmailBody can not be blank');
+            return;
+        }
+        @*@Model.EmailBody=value;*@
+       $("#frm").validate();
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+          document.getElementById('EmailBody').value = Value;
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize(),
+                 cache:false,
+                 url: "/LEmailTemplates/SaveTemplate",
+                 success: function (data) {
+                     if (data.success) {
+
+                         alert("Data saved successfully.");
+                         window.location.href = "/LEmailTemplates/Index";
+                         // window.close();
+                     }
+                 },
+                 error: function (reponse) {
+                     console.log(reponse);
+                 }
+             });
+        }
+
+
+    }
+
+</script>
+
+<h3>Email Template Configuration</h3>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @*<h4 class="text-danger text-capitalize" style="color:#e60000;">@ViewBag.Title</h4>*@
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ErrorMessage"></h4>
+    <div id="ErrorMessageDetails"></div>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.Hidden("EmailBody")
+
+    <div class="col-md-11 col-lg-11">
+        <div class="col-md-5 col-lg-5 col-sm-5">
+            <div class="col-md-12 col-lg-12 col-sm-12" style="min-height:80px;">
+                @Html.LabelFor(model => model.TemplateName, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-12 col-lg-12">
+                    @Html.EditorFor(model => model.TemplateName, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; min-width: 450px;text-align: left;background-color: white ;" } })
+                    @Html.ValidationMessageFor(model => model.TemplateName, "", new { @class = "text-danger" })
+
+                </div>
+            </div>
+
+            <div class="col-md-12 col-lg-12" style="min-height:80px;">
+                @Html.LabelFor(model => model.EmailSubject, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-12 col-lg-12">
+                    @Html.EditorFor(model => model.EmailSubject, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px;min-width: 450px; text-align: left;background-color: white ;" } })
+                    @Html.ValidationMessageFor(model => model.EmailSubject, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="col-md-12 col-lg-12" style="min-height:80px;">
+                @Html.LabelFor(model => model.Signature, htmlAttributes: new { @class = "col-md-6 col-lg-6 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-12 col-lg-12">
+                    @Html.TextAreaFor(model => model.Signature, new { @class = "form-control ", @style = "min-height:100px;min-width: 450px;" })
+                    @*@Html.ValidationMessageFor(model => model.Signature, "", new { @class = "text-danger" })*@
+                    @*@Html.EditorFor(model => model.Signature, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left;background-color: white ;" } })*@
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-6 col-lg-6 col-sm-6">
+
+
+
+           
+
+
+
+
+
+
+            <div class="col-md-11 col-lg-11" style="min-height:80px;">
+                @Html.LabelFor(model => model.EmailBody, htmlAttributes: new { @class = "required col-md-6 col-lg-6 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-11 col-lg-11">
+                    @*@Html.TextAreaFor(model => model.EmailBody, new { htmlAttributes = new { @class = "form-control ",@id= "EditorBody", @name = "EditorBody" } })*@
+                    <textarea id="EditorBody" name="EditorBody"></textarea>
+                </div>
+
+            </div>
+
+
+
+
+
+
+
+
+        </div>
+
+            @*</div>*@
+
+
+
+        </div>
+        @*<div><jqx-editor width="700" height="300"></jqx-editor></div>*@
+
+        <div class="col-md-1 col-lg-1" style="padding:0px;">
+
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="FnbackButton();">Back&nbsp;</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick="FnSaveData();">Save</button>
+            <label for="FileUpload" class="CustomFileUpload-SideLayout" style="font-weight:normal; padding:4px;">Attach</label>
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+
+
+            @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="bck" onclick="FnbackButton();">Back &nbsp;</button>
+            <button type="button" class="btn btn-red btn-cons" id="btnSubmit" name="save" onclick="FnSaveData();"><b>Save&nbsp;</b></button>
+            @*<button type="button" class="btn btn-red btn-cons" id="SupportingDocs" onclick="FnGetSupportingDocumentList();">Add Supporting Docs &nbsp;</button>*@
+
+            @*<input type="submit" value="SaveTemplate" class="btn btn-red btn-cons" />*@
+        </div>
+
+
+
+    @*For Grid of attachment Files*@
+
+        <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+            <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+                <ul class="nav nav-tabs tabs tabs-container-border ">
+                    <li style="margin-left: 30px;">Attached Files</li>
+                </ul>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="AttachedFiles">
+
+                        <div id="jqxgrid"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+
+    </div>
+
+}
+
+
+
+
+<br>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system*@
+<div class="col-md-8" id="FileDiv">
+</div>
+
+
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+

@@ -1,0 +1,274 @@
+﻿
+@{
+    var ColumnsForProductReport = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.ColumnsDataForProductReport;
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#jqxDateTimeInputStartDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+        $("#jqxDateTimeInputEndDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+
+
+        var date = new Date();
+        date.setMonth(date.getMonth() - 6);
+        $('#jqxDateTimeInputStartDate').jqxDateTimeInput('setDate', date);
+
+        //$("#csvExport1").jqxButton();
+        //$("#csvExport1").click(function () {
+
+        //    var dt = new Date();
+
+        //    // Display the month, day, and year. getMonth() returns a 0-based number.
+        //    var month = dt.getMonth() + 1;
+        //    var day = dt.getDate();
+        //    var year = dt.getFullYear();
+        //    var currentDate = day + '-' + month + '-' + year;
+        //    $("#jqxGridProductReport").jqxGrid('exportdata', 'csv', 'ReportOfProducts_' + currentDate);
+
+        //});
+            //$("#csvExport2").jqxButton();
+            //$("#csvExport2").click(function () {
+
+            //    var dt = new Date();
+
+            //    // Display the month, day, and year. getMonth() returns a 0-based number.
+            //    var month = dt.getMonth() + 1;
+            //    var day = dt.getDate();
+            //    var year = dt.getFullYear();
+            //    var currentDate = day + '-' + month + '-' + year;
+            //    $("#jqxGridProductReport").jqxGrid('exportdata', 'csv', 'ReportOfProducts_' + currentDate);
+
+            //});
+        //        $("#csvExport3").jqxButton();
+        //        $("#csvExport3").click(function () {
+
+        //            var dt = new Date();
+
+        //            // Display the month, day, and year. getMonth() returns a 0-based number.
+        //            var month = dt.getMonth() + 1;
+        //            var day = dt.getDate();
+        //            var year = dt.getFullYear();
+        //            var currentDate = day + '-' + month + '-' + year;
+        //            $("#jqxGridProductReport").jqxGrid('exportdata', 'csv', 'ReportOfProducts_' + currentDate);
+
+        //});
+        $("#DropdownlistName").change(function () {
+            if ($("#DropdownlistName option:selected").val() == "1") {
+                $("#RequestName").hide();
+                $("#ProductCodeName").hide();
+                $("#DateRange").show();
+              //  $('#jqxGridProductReport').trigger('reloadGrid');
+
+                }
+            else if ($("#DropdownlistName option:selected").val() == "2") {
+                $("#DateRange").hide();
+                $("#ProductCodeName").hide();
+                $("#RequestName").show();
+
+            }
+            else {
+                $("#RequestName").hide();
+                $("#DateRange").hide();
+                $("#ProductCodeName").show();
+
+            }
+
+
+        });
+    });
+
+    function fnGetReportOfProducts() {
+        var StartDate = $('#jqxDateTimeInputStartDate').jqxDateTimeInput('getDate');
+        var EndDate = $('#jqxDateTimeInputEndDate').jqxDateTimeInput('getDate');
+        var formattedStartDate = $.jqx.dataFormat.formatdate(StartDate, 'yyyy-MM-dd');
+        var formattedEndDate = $.jqx.dataFormat.formatdate(EndDate, 'yyyy-MM-dd');
+        var DateRange = formattedStartDate + "!" + formattedEndDate;
+        var e = document.getElementById("DropdownlistName");
+        var FilterType = e.options[e.selectedIndex].text;
+        var FilterValue = null;
+        if (FilterType == "RequestNameLike")
+        {
+            TextBoxValue1 = document.getElementById("RequestNameTextBox");
+            FilterValue = TextBoxValue1.value;
+        }
+        else if (FilterType == "ProductCodeNameLike")
+        {
+            TextBoxValue2 = document.getElementById("ProductNameTextBox");
+            FilterValue = TextBoxValue2.value;
+        }
+        else
+             FilterValue = DateRange;
+
+        //if user does not provide any value in filters, raise an alert and stop further processing.
+        if (FilterValue == null || FilterValue == '')
+        {
+            alert("Please provide some value for filter.")
+            return;
+        }
+
+        fnReportOfProducts(FilterType, FilterValue);
+
+    }
+
+
+    function fnReportOfProducts(FilterType,FilterValue)
+    {
+        var datafieldsProductReport =new Array();
+            var columnsProductReport = new Array();
+            datafieldsProductReport.push({ name: 'ProductName', type: 'string' });
+            columnsProductReport.push({ text: 'ProductName', datafield: 'ProductName', width: '10%' });
+
+            datafieldsProductReport.push({ name: 'ProductCode', type: 'string' });
+            columnsProductReport.push({ text: 'ProductCode', datafield: 'ProductCode', width: '10%' });
+
+            datafieldsProductReport.push({ name: 'SysCat', type: 'string' });
+            columnsProductReport.push({ text: 'SysCat', datafield: 'SysCat', width: '15%'  });
+            datafieldsProductReport.push({ name: 'RequestName', type: 'string' });
+            columnsProductReport.push({ text: 'RequestName', datafield: 'RequestName', width: '10%' });
+            datafieldsProductReport.push({ name: 'LocalPobName', type: 'string' });
+            columnsProductReport.push({ text: 'LocalPobName', datafield: 'LocalPobName', width: '10%' });
+            //9Jan2019 - rearranging columns as columns from SP in DB are rearranged which are further used in Downloading of report
+            datafieldsProductReport.push({ name: 'GlobalPobName', type: 'string' });
+            columnsProductReport.push({ text: 'GlobalPobName', datafield: 'GlobalPobName', width: '15%' });
+            //datafieldsProductReport.push({ name: 'GlobalPobNameRet', type: 'string' });
+            //columnsProductReport.push({ text: 'GlobalPobName(Ret)', datafield: 'GlobalPobNameRet', width: '15%' });
+        datafieldsProductReport.push({ name: 'CopaDimension', type: 'string' });
+        columnsProductReport.push({ text: 'Copa Dimension', datafield: 'CopaDimension', width: '15%' });
+            //datafieldsProductReport.push({ name: 'Copa5', type: 'string' });
+            //columnsProductReport.push({ text: 'Copa5', datafield: 'Copa5', width: '15%' });
+            //datafieldsProductReport.push({ name: 'Copa2Ret', type: 'string' });
+            //columnsProductReport.push({ text: 'Copa2(Ret)', datafield: 'Copa2Ret', width: '15%' });
+            //datafieldsProductReport.push({ name: 'Copa5Ret', type: 'string' });
+            //columnsProductReport.push({ text: 'Copa5(Ret)', datafield: 'Copa5Ret', width: '15%' });
+
+            var data = @Html.Raw(Json.Encode(ColumnsForProductReport));
+            for (var i = 0; i < data.length; ++i) {
+                //datafieldsProductReport.push({ name: data[i].Label, type: data[i].DataType });
+                //columnsProductReport.push({ text: data[i].Label, datafield: data[i].Label, width: '12%' });
+                datafieldsProductReport.push({ name: data[i].Label, type: data[i].DataType });
+                if (data[i].DataType.toLowerCase() == "bit") {
+                    datafieldsProductReport.push({ name: data[i].Label, type: 'bool' });
+                    columnsProductReport.push({ text: data[i].Label, datafield: data[i].Label, columntype: 'checkbox' });
+                }
+                else if (data[i].DataType.toLowerCase() == "datetime") {
+                    datafieldsProductReport.push({ name: data[i].Label, type: 'date' });
+                    columnsProductReport.push({ text: data[i].Label, datafield: data[i].Label, cellsformat: 'dd/MM/yyyy', columntype: 'date' });
+                }
+                else {
+                    datafieldsProductReport.push({ name: data[i].Label, type: data[i].DataType });
+                    columnsProductReport.push({ text: data[i].Label, datafield: data[i].Label,width:'12%'});
+                }
+            }
+            
+
+            var sourceProductReport = {
+            dataType: "json",
+            dataFields: datafieldsProductReport,
+
+
+            data: { FilterType:FilterType ,FilterValue: FilterValue },
+             url: "/Reports/GetFReportOfProducts"
+            };
+
+            var dataAdapterProductReport = new $.jqx.dataAdapter(sourceProductReport);
+            $("#jqxGridProductReport").jqxGrid({
+                source: dataAdapterProductReport,
+                width: '100%',
+                columnsresize: true,
+                pageable: true,
+                pagesize: 200,
+                filterable: true,
+                autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                sortable: true,
+                keyboardnavigation: false,
+
+            ready: function () {
+            },
+            columns: columnsProductReport
+
+
+
+            });
+
+
+    }
+
+    function DownloadReportofProducts() {  
+        var StartDate = $('#jqxDateTimeInputStartDate').jqxDateTimeInput('getDate');
+        var EndDate = $('#jqxDateTimeInputEndDate').jqxDateTimeInput('getDate');
+        var formattedStartDate = $.jqx.dataFormat.formatdate(StartDate, 'yyyy-MM-dd');
+        var formattedEndDate = $.jqx.dataFormat.formatdate(EndDate, 'yyyy-MM-dd');
+        var DateRange = formattedStartDate + "!" + formattedEndDate;
+        var e = document.getElementById("DropdownlistName");
+        var FilterType = e.options[e.selectedIndex].text;
+        var FilterValue = null;
+        if (FilterType == "RequestNameLike") {
+            TextBoxValue1 = document.getElementById("RequestNameTextBox");
+            FilterValue = TextBoxValue1.value;
+        }
+        else if (FilterType == "ProductCodeNameLike") {
+            TextBoxValue2 = document.getElementById("ProductNameTextBox");
+            FilterValue = TextBoxValue2.value;
+        }
+        else
+            FilterValue = DateRange;
+
+        if (FilterValue == null || FilterValue == '') {
+            alert("Please provide some value for filter.")
+            return;
+        }
+
+        window.location.href = '/Reports/DownloadReportofProducts?FilterType=' + FilterType + '&FilterValue=' + FilterValue;
+    }
+
+</script>
+<div class="col-md-12 col-lg-12">
+    <label for="Filters" class="col-lg-2 col-md-2">Select Filter</label>
+@Html.DropDownList("DropdownlistName", new SelectList(new List<SelectListItem> {
+    new SelectListItem { Text = "DateRange", Value = "1"},
+    new SelectListItem { Text = "ProductCodeNameLike", Value = "3" },
+    new SelectListItem { Text = "RequestNameLike", Value = "2"}}, "Value", "Text"), "--Select Filter--", new { @class = "form-control" })
+
+    <br />
+
+<div class="col-md-12 col-lg-12 boxes" id="DateRange" style="display:none">
+    <div class="col-md-5 col-lg-5">
+        <label for="Interval" class=" col-lg-7 col-md-7">Request created between</label>
+        <div id='jqxDateTimeInputStartDate'></div>
+    </div>
+    <div class="col-md-3 col-lg-3">
+        <label for="Buckets" class=" col-lg-3 col-md-3">and: </label>
+        <div id='jqxDateTimeInputEndDate'></div>
+    </div>
+    <div class="col-md-4 col-lg-4">
+        <input type="button" id="GetDetails" class="btn btn-red" value="Go" onclick="fnGetReportOfProducts();" />
+        <i id="csvExport1"  onclick="DownloadReportofProducts();"  class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i>
+     </div>
+
+</div>
+
+<div class="col-md-12 col-lg-12 boxes" id="RequestName" style="display:none">
+    <div class="col-md-8 col-lg-8">
+        <label for="RequestName" class=" col-lg-3 col-md-3">RequestName Like</label>
+        @Html.TextBox("RequestNameTextBox", null, new { @class = "form-control" })
+    </div>
+    <div class="col-md-4 col-lg-4">
+        <input type="button" id="GetDetails" class="btn btn-red" value="Go" onclick="fnGetReportOfProducts();" />
+        <i id="csvExport2" onclick="DownloadReportofProducts();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i>
+     </div>
+</div>
+
+<div class="col-md-12 col-lg-12 boxes" id="ProductCodeName" style="display:none">
+    <div class="col-md-9 col-lg-9">
+        <label for="RequestName" class=" col-lg-4 col-md-4">ProductCode or ProductName Like</label>
+        @Html.TextBox("ProductNameTextBox", null, new { @class = "form-control" })
+    </div>
+    <div class="col-md-3 col-lg-3">
+        <input type="button" id="GetDetails" class="btn btn-red" value="Go" onclick="fnGetReportOfProducts();" />
+        <i id="csvExport3"  onclick="DownloadReportofProducts();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i>
+     </div>
+</div>
+</div>
+<br />
+<div id="jqxGridProductReport"></div>
+

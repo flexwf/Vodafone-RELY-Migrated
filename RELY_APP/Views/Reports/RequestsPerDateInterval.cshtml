@@ -1,0 +1,112 @@
+﻿
+
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        fnRequestsPerDateInterval();
+    });
+
+    function DownloadAccountingMemo() {
+        $.ajax({
+            data: { EntityType: 'LProducts', EntityId: '168' },
+            cache: false,
+            url: "/Reports/DownloadAccountingMemo",
+            //dataType: "json",
+            type: "POST",
+            success: function (data) {
+                alert('Extract ran successfully and files has been saved in shared extract folder');
+            },
+            error: function (reponse) {
+
+                //alert();
+                alert("error : " + reponse);
+            }
+        });
+    }
+
+    function fnRequestsPerDateInterval() {
+
+        var sourceRequestsPerDateInterval = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Months', type: 'string' },
+                { name: 'Request', type: 'int' }
+            ],
+            //data: { WFType: WFType },
+            url: "/Reports/GetRequestsPerDateInterval"
+        };
+        var dataAdapterRequestsPerDateInterval = new $.jqx.dataAdapter(sourceRequestsPerDateInterval);
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterRequestsPerDateInterval,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            pagesizeoptions: ['50', '100', '200', '500', '1000'],
+            ready: function () {
+            },
+            columns: [
+
+                { text: 'Months', datafield: 'Months' },
+                { text: '# of Requests', datafield: 'Request' }
+            ]
+        });
+    }
+
+    //DownloadReqPerDateInt
+    function DownloadReqPerDateInt() {
+        window.location.href = '/Reports/DownloadReqPerDateInt';
+    }
+</script>
+
+<input type="button" class="btn btn-red" value="Download Accounting Memo" onclick="DownloadAccountingMemo();" style="display:none;" />
+<br />
+<br />
+<div class="col-md-12 col-lg-12">
+    <div class="boxes">
+        <div class="col-md-12 col-lg-12 rely-labels">
+            <div class="col-md-5 col-lg-5" style="display:none;">
+                <div class="col-md-4 col-lg-4">
+                    Date Range:
+                </div>
+                <div id='jqxDateTimeInputStartDate'></div>
+
+            </div>
+            <div class="col-md-5 col-lg-5" style="display:none;">
+                <div class="col-md-2 col-lg-2">
+                    To:
+                </div>
+                <div id='jqxDateTimeInputEndDate'></div>
+
+            </div>
+
+            <div class="col-md-offset-1 pull-right" style="padding-right:0px;">
+                @*<div class="col-md-2 col-lg-2">
+                    System:
+                </div>*@
+                @*<div id="WftypesDropdownlist" class="col-lg-2" style="background:white !important;"></div>&nbsp;*@
+                @*<input type="button" class="btn-red" value="Go" onclick="fnShowRequestPerStatus();" style="height:25px; text-align: center;" />&ensp;*@
+                @*<h class="text-danger text-capitalize"><i id="csvExport" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important" onclick="DownloadReqPerDateInt();"></i></h>*@
+                @*<input type="button" id="csvExport" class="btn btn-red" value="Download" style="height:25px; text-align: center;" />*@
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-1" style="margin-bottom:10px;padding-left:0px;">
+            <button type="button" class="btn btn-red-SideLayout btn-cons" id="HistoryDownload" name="HistoryDownload" onclick=" DownloadReqPerDateInt();">Download</button>
+        </div>
+        
+        <br />
+        <div id="jqxgrid"></div>
+    </div>
+</div>

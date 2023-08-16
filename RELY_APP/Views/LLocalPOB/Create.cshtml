@@ -1,0 +1,562 @@
+﻿@model RELY_APP.ViewModel.LLocalPOBViewModel
+@{
+    
+    var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+}
+@*<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>*@@*//this script will contain methods common in different views*@
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+@*@Scripts.Render("~/bundles/jQuery-File-Upload")*@
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>@*SS added this line to remove error due to version difference in jquery which is not compatible with today's browsers*@
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+<script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    //This variable is defined to store value if form has any changes since it has loaded
+     var isChanged = false;
+     var LocalPobId = 0;
+     var CheckBoxAttributeValues = 'AttributeB01:null|AttributeB02:null|AttributeB03:null|AttributeB04:null|AttributeB05:null|AttributeB06:null|AttributeB07:null|AttributeB08:null|AttributeB09:null|AttributeB10:null';
+    var TypeId = 0;
+    var CopaId1 ;
+    var CopaId2  ;
+    var CopaId3 ;
+    var CopaId4 ;
+    var GPobId1 ;
+    var GPobId2 ;
+
+    $(document).ready(function () {
+
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+    $('input:checkbox').click(function() {
+		if ($(this).is(':checked')) {
+
+        $(this).prop('checked', true);
+		}
+	});
+
+        //Add JqxLoader when form is submitted to disable further clicks
+        $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+        //The below code checks for changes in form controls and pdates the flag
+        $('input,select,textarea').change(function () {
+            isChanged = true;
+        })
+   
+        // Method to load jqxtabs in view.
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+
+
+        var FormType = '@ViewBag.FormType';
+        if (FormType == 'Create') {
+            LocalPobId = LocalPobId;
+        }
+
+
+
+
+    //source for LocalPOB Type dropdown
+         var sourceLPobTypeDropdownlist = {
+             dataType: "json",
+             cache: false,  
+             dataFields: [
+                 { name: 'Id', type: 'string' },
+                 { name: 'Name', type: 'string' },
+             ],
+             id: "Id",
+             data: {selected: '@Model.LocalPobTypeId'},
+             url: "/LLocalPOB/GetLPobType"
+         };
+         var dataAdapterLPob = new $.jqx.dataAdapter(sourceLPobTypeDropdownlist, { autoBind: true, async: false })
+
+         $("#LPobdropdownlist").jqxDropDownList({
+             filterable: true,
+             source: dataAdapterLPob,
+             searchMode: 'containsignorecase',
+             width: '277px',
+             height: '25px',
+
+             displayMember: "Name",
+             valueMember: "Id",
+
+         });
+        $('#LPobdropdownlist').on('change', function (event) {
+             var args = event.args;
+             if (args) {
+                 // index represents the item's index.
+                 var index = args.index;
+                 var item = args.item;
+                 // get item's label and value.
+                 var label = item.label;
+                 var value = item.value;
+                 TypeId = value;
+                 FnGetAttributes(value);
+             }
+         });
+
+    var TransactionId='@Model.Id';
+    if(TransactionId == 0)
+    {
+        //document.getElementById('SpanVersions').style.display = 'block';
+          $("#LPobdropdownlist").jqxDropDownList('selectItem','@Model.LocalPobTypeId');
+        $("#LPobdropdownlist").jqxDropDownList('disabled',true);
+    }
+
+
+        document.getElementById('TypeDiv').style.display = 'none';
+        var Source = '@Model.Source';
+        if(Source == 'Product'){
+            document.getElementById('saveclose').style.display = 'block';
+            document.getElementById('BackButton').style.display = 'none';
+        }else {
+            document.getElementById('saveclose').style.display = 'none';
+            document.getElementById('BackButton').style.display = 'block';
+        }
+    });//end of document.ready
+
+    function FnPopultaeDropDown(){
+     $("#LPobdropdownlist").jqxDropDownList('selectItem','@Model.LocalPobTypeId');
+        $("#LPobdropdownlist").jqxDropDownList('disabled',true);
+    }
+
+    function FnPopulateAttributes(){
+
+        //These lines add the value to connection date and order date if present in model
+
+            //These lines add the value to attributes columns textbox if present in Model
+        @if (! (Model.AttributeC01=="" || Model.AttributeC01 == null)) {
+            @: $('#AttributeC01').val('@Model.AttributeC01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC02=="" || Model.AttributeC02 == null)) {
+            @: $('#AttributeC02').val('@Model.AttributeC02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC03=="" || Model.AttributeC03 == null)) {
+            @: $('#AttributeC03').val('@Model.AttributeC03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC04=="" || Model.AttributeC04 == null)) {
+            @: $('#AttributeC04').val('@Model.AttributeC04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC05=="" || Model.AttributeC05 == null)) {
+            @: $('#AttributeC05').val('@Model.AttributeC05');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI01 == 0 || Model.AttributeI01 == null)) {
+            @: $('#AttributeI01').val('@Model.AttributeI01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI02 == 0 || Model.AttributeI02 == null)) {
+            @: $('#AttributeI02').val('@Model.AttributeI02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI03 == 0 || Model.AttributeI03 == null)) {
+            @: $('#AttributeI03').val('@Model.AttributeI03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI04 == 0 || Model.AttributeI04 == null)) {
+            @: $('#AttributeI04').val('@Model.AttributeI04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI05 == 0 || Model.AttributeI05 == null)) {
+            @: $('#AttributeI05').val('@Model.AttributeI05');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN01 == 0)) {
+            @: $('#AttributeN01').val('@Model.AttributeN01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN02 == 0)) {
+            @: $('#AttributeN02').val('@Model.AttributeN02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN03 == 0)) {
+            @: $('#AttributeN03').val('@Model.AttributeN03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN04 == 0)) {
+            @: $('#AttributeN04').val('@Model.AttributeN04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN05 == 0)) {
+            @: $('#AttributeN05').val('@Model.AttributeN05');
+        }
+/**/
+        @if ( Model.AttributeB01 == true) {
+            @: $('#AttributeB01').prop('checked', true);
+        }
+/**/
+         @if ( Model.AttributeB02 == true) {
+            @: $('#AttributeB02').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB03 == true) {
+            @: $('#AttributeB03').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB04 == true) {
+            @: $('#AttributeB04').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB05 == true) {
+            @: $('#AttributeB05').prop('checked', true);
+        }
+
+    @if (Model.AttributeD01.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD01.Value.Year', '@Model.AttributeD01.Value.Month'-1, '@Model.AttributeD01.Value.Day')
+            @: $('#AttributeD01').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD02.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD02.Value.Year', '@Model.AttributeD02.Value.Month'-1, '@Model.AttributeD02.Value.Day')
+            @: $('#AttributeD02').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD03.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD03.Value.Year', '@Model.AttributeD03.Value.Month'-1, '@Model.AttributeD03.Value.Day')
+            @: $('#AttributeD03').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD04.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD04.Value.Year', '@Model.AttributeD04.Value.Month'-1, '@Model.AttributeD04.Value.Day')
+            @: $('#AttributeD04').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD05.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD05.Value.Year', '@Model.AttributeD05.Value.Month'-1, '@Model.AttributeD05.Value.Day')
+            @: $('#AttributeD05').jqxDateTimeInput('setDate', Connection);
+        }
+
+    }
+
+    function FnClickBottomButtons(ActionName, StepParticipantActionId)
+    {
+    isChanged = false;
+    var WorkflowId = @ViewBag.WorkflowId;
+    var StepId = '@ViewBag.StepId';
+    var Source = '@Model.Source';
+        var TransactionId = @Model.Id;
+        var GlobalComment = document.getElementById("WFComments").value;
+        FnClickSecondaryButtons(ActionName, WorkflowId, StepId, Source, TransactionId, GlobalComment, StepParticipantActionId);
+    }
+
+    //Calling Partial View for History Grid and Attachment File Grid
+         @{
+             Html.RenderPartial("_HistoryGridPartial");
+
+             //-----------23/06/2018  comment for no need of this method on create page-------------
+             // Html.RenderPartial("_AttachmentGridPartial");
+      }
+
+     function FnSubmit(IsClose)
+    {
+         if ($("#AttributeB01").length > 0) {
+             if (document.getElementById("AttributeB01").checked) {
+                  document.getElementById('AttributeB01').value =  true;
+             }
+        }
+        if ($("#AttributeB02").length > 0){
+            if(document.getElementById('AttributeB02').checked)
+                   document.getElementById('AttributeB02').value =  true;
+        }
+         if ($("#AttributeB03").length > 0){
+             if(document.getElementById('AttributeB03').checked)
+                   document.getElementById('AttributeB03').value =  true;
+        }
+         if ($("#AttributeB04").length > 0){
+            if(document.getElementById('AttributeB04').checked)
+                   document.getElementById('AttributeB04').value =  true;
+        }
+        if ($("#AttributeB05").length > 0){
+            if(document.getElementById('AttributeB05').checked)
+                   document.getElementById('AttributeB05').value =  true;
+        }
+    document.getElementById('LocalPobTypeId').value = TypeId;
+    
+    var StartDate = null;
+    var EndDate = null;
+     if ($("#AttributeD02").length > 0){
+          EndDate = $('#AttributeD02').jqxDateTimeInput('getText');
+         }
+       document.getElementById("EffectiveStartDate").value = StartDate;
+        document.getElementById("EffectiveEndDate").value = EndDate;
+    $("#frm").validate();
+         if ($('#frm').valid()) {
+             isChanged = false;
+             //debugger;
+             sessionStorage.setItem("LatestLocalPobName", document.getElementById('Name').value);
+             var Form = $("#frm");
+             var Source = '@Model.Source';
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize() + "&CheckBoxAttributeValues=" + CheckBoxAttributeValues,
+                 cache: false, 
+                 url: "/LLocalPOB/Create",
+                 //dataType: "json",
+                 success: function (data) {
+                     document.getElementById("Id").value = data.Id;
+                     if (data.ErrorMessage) {
+                         document.getElementById("ErrorMessageDetails").value = data.ErrorMessage;
+                         alert(data.ErrorMessage);//In case of ErrorMessage, POp up is displayed. It will be updated in future, instead we will display as error just like other pages
+                     }
+                     else {
+                          alert('LocalPob saved sucessfully');
+                         if('@Model.Source' == 'Product' && IsClose) {
+                                  window.close();
+                         }
+                         if (IsClose) {
+                             window.location.href = "/GenericGrid/Index";
+                         } else {
+                             window.location.href = "/LLocalPOB/Edit/" + data.Id + "?FormType=Edit&Source=" + Source;
+                         }
+                     }//end of else
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+             });
+
+         }
+     }
+
+     //This function is used to store comments typed on any of the text area
+     var GlobalComment = '';
+     function FnAttachComments(Comments) {
+         GlobalComment = Comments;
+         document.getElementById('Comments').value = Comments;
+     }
+     function getGlymph() {
+         return ("<i class=\"fa fa-plus\" aria-hidden=\"true\" style=\"color:#e60000;font-size:20px !important;\" title=\"Add SSP\"></i>");
+     }
+
+
+     function FnAttach() {
+         alert("Functionality not yet implemented.");
+     }
+
+     //This method is called when we leave this page to check if there are any changes in form
+     window.onbeforeunload = function () {
+         if (isChanged) {
+             return "Are you sure you want to leave this page ? There are unsaved changes that will be lost";
+         }
+         //SS commented this because it is making issues on downloading file fom AttachedFiles$('#jqxLoader').jqxLoader('open');
+     }
+    //getting Company specific attributes after LocalPobType selection
+     function FnGetAttributes(LocalPobTypeId){
+    //alert("LocalPobType" + LocalPobTypeId);
+        
+         $.ajax({
+             type: "GET",
+             cache: false,
+                 data: { LocalPobTypeId :LocalPobTypeId } ,
+                 url: "/LLocalPOB/GetAttributes",
+                 success: function (data) {//using -1 as transactionId in Create as 0 is possible value for transaction
+                    GenerateCompanySpecificForm(data, 'LocalPobs', -1);//call this method placed in ProjectScript file to repaint the form with new labels order and validations
+   // document.getElementById('LocalPobTypeId').style.pointerEvents = 'none';
+                    document.getElementById('LPobdropdownlist').style.backgroundColor = 'lightgray';
+    $("#LPobdropdownlist").jqxDropDownList('disabled',true);
+   // theme: 'lightgrey',
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+             });
+        }
+
+</script>
+
+<div id="jqxLoader">
+</div>
+
+@using (Html.BeginForm("Create", "LLocalPOB", FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+    @Html.HiddenFor(m => m.LocalPobTypeId)
+    @*@Html.HiddenFor(m => m.CopaId1)
+        @Html.HiddenFor(m => m.CopaId2)
+        @Html.HiddenFor(m => m.CopaId3)
+        @Html.HiddenFor(m => m.CopaId4)
+        @Html.HiddenFor(m => m.GlobalPobId1)
+        @Html.HiddenFor(m => m.GlobalPobId2)*@
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.Hidden("Comments")
+    @Html.Hidden("FormType")
+    @Html.Hidden("EffectiveStartDate")
+    @Html.Hidden("EffectiveEndDate")
+    @Html.Hidden("WorkFlowId")
+    @Html.Hidden("ProductId")
+    @Html.Hidden("PobStDt")
+    @Html.Hidden("PobEnDt")
+    @Html.Hidden("StepId")
+    @Html.HiddenFor(m => m.SspId)
+    @Html.HiddenFor(m => m.UpdatedById)
+    @Html.HiddenFor(m => m.CreatedById)
+    @Html.HiddenFor(m => m.CreatedDateTime)
+    @Html.HiddenFor(m => m.UpdatedDateTime)
+    @Html.HiddenFor(m => m.Status)
+    @Html.HiddenFor(m => m.Version)
+    @Html.HiddenFor(m => m.WFOrdinal)
+    @Html.HiddenFor(m => m.WFStatus)
+    @Html.HiddenFor(m => m.WFType)
+    @Html.HiddenFor(m => m.WFRequesterId)
+    @Html.HiddenFor(m => m.WFRequesterRoleId)
+    @Html.HiddenFor(m => m.WFAnalystId)
+    @Html.HiddenFor(m => m.WFManagerId)
+    @Html.HiddenFor(m => m.WFCurrentOwnerId)
+    @Html.HiddenFor(m => m.Source)
+    <div id="ErrorMessageDetails"></div>
+    <div class="col-md-11 col-lg-11">
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels ", @style = "text-align: right;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div id="TypeDiv" name="TypeDiv" class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.LocalPobTypeId, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right; " })
+           
+            <div class="col-md-11 col-lg-11">
+                <div id="LPobdropdownlist" style="background:white !important;"></div>
+            </div>
+        </div>
+        <div class="col-md-10 col-lg-10 col-sm-10" style="min-height:80px;">
+            @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "col-md-6 col-lg-6 rely-labels ", @style = "text-align: left;" })
+            <div class="col-md-12 col-lg-12">
+                @Html.TextAreaFor(model => model.Description, new { @class = "form-control ", @style = "min-height:70px;min-width:706px;" })
+                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <div id="ButtonsDiv" name="ButtonsDiv">
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back&nbsp;</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick="FnSubmit(false);">Save</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="saveclose" name="saveclose" onclick="FnSubmit(true);">Save & Close</button>
+            <label for="FileUpload" class="btn btn-borderRed-SideLayout btn-cons" style="font-weight:normal; padding:4px;">Attach</label>
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+        </div>
+        <div name="SecondaryFormButtons" id="SecondaryFormButtons">
+            @Html.Raw(ViewBag.BottomButtons)
+        </div>
+    </div>
+
+    <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+        <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+            <ul class="nav nav-tabs tabs tabs-container-border ">
+                <li style="margin-left: 30px;">Attributes</li>
+                <li>SSP</li>
+                @*<li>Versions </li>*@
+                <li>Global Pob</li>
+                <li>Copa Dimesion</li>
+                <li>Comments </li>
+                <li>History</li>
+                <li>Attached Files</li>
+
+
+            </ul>
+            <div class="tab-content" style="padding:10px;">
+                <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+
+                </div>
+            </div>
+            <div class="tab-content" style="padding:3px;">
+                &ensp; <br />
+                <div id="jqxGridSSP"></div>
+                <textarea id="History" name="History" placeholder="Press Save button first and come back here to attach SSP" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <br />
+                <div id="jqxgridGpobMapping"></div>
+                <textarea id="History" name="History" placeholder="Press Save button first and come back here to attach Global pob" style="min-height:100px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <br />
+                <div id="jqxgridCopaMapping"></div>
+                <textarea id="History" name="History" placeholder="Press Save button first and come back here to attach Copa Dimension" style="min-height:100px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                @*<textarea id="Comments" name="Comments" style="min-height:120px;" class=" textarea1" onchange="FnAttachComments(this.value)"></textarea>*@
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div id="jqxgridHistory"></div>
+                <textarea id="History" name="History" placeholder="No History so far" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div id="jqxgrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+}
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system for Upload Utility*@
+<div class="col-md-8" id="FileDiv">
+</div>
+

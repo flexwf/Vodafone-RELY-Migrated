@@ -1,0 +1,271 @@
+﻿<script>
+    var CurrentWorkFlowId = 0;
+    var MaxOrdinal ;
+    MaxOrdinal = '@TempData["MaxStepOrdinal"]';
+    //funtion to get the step details for the Selected workflow
+    function FnGetStepsInformation(WorkFlowId) {
+        MaxOrdinal = '@TempData["MaxStepOrdinal"]';
+        var sourceSteps = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'WorkFlowId', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'Label', type: 'string' },
+                { name: 'Ordinal', type: 'int' },
+                { name: 'Skip', type: 'bool' },
+                { name: 'SkipFunctionName', type: 'string' },
+                { name: 'Banner', type: 'string' },
+                { name: 'DoNotNotify', type: 'bool' },
+                { name: 'IsReady', type: 'bool' },
+                { name: 'Description', type: 'string' }
+            ],
+            id: "Id",
+            data: { WorkFlowId: WorkFlowId },
+            url: "/WSteps/GetByWorkFlowId",
+            root: 'Rows',
+        };
+        CurrentWorkFlowId = WorkFlowId;
+        /* -- Information for Steps Dropdown - */
+        var StepDropDownSource = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+            ],
+            id: 'Id',
+            data: { WorkFlowId: WorkFlowId },
+            url: "/WSteps/GetStepsDropDown"
+
+        };
+        dataAdapterSendToStepDropDown = new $.jqx.dataAdapter(StepDropDownSource, { async: false, autoBind: true })
+
+
+        var dataAdapterSteps = new $.jqx.dataAdapter(sourceSteps)
+        var validateFuncSteps = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        var validateFuncStepName = function (datafield, value) {
+            if (value.match(/\ /)) {
+                return { message: "Fieldcannot contain spaces", result: false };
+            }
+            return true;
+        }
+        var validateFuncStepsOrdinal = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+
+            else if (value < MaxOrdinal) {
+                var r = confirm('You are attempting to insert a step between existing steps.  Do you wish to continue?');
+                if (r == false)
+                    return false ;
+                else
+                    return true;
+            }
+           return true;
+        }
+        var cellsrenderersteps = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgridSteps').jqxGrid('getrowdata', row);
+
+            isStepChanged = true;
+            return '&emsp;<a href="#" onclick="FnDeleteStep(' + rowdata.Id + ',' + CurrentWorkFlowId + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+
+        };
+        $('#jqxgridSteps').jqxGrid({
+            source: dataAdapterSteps,
+            width: "100%",
+            autoheight: true,
+            columnsresize: true,
+
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'singlerow',
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+
+            columns: [
+                { text: 'Name', datafield: 'Name', validateEverPresentRowWidgetValue: validateFuncSteps, validateEverPresentRowWidgetValue: validateFuncStepName},
+                { text: 'Label', datafield: 'Label', validateEverPresentRowWidgetValue: validateFuncSteps},
+                { text: 'Ordinal', datafield: 'Ordinal', validateEverPresentRowWidgetValue: validateFuncStepsOrdinal,editable:false},
+                //{ text: 'Skip', datafield: 'Skip' ,columntype:'checkbox'},
+                //{ text: 'SkipFunction', datafield: 'SkipFunctionName' },
+                { text: 'Banner', datafield: 'Banner' },
+                //{ text: 'DoNotNotify', datafield: 'DoNotNotify' },
+                { text: 'IsReady', datafield: 'IsReady', columntype: 'checkbox'},
+                { text: 'DoNotNotify', datafield: 'DoNotNotify', columntype: 'checkbox' },
+                { text: 'Description', datafield: 'Description' },
+                { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderersteps, width: '10%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+
+        });
+        $("#jqxgridSteps").on('cellvaluechanged', function (event) {
+            var row = event.args.rowindex;
+            var rowdata = $("#jqxgridSteps").jqxGrid('getrowdata', row);
+            editedRows.push({ index: row, data: rowdata });
+            isStepChanged = true;
+        });
+        $("input.form-control").val('');
+    }
+
+
+    function FnSaveStepsData() {
+        var arr = [];
+        var rows = $('#jqxgridSteps').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            arr[i][1] = (rows[i].Name == null) ? '' : rows[i].Name;
+            arr[i][2] = (rows[i].Label == null) ? '' : rows[i].Label;
+            arr[i][3] = (rows[i].Banner == null) ? '' : rows[i].Banner;
+            arr[i][4] = (rows[i].Skip == null) ? false : rows[i].Skip;
+            arr[i][5] = (rows[i].SkipFunctionName == null) ? '' : rows[i].SkipFunctionName;
+            arr[i][6] = (rows[i].Description == null) ? '' : rows[i].Description;
+            arr[i][7] = (rows[i].IsReady == null) ? false : rows[i].IsReady;
+            arr[i][8] = (rows[i].DoNotNotify == null) ? false : rows[i].DoNotNotify;
+            arr[i][9] = (rows[i].Ordinal == null) ? false : rows[i].Ordinal;
+        }
+        $.ajax({
+            data: { GridData: arr, WorkFlowId: CurrentWorkFlowId },
+            url: "/WSteps/SaveData",
+            cache: false,
+            type: "POST",
+            success: function (data) {
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    alert("Step Added Successfully, please remember to add columns to its grid and actions to it");
+                    FnGetStepsInformation(CurrentWorkFlowId);
+                }
+              //  window.location.reload();
+            },
+            error: function (reponse) {
+
+            }
+        });
+    }
+
+
+    function FnDeleteStep(Id, WorkFlowId) {
+        var r = confirm('Step and other configurations will be deleted. \n Do you want to continue?');
+        if (r == false) {
+
+            return;
+        }
+        else {
+            $('#jqxTabs').hide();
+            //$('#jqxtest').show();
+            $('#loadertext').show();
+            $('#btnPrevious').hide();
+            $('#btnNext').hide();
+
+            $.ajax({
+                data: { Id: Id, WorkFlowId: WorkFlowId},
+                url: "/WSteps/DeleteById",
+                cache: false,
+                traditional: true,
+                beforeSend: function () {
+                    $('#jqxTabs').hide();
+                    $('#btnPrevious').hide();
+                    $('#btnNext').hide();
+                    $('#loadertext').show();
+
+                },
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        } else {
+                            $('#loadertext').hide();
+                            alert(data.PopupMessage);                           
+                        }
+                        $('#loadertext').hide();
+                        FnGetStepsInformation(CurrentWorkFlowId);
+                    }
+                    else {
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                complete: function () {
+                    $('#jqxTabs').show();
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    //$('#jqxtest').hide();
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+    function fnSwapStepOrdinals() {
+        var Ordinal1 = document.getElementById("input1").value;
+        var Ordinal2 = document.getElementById("input2").value;
+
+        if (Ordinal1 == '' || Ordinal1 == null || Ordinal2 == '' || Ordinal2 == null) {
+            alert("Please provide both the ordinal values.");
+            return;
+        }
+       else if (Ordinal1 == Ordinal2) {
+            alert("Source and Target ordinals can't be same");
+            $("input.form-control").val('');
+            return;
+        }
+        else if (Ordinal1 <= MaxOrdinal && Ordinal2 <= MaxOrdinal) {
+             $.ajax({
+                data: { WorkFlowId: CurrentWorkFlowId, Ordinal1: Ordinal1, Ordinal2: Ordinal2 },
+                url: "/WSteps/SwapStepOrdinals",
+                cache: false,
+                type: "POST",
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        } else {
+                            $('#loadertext').hide();
+                            alert("Steps interchanged successfully");
+                            FnGetStepsInformation(CurrentWorkFlowId);
+                        }
+                    }
+                    else {
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                }
+            });
+        }
+        //else {
+        //    alert("Steps cannot be interchanged, passed ordinal values should be less than or equals to " + MaxOrdinal);
+        //    return;
+        //}
+
+    }
+
+</script>    

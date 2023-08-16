@@ -1,0 +1,606 @@
+﻿@model RELY_APP.ViewModel.LNotificationViewModel
+<a style="cursor:pointer" onclick="fnShowPopUp();">Create</a>
+<div id="jqxgrid">
+</div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- POP up window code-->
+    <div id="notifiPopUp" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="popupHeaderEdit">
+                        Update Notifications
+                    </h4>
+                    <h4 class="modal-title" id="popupHeaderAdd">
+                        Create Notifications
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px">
+                                    @Html.Label("Workflow", htmlAttributes: new { @class = "required" })
+                                </div>
+
+                                <div class="col-sm-8 col-md-8 col-lg-8">
+                                    @*@Html.DropDownList("WorkFlowList", null, "-- Select Here --", new { @class = "form-control LNotification-EditorFor", @onchange = "fnBindStepName(this.value);" })*@
+                                    @Html.DropDownListFor(model => model.Workflow, null, "-- Please choose: --", new { @class = "form-control LNotification-EditorFor", @onchange = "fnBindStepName(this.value);" })
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px">
+                                    @Html.LabelFor(model => model.OriginatingStepName)
+                                </div>
+
+                                <div class="col-sm-8 col-md-8 col-lg-8">
+                                    @*@Html.DropDownListFor(model => model.OriginatingStepName, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", @onchange = "fnGetStepName();" })*@
+                                    @*@Html.DropDownList("OriginatingStepName", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-8", onchange = "fnGetStepName()" })*@
+                                    @Html.DropDownListFor(model => model.OriginatingStepName, new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-8", onchange = "fnGetStepName()" })
+                                </div>
+
+                            </div>
+
+                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required" })
+                                </div>
+
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                                    @Html.DropDownListFor(model => model.Name, new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-8", onchange = "fnGetStepName()" })
+                                    @*@Html.DropDownList("Name", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-8", onchange = "fnGetStepName()" })*@
+                                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                                </div>
+
+
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                    @Html.LabelFor(model => model.RoleName, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                                    @Html.DropDownListFor(model => model.RoleName, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", @onchange = "fnGetRoleName();" })
+                                    @Html.ValidationMessageFor(model => model.RoleName, "", new { @class = "text-danger" })
+                                </div>
+
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                    @Html.LabelFor(model => model.Type, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+
+                                    @Html.DropDownListFor(model => model.Type, new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null }, new SelectListItem { Text = "Transition Email", Value = "Transition Email" }, new SelectListItem { Text = "Reminder", Value = "Reminder" } }, new { @class = "form-control", @style = "text-align: left;" })
+                                   
+                                    @Html.ValidationMessageFor(model => model.Type, "", new { @class = "text-danger" })
+                                </div>
+                                
+                            </div>
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                    @Html.LabelFor(model => model.TemplateName, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                                    @Html.DropDownListFor(model => model.TemplateName, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", @onchange = "fnGetTempName();" })
+                                    @Html.ValidationMessageFor(model => model.TemplateName, "", new { @class = "text-danger" })
+                                </div>
+
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                    @Html.LabelFor(model => model.RemindAfterDays)
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                                    @Html.EditorFor(model => model.RemindAfterDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.RemindAfterDays, "", new { @class = "text-danger" })
+                                </div>
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+
+                                    <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                                        @Html.LabelFor(model => model.Description)
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                                        @*@Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control" } })*@
+                                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", @style = "min-height:100px;" })
+                                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                            <div class="modal-footer">
+                                @*button on Edit pop up*@
+                                <button id="btnedit" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Save</button>
+
+                                @*button on create pop up*@
+                                <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Create</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+
+    <script type="text/javascript">      
+    var tempid;
+    var stepid;
+        var roleid;
+        var OriginatingStepId;
+    $(document).ready(function () {
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        fnGetLNotification();
+    }); 
+
+    //methods to get the id of selected dropdown values and set into a variable which can be used to send id to controller
+    function fnGetTempName() {
+        //tempid = document.getElementById('TemplateName').value;
+        tempid = document.getElementById('TemplateName').value;
+        // alert(tempid);
+    }
+    function fnGetRoleName() {
+        //tempid = document.getElementById('TemplateName').value;
+        roleid = document.getElementById('RoleName').value;
+        // alert(tempid);
+    }
+    function fnGetStepName() {
+        //tempid = document.getElementById('TemplateName').value;
+        stepid = document.getElementById('Name').value;
+        OriginatingStepId = document.getElementById('OriginatingStepName').value;
+        // alert(tempid);
+        }   
+
+        function fnBindStepName(WorkFlowId, SelectedValueForLanding, SelectedValueForOriginating) {
+            if (WorkFlowId != '') {
+                var procemessage = "<option value=null> Please wait...</option>";
+                $("#Name").html(procemessage).show();
+                $("#OriginatingStepName").html(procemessage).show();
+                var url = "/LNotification/GetStepsNameByWorkFlowId/";
+
+                $.ajax({
+                    url: url,
+                    data: { WorkFlowId: WorkFlowId },
+                    cache: false,
+                    type: "GET",
+                    success: function (data1) {
+
+                        if (data1.length != 0) {
+
+                            var markupForLandingStep = '<option value="">-- Select Here --</option>';;//selected="selected"
+                            for (var x = 0; x < data1.length; x++) {
+                                if (data1[x].Id == SelectedValueForLanding) {
+                                    markupForLandingStep += '<option selected="selected" value="' + data1[x].Id + "\">" + data1[x].Name + '</option>';
+                                }
+                                else {
+                                    markupForLandingStep += '<option value="' + data1[x].Id + "\">" + data1[x].Name + '</option>';
+                                }
+                            }
+
+                            var markupForOrginatingStep = "<option value=null>-- Select Here --</option>";
+                            for (var x = 0; x < data1.length; x++) {
+                                if (data1[x].Id == SelectedValueForOriginating) {
+                                    markupForOrginatingStep += '<option selected="selected" value="' + data1[x].Id + "\">" + data1[x].Name + '</option>';
+                                }
+                                else {
+                                    markupForOrginatingStep += '<option value="' + data1[x].Id + "\">" + data1[x].Name + '</option>';
+                                }
+                                //markupForOrginatingStep += "<option value=\"" + data1[x].Id + "\">" + data1[x].Name + "</option>";
+                            }
+
+                            $("#Name").html(markupForLandingStep).show();
+                            $("#OriginatingStepName").html(markupForOrginatingStep).show();
+
+                        } else {
+
+                            var procemessage = "<option value=0> No Records Found..</option>";
+                            $("#Name").html(procemessage).show();
+                            $("#OriginatingStepName").html(procemessage).show();
+                        }
+                    },
+                    error: function (reponse) {
+                        alert("error : " + reponse);
+                    }
+                });
+            }
+            else {
+                alert('Worflow is required');
+            }
+        }   
+    function fnGetLNotification() {
+        var LNotificationSource = {
+            dataType: "json",
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Type', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'RemindAfterDays', type: 'int' },
+                { name: 'TemplateId', type: 'int' },
+                { name: 'TemplateName', type: 'string' },
+                { name: 'LandingStepId', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'RecipientRoleId', type: 'int' },
+                { name: 'RoleName', type: 'string' },
+                { name: 'OriginatingStepName', type: 'string' },
+            ],
+            id: 'Id',
+            url: "/LNotification/GetLNotification"
+        };
+        var dataAdapter = new $.jqx.dataAdapter(LNotificationSource);
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            if (Number(rowdata.Id) != 0 && rowdata.CompanyCode) {
+                // return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>';
+                return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>&emsp;<a href="#" onclick="Edit(' + rowdata.Id + ')"><i class="fa fa-pencil-square-o" style="color:red;font-size:15px !important;" aria-hidden="true"  title="Edit"></i>';
+            }
+            //else {
+            //    isChanged = true;
+            //    return '&emsp;<a href="#" onclick="FnDeleteGridRow(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+            //}
+        };
+        $('#jqxgrid').jqxGrid({
+            source: LNotificationSource,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,            
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Type', datafield: 'Type'/*, cellclassname: cellclass, filtertype: 'input'*/
+                },
+                {
+                    text: 'Description', datafield: 'Description'/*, cellclassname: cellclass, filtertype: 'input'*/
+
+                },
+                {
+                    text: 'RemindAfterDays', datafield: 'RemindAfterDays'/*, cellclassname: cellclass, filtertype: 'input'*/
+                },
+                {
+                    text: 'Step Name', datafield: 'Name', /*cellclassname: cellclass, filtertype: 'input', columntype: 'dropdownlist',*/
+                   
+                },
+                {
+                    text: 'Role Name', datafield: 'RoleName'/*, cellclassname: cellclass, filtertype: 'input', columntype: 'dropdownlist',*/
+                    
+                },
+                {
+                    text: 'Template Name', datafield: 'TemplateName'/*, cellclassname: cellclass, filtertype: 'input', columntype: 'dropdownlist',*/
+                   
+                },
+                {
+                    text: 'Originating Step Name', datafield: 'OriginatingStepName'/*, cellclassname: cellclass, filtertype: 'input', columntype: 'dropdownlist',*/
+
+                },
+                {
+                    text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%'/*, editable: false,*/
+                   
+                }
+            ]
+        });
+    }   
+
+        function fnShowPopUp() {
+        $("#btncreate").show();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").show();
+        $("#popupHeaderEdit").hide();
+        $("input.form-control").val('');
+        document.getElementById('Name').value = '';
+        document.getElementById('OriginatingStepName').value = '';
+        document.getElementById('RoleName').value = '';
+        document.getElementById('TemplateName').value = '';
+        document.getElementById('Description').value = '';
+        document.getElementById('Type').value = '';
+        document.getElementById('Workflow').value = '';
+        $('.text-danger').text(""); /*to clear validation message*/
+        $('#notifiPopUp').modal(); //modal pop up opens
+    }    
+
+     //this function is use to edit(on edit glimp)
+     function Edit(id) {
+        $("#btncreate").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").show();
+        $("#btnedit").show();
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("Edit", "LNotification")',
+            dataType: "html",
+            cache: false,
+            data: { id: id },
+            success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('TemplateName').value = obj.TemplateId;
+                tempid = obj.TemplateId;
+                document.getElementById('RoleName').value = obj.RecipientRoleId;
+                roleid = obj.RecipientRoleId;
+                document.getElementById('Name').value = obj.LandingStepId;
+                stepid = obj.LandingStepId;
+                document.getElementById('Name').value = obj.OriginatingStepId;
+                OriginatingStepId = obj.OriginatingStepId;
+                document.getElementById('Type').value = obj.Type;
+                document.getElementById('Description').value = obj.Description;
+                document.getElementById('Id').value = obj.Id;
+                document.getElementById('RemindAfterDays').value = obj.RemindAfterDays;
+
+                document.getElementById('Workflow').value = obj.WorkFlowId;
+                //Following function is called here because we need to bing OriginatingStepName and LandingStepName dropdown in Edit also without changing Value of Workflow dropdown
+                fnBindStepName(obj.WorkFlowId, obj.LandingStepId, obj.OriginatingStepId);
+
+                $("#notifiPopUp").modal("show");
+                $("#notifiPopUp .modal-content").html(data.html);
+            }
+        });
+        fnGetLNotification();
+    }
+
+
+    $("#btncreate").click(function (event) {
+        $("#frm").validate();
+        if ($('#frm').valid()) {           
+            $("#btncreate").show();
+            $("#popupHeaderAdd").show();
+            $("#popupHeaderEdit").hide();
+            $("#btnedit").hide();
+            $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&tempid=" + tempid + "&roleid=" + roleid + "&stepid=" + stepid + "&OriginatingStepId=" + OriginatingStepId ,
+                url: "/LNotification/Create",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            window.location.reload();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#notifiPopUp").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+        else {
+            event.stopPropagation();
+        }
+    });
+
+        function FnDelete(Id) {            
+            var r = confirm("Are you sure to delete the selected notification?");
+            if (r == false) {
+                return;
+            }
+            else {
+                $.ajax({
+                    data: { Id: Id },
+                    cache: false,
+                    url: "/LNotification/Delete",
+                    traditional: true,
+                    success: function (data) {
+                        if (data) {
+                            if (data.ErrorMessage) {
+                                alert(data.ErrorMessage);
+                            }
+                            else {
+                                alert(data.PopupMessage);
+                            }
+                            fnGetLNotification();
+                        }
+                        else {
+                            //Any unhanded error has been caught
+                            window.location.href = "/Home/Error";
+                        }
+                    },
+                    error: function (reponse) {
+                        console.log(reponse);
+                        alert("error");  //  alert("error : " + reponse);
+                    }
+                });
+            }
+        }
+
+     //This function is use to save the edited data
+     $("#btnedit").click(function (event) {
+         $("#frm").validate();
+         if ($('#frm').valid()) {
+             var id = document.getElementById('Id').value;             
+              $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&id=" + id + "&tempid=" + tempid + "&roleid=" + roleid + "&stepid=" + stepid + "&OriginatingStepId=" + OriginatingStepId,
+                url: '@Url.Action("Update", "LNotification")',
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            window.location.reload();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#notifiPopUp").modal({ "backdrop": "static" });
+                        fnGetLNotification();
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+              });
+         }
+         else {
+             event.stopPropagation();
+         }
+     });
+
+
+
+/*------------------------------------Below code is commented by Rakhi Singh on 12/09/18------------------------------------------------------------------------------*/
+   ////function to delete unsaved grid row from grid
+    //function FnDeleteGridRow(Id) {
+    //    var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //}
+
+        //var StepNameSource = {
+    //    dataType: "json",
+    //    type: "GET",
+    //    dataFields: [
+    //        { name: 'Id', type: 'int' },
+    //        /* { name: 'CompanyCode', type: 'string' }*/
+    //        { name: 'Name', type: 'string' }
+    //    ],
+    //    id: 'Id',
+    //    url: "/LNotification/BindStepNameDropDown"
+    //};
+
+    //dataAdapterStepName = new $.jqx.dataAdapter(StepNameSource, { async: false, autoBind: true })
+
+    //var RoleNameSource = {
+    //    dataType: "json",
+    //    type: "GET",
+    //    dataFields: [
+    //        { name: 'Id', type: 'int' },
+    //        { name: 'CompanyCode', type: 'string' },
+    //        { name: 'RoleName', type: 'string' }
+    //    ],
+    //    id: 'Id',
+    //    url: "/LNotification/BindRoleNameDropDown"
+    //};
+
+    //dataAdapterRoleName = new $.jqx.dataAdapter(RoleNameSource, { async: false, autoBind: true })
+
+    //var TemplateNameSource = {
+    //    dataType: "json",
+    //    type: "GET",
+    //    dataFields: [
+    //        { name: 'Id', type: 'int' },
+    //        { name: 'CompanyCode', type: 'string' },
+    //        { name: 'TemplateName', type: 'string' },
+    //    ],
+    //    id: 'Id',
+    //    url: "/LNotification/BindTemplateNameDropDown"
+
+    //};
+    //dataAdapterTemplateName = new $.jqx.dataAdapter(TemplateNameSource, { async: false, autoBind: true })
+
+
+    //function FnAddLNotification() {
+    //    var arr = [];
+    //    var rows = $('#jqxgrid').jqxGrid('getrows');
+    //    for (var i = 0; i < rows.length; i++) {
+    //        arr[i] = [];
+    //        arr[i][0] = rows[i].Id;
+
+    //        arr[i][1] = (rows[i].Type == null) ? '' : rows[i].Type;
+    //        arr[i][2] = (rows[i].Description == null) ? '' : rows[i].Description;
+    //        arr[i][3] = (rows[i].RemindAfterDays == null) ? '' : rows[i].RemindAfterDays;
+
+    //        //Section to get StepId
+    //        if (rows[i].Name) {
+    //            for (var j = 0; j < dataAdapterStepName.records.length; j++) {
+    //                if (dataAdapterStepName.records[j].Name == rows[i].Name) {
+    //                    arr[i][4] = dataAdapterStepName.records[j].Id;
+    //                    break;
+    //                }
+    //                //alert(arr[i][4] = dataAdapterStepName.records[j].Id);
+    //                //alert(rows[i].Name);
+    //            }
+    //        }
+
+    //        //Section to get RoleId
+    //        if (rows[i].RoleName) {
+    //            for (var j = 0; j < dataAdapterRoleName.records.length; j++) {
+    //                if (dataAdapterRoleName.records[j].RoleName == rows[i].RoleName) {
+    //                    arr[i][5] = dataAdapterRoleName.records[j].Id;
+    //                    break;
+    //                }
+    //            }
+    //        }
+
+    //        //Section to get TemplateId
+    //        if (rows[i].TemplateName) {
+    //            for (var j = 0; j < dataAdapterTemplateName.records.length; j++) {
+    //                if (dataAdapterTemplateName.records[j].TemplateName == rows[i].TemplateName) {
+    //                    arr[i][6] = dataAdapterTemplateName.records[j].Id;
+    //                    break;
+    //                }
+    //            }
+    //        }
+
+    //    }
+
+    //    console.log(arr)
+    //    $.ajax({
+    //        data: { GridData: arr },
+    //        url: "/LNotification/EditLNotification",
+    //        type: "POST",
+    //        // traditional: true,
+    //        success: function (data) {
+    //            window.location.reload();
+    //        },
+    //        error: function (reponse) {
+    //            //  alert("error : " + reponse);
+    //        }
+    //    });
+    //}
+    </script>
+
+

@@ -1,0 +1,176 @@
+﻿
+<script>
+    function fnLoadGpobPopup(GpobType) {
+        //source for GPOB available
+        var sourceGPob = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'Type', type: 'string' },
+                { name: 'IFRS15Account', type: 'string' },
+                { name: 'Label', type: 'string' },
+            ],
+            data: { PobCatalogueId: CatalogueId, GpobType: GpobType },
+            id: "Id",
+            url: "/GGlobalPOB/GetGGlobalPOB"
+        };
+       
+        var dataAdapterGPob = new $.jqx.dataAdapter(sourceGPob, { autoBind: true, async: false })
+        $("#jqxGridGpobPopup").jqxGrid({
+            source: dataAdapterGPob,
+            width: '100%',
+            height: '350px',
+            theme: 'bootstrap',
+            filterable: true,
+            columnsresize: true,
+            columnsreorder: true,
+            showstatusbar: false,
+            ready: function () { },
+            columns: [
+                { text: 'Name', datafield: 'Name' },
+                { text: 'IFRS15Account', datafield: 'IFRS15Account' },
+                { text: 'Type', datafield: 'Type' },
+               
+            ]
+        });
+        //$('#GpobModal').modal();
+        $('#GpobModal').modal({ backdrop: 'static', keyboard: false }, 'show'); 
+    }
+
+    function FnChooseGpob() {
+        var item = $('#jqxGridGpobPopup').jqxGrid('getselectedrowindex');
+        var UCIndicator = null;
+        var data = $('#jqxGridGpobPopup').jqxGrid('getrowdata', item);
+        if (data == null) {
+            alert("Please choose Global Pob");
+            return;
+        }
+        //var UCitem = $("#UseCaseIndicatordropdownlist").jqxDropDownList('getSelectedItem');
+        //if (UCitem == null) {
+
+        //} else {
+        //    UCIndicator = UCitem.label;
+        //}
+        //attach this Gpob to LocalPob, make entry in mapping table
+        var GpobId = data.Id;
+        var GpobStDate = null;
+
+        if ($("#GpobMappingStartDate").length > 0) {
+            GpobStDate = $('#GpobMappingStartDate').jqxDateTimeInput('getText');
+        }
+        if (GpobStDate == null || GpobStDate == '') {
+            alert("Start Date is mandatory");
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            data: "PobCatalogueId=" + CatalogueId + "&GpobMappingStartDate=" + GpobStDate + "&GpobId=" + GpobId + "&GpobType=" + GpobType,
+            cache: false,
+            url: "/LLocalPOB/AttachGpob",
+            success: function (data) {
+                var LatestGpobMappedStartDate = data.LatestGpobMappedStartDate;
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    if (LatestGpobMappedStartDate == null || LatestGpobMappedStartDate == '' || LatestGpobMappedStartDate == 'undefined') {
+                        $('#GpobMappingStartDate').jqxDateTimeInput({ value: new Date(2010, 0, 1) });
+                    } else {
+                        var javaScriptDate = new Date(parseInt(LatestGpobMappedStartDate.substr(6)));
+                        $('#GpobMappingStartDate').jqxDateTimeInput({ value: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+                        $('#GpobMappingStartDate').jqxDateTimeInput({ min: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+                    }
+                    alert("Global POB mapped successfully.");
+                    $('#jqxGridGpobPopup').jqxGrid('clearselection');
+                    //$("#UseCaseIndicatordropdownlist").jqxDropDownList('clearSelection'); 
+                    fnGetGpobDetails(GpobType);
+                }
+
+                
+            },
+            error: function (reponse) {
+                console.log(reponse);
+            }
+        });
+    }
+
+    function fnGetGpobDetails(GpobType) {
+
+        var GpobData = {
+            dataType: "json",
+            cache: false,
+            dataFields: [{ name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'PobCatalogueId', type: 'int' },
+                { name: 'UseCaseIndicator', type: 'string' },
+                { name: 'EffectiveStartDate', type: 'date' },
+                { name: 'EffectiveEndDate', type: 'date' },
+            ],
+            data: { PobCatalogueId: CatalogueId, GpobType: GpobType },
+            url: "/LLocalPOB/GetGPOBDataForGrid"
+        };
+        var dataAdapterGpobData = new $.jqx.dataAdapter(GpobData);
+         var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+           return '&emsp;<button type="button" id="DeleteGpob" name="DeleteGpob" onclick="FnDeleteGpob(); " class="GridButton">Delete</button>';
+        };
+        var ColumnsList = [
+                { text: 'Global Name', datafield: 'Name' },
+                { text: 'Start Date', datafield: 'EffectiveStartDate', cellsformat: 'dd/MM/yyyy' },
+                { text: 'End Date', datafield: 'EffectiveEndDate', cellsformat: 'dd/MM/yyyy' },
+            ];
+        if (ShowDeleteMappingLink) {
+            ColumnsList.push({ text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%' }) 
+        }
+        //Check whether the grid is already defined or not and ready for use.
+        var ready = $("#jqxgridGpobMapping").jqxGrid('ready');
+        //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+        if (typeof ready != 'undefined') {
+            $("#jqxgridGpobMapping").jqxGrid('updatebounddata');
+        }
+        else {
+            $("#jqxgridGpobMapping").jqxGrid({
+                source: dataAdapterGpobData,
+                width: '100%',
+                autoheight: true,
+                theme: 'bootstrap',
+                pageable: true,
+                pagesize: 10,
+                columnsresize: true,
+                columnsreorder: true,
+                showstatusbar: false,
+                ready: function () { },
+                columns:ColumnsList
+            });
+        }
+    }
+</script>
+
+
+<!-- This code displays a popup to get Selected LProducts-->
+<div class="modal fade" id="GpobModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3>Choose from existing Global POBs</h3>
+            </div>
+            <div class="modal-body">
+                <label class="required col-md-2 col-lg-2 rely-labels" style="text-align:left; ">Start Date</label>
+                <div id="GpobMappingStartDate"></div>
+                <br/>
+                <div id="jqxGridGpobPopup"></div>
+                <br />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red pull-left" onclick="FnChooseGpob();" data-dismiss="modal">Choose</button>&ensp;
+                <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+            </div>
+
+    </div>
+</div>
+

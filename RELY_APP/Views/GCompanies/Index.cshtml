@@ -1,0 +1,578 @@
+﻿@model RELY_APP.ViewModel.CreateCompanyViewModel
+
+<a style="cursor:pointer" id="lnkCreate" onclick="fnShowPopUp();">Create</a>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+
+
+        //This Grid will load the PasswordPolicies
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'CompanyName', type: 'string' },
+                { name: 'LogoPath', type: 'string' },
+                { name: 'PunchLine', type: 'string' },
+
+
+            ],
+            url: "/GCompanies/GetCompanies"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+
+
+            return '&emsp;<button type="button" id="EditButton" name="EditButton" onclick="FnEdit()" class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete()" class="GridButton">Delete</button>&emsp;';
+
+
+        };
+
+        var imagerenderer = function (row, datafield, value) {
+            return '<img style="margin-left: 5px;" height="30" width="50" src="' + value + '"/>';
+        }
+
+
+        $("#jqxGCompaniesGrid").jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            sortable: true,
+            columnsresize: true,
+            editable: false,
+            pageable: true,
+            pagesize: 40,
+            pagesizeoptions: ['5', '7', '10'],
+
+            enablebrowserselection: true,
+
+            filterable: true,
+
+            ready: function () {
+            },
+
+
+            columns: [
+
+                {
+                    text: 'CompanyCode', datafield: 'CompanyCode' , width: '15%'
+                },
+                {
+                    text: 'CompanyName', datafield: 'CompanyName', width: '20%'
+
+                },
+                {
+                    text: 'LogoPath', datafield: 'LogoPath', width: '24%', height:'30%' , cellsrenderer: imagerenderer
+
+                },
+                {
+                    text: 'PunchLine', datafield: 'PunchLine' , width: '24%'
+
+                },
+
+                {
+                    text: 'Actions', width: '15%', cellsrenderer: cellsrenderer
+                },
+
+            ],
+        });
+
+
+        document.getElementById("Done").addEventListener("click", function () {
+
+            $.ajax({
+                type: "Get",
+                cache: false,
+                // data: { CompanyCode: CompanyCode },
+                url: "/GCompanies/GetLogoImage",
+                dataType: "html",
+                success: function (data) {
+
+                    //var filename = data.LogoImagePath1;
+                    var fname = JSON.parse(data);
+                   // document.getElementById('divLogoImage').style.backgroundImage = "url('" + data + "')";
+                    var imagePath = "url(.." + fname + ")";
+                    document.getElementById('divLogoImage').style.backgroundImage = imagePath;
+                    @*document.getElementById('divLogoImage').style.backgroundImage = "url('@HttpContext.Current.Session["LogoImagePath"]')";*@
+                    document.getElementById('divLogoImage').style.position = "right";
+                    document.getElementById('divLogoImage').style.backgroundSize = "contain";
+                    document.getElementById('divLogoImage').style.backgroundRepeat = "no-repeat";
+                    document.getElementById('divLogoImage').style.height = "30px";
+                    $("#GCompaniesPopup").modal("show");
+                   // $("#GCompaniesPopup .modal-content").html(data.html);
+
+                }
+            })
+
+        });
+
+
+    });  //End of document ready
+
+
+
+    //function fnHidePopUp() {
+    //    $('#GCompaniesPopup').hide();
+    //}
+
+
+    function fnShowPopUp() {
+
+        $("#Update").hide();
+        $("#lblFileUploadForEdit").hide();
+        $("#lblFileUploadForCreate").show();
+        $("input.form-control").val('');
+        $('#GCompaniesPopup').modal(); //modal pop up opens
+
+    }
+
+    function FnDelete() {
+        var r = confirm("Do you want to delete Company");
+        if (r == false) {
+            return;
+        }
+        else {
+
+            var selectedrowindex = $('#jqxGCompaniesGrid').jqxGrid('selectedrowindex');
+            var rowdata = $('#jqxGCompaniesGrid').jqxGrid('getrowdata', selectedrowindex);
+            var CompanyCode = rowdata.CompanyCode;
+            if (CompanyCode == 'DE') {
+                alert('CG Company CanNot be deleted, please choose right one');
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                data: { CompanyCode: CompanyCode },
+
+                url: "/GCompanies/DeleteCompany",
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Company deleted successfully.");
+                        window.location.href = "/GCompanies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                }
+            });
+        }
+
+    }
+
+
+    function FnEdit() {
+        var GridRows = $("#jqxGCompaniesGrid").jqxGrid('getrows');
+        $("#lblFileUploadForCreate").hide();
+        $("#lblFileUploadForEdit").show();
+        $("#Update").show();
+        $("#btnSave").hide();
+        var selectedrowindex = $('#jqxGCompaniesGrid').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxGCompaniesGrid').jqxGrid('getrowdata', selectedrowindex);
+        var CompanyCode = rowdata.CompanyCode;
+
+        $.ajax({
+            type: "Get",
+            cache: false,
+            data: { CompanyCode: CompanyCode },
+            url: "/GCompanies/GetCompanyInfo",
+            dataType: "html",
+            success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('CompanyName').value = obj[0].CompanyName;
+                document.getElementById('CompanyCode').value = obj[0].CompanyCode;
+               // document.getElementById('LogoPath').value = obj.LogoPath;
+                document.getElementById('PunchLine').value = obj[0].PunchLine;
+                document.getElementById('DomainAddress').value = obj[0].DomainAddress;
+                document.getElementById('MinLength').value = obj[0].MinLength;
+                document.getElementById('MinUpperCase').value = obj[0].MinUpperCase;
+                document.getElementById('MinLowerCase').value = obj[0].MinLowerCase;
+                document.getElementById('MinNumbers').value = obj[0].MinNumbers;
+                document.getElementById('MinSpecialChars').value = obj[0].MinSpecialChars;
+                document.getElementById('MinAgeDays').value = obj[0].MinAgeDays;
+                document.getElementById('MaxAgeDays').value = obj[0].MaxAgeDays;
+                document.getElementById('ReminderDays').value = obj[0].ReminderDays;
+                document.getElementById('PreventReuse').value = obj[0].PreventReuse;
+                document.getElementById('LockoutFailedAttempts').value = obj[0].LockoutFailedAttempts;
+                document.getElementById('LockoutMinutes').value = obj[0].LockoutMinutes;
+
+                //setting ImagePath for logo
+                var imagePath = "url(.." + obj[0].LogoPath + ")";
+                document.getElementById('divLogoImage').style.backgroundImage = imagePath;
+                @* document.getElementById('divLogoImage').style.backgroundImage = "url('@HttpContext.Current.Session["LogoImagePath"]')";*@
+                document.getElementById('divLogoImage').style.position = "right";
+                document.getElementById('divLogoImage').style.backgroundSize = "contain";
+                document.getElementById('divLogoImage').style.backgroundRepeat = "no-repeat";
+                document.getElementById('divLogoImage').style.height = "30px";
+
+
+                $("#GCompaniesPopup").modal("show");
+                $("#GCompaniesPopup .modal-content").html(data.html);
+            }
+        })
+    }
+
+
+    function FnUpdateData()
+    {
+        $("#frm").validate();
+
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+            var id = document.getElementById('Id').value;
+            $.ajax({
+                type: "POST",
+                data: Form.serialize(),
+             url: '@Url.Action("UpdateData", "GCompanies")',
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Data Updated successfully.");
+                        window.location.href = "/GCompanies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+    }
+
+
+
+    function FnSaveData()
+
+   // $("#btnSave").click(function (event)
+    {
+
+        $("#Update").hide();
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+
+            $.ajax({
+                type: "POST",
+                data: Form.serialize(),
+
+                url: "/GCompanies/SaveData",
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Data saved successfully.");
+                        window.location.href = "/GCompanies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                }
+            });
+        }
+
+   }
+    //    else {
+    //        event.stopPropagation();
+    //    }
+
+    //});
+
+
+    //function FnUploadFile() {
+
+    //    var xx = document.getElementById('file1');
+    //    var filename = xx.files.item(0).name;
+    //    document.getElementById('LogoPath').value = filename;
+    //    var path = Path.GetFullPath(fileUpload.PostedFile.filename);
+
+
+
+    //}
+
+</script>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqxgridbundle")
+}
+<div id="jqxGCompaniesGrid"></div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- POP up window code-->
+    <div id="GCompaniesPopup" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:50%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Manage Companies</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-5 col-md-5 col-lg-5">
+                                <div class="col-sm-5 col-md-5 col-lg-5" style="text-align: right">
+                                    @Html.LabelFor(model => model.CompanyCode, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-7 col-md-7 col-lg-7">
+                                    @Html.EditorFor(model => model.CompanyCode, new { htmlAttributes = new { @class = "form-control focus" } })
+                                    @Html.ValidationMessageFor(model => model.CompanyCode)
+                                </div>
+                            </div>
+
+
+                            <div class="col-sm-7 col-md-7 col-lg-7">
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="text-align: right">
+                                    @Html.LabelFor(model => model.LogoPath, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: left;">
+                                    @*@Html.EditorFor(model => model.LogoPath, new { htmlAttributes = new { @class = "form-control" } })
+                                     @Html.ValidationMessageFor(model => model.LogoPath)*@
+                                    <div id="divLogoImage">
+
+                                    </div>
+                                    <label for="FileUpload" id="lblFileUploadForEdit" class="CustomFileUpload-SideLayout" style="font-weight:normal; padding:4px;width:30%">Change Logo</label>
+                                    @*<button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>*@
+
+                                    <label for="FileUpload" id="lblFileUploadForCreate" class="CustomFileUpload-SideLayout" style="font-weight:normal; padding:4px;">Upload Logo</label>
+                                    <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+
+                                    @*<label for="file1" class="btn">Browser</label>
+                                     <input id="file1" style="visibility:hidden;" type="file" onchange="FnUploadFile();">*@
+
+
+                                </div>
+
+
+
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-5 col-md-5 col-lg-5">
+                                <div class="col-sm-5 col-md-5 col-lg-5" style="text-align: right">
+                                    @Html.LabelFor(model => model.CompanyName, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-7 col-md-7 col-lg-7">
+                                    @Html.EditorFor(model => model.CompanyName, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.CompanyName)
+                                </div>
+                            </div>
+                            <div class="col-sm-7 col-md-7 col-lg-7">
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="text-align: right">
+                                    @Html.LabelFor(model => model.PunchLine, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8">
+                                    @Html.EditorFor(model => model.PunchLine, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.PunchLine)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-6 col-md-6 col-lg-6">
+                                <div class="col-sm-4 col-md-4 col-lg-4" style="text-align: left">
+                                    @Html.LabelFor(model => model.DomainAddress, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-8 col-md-8 col-lg-8" style="text-align: left">
+                                    @Html.EditorFor(model => model.DomainAddress, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.CompanyName)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <br />
+
+                    <br />
+                    <h4 class="modal-title">Password Policy Information:-</h4>
+                    <br />
+                    <br />
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinLength, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinLength, new { htmlAttributes = new { @class = "form-control focus" } })
+                                    @Html.ValidationMessageFor(model => model.MinLength)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                @*<div class="col-sm-5 col-md-5 col-lg-5" style="padding-left:0px">*@
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinUpperCase, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinUpperCase, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinUpperCase)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinLowerCase, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinLowerCase, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinLowerCase)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinNumbers, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinNumbers, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinNumbers)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinSpecialChars, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinSpecialChars, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinSpecialChars)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinAgeDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinAgeDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinAgeDays)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MaxAgeDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MaxAgeDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MaxAgeDays)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.ReminderDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.ReminderDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.ReminderDays)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.PreventReuse, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.PreventReuse, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.PreventReuse)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <br />
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.LockoutFailedAttempts, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.LockoutFailedAttempts, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.LockoutFailedAttempts)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.LockoutMinutes, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.LockoutMinutes, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.LockoutMinutes)
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-red pull-left" value="Save" id="btnSave" data-dismiss="modal" onclick="FnSaveData();">Save</button>
+                        <button type="button" class="btn btn-red pull-left" value="Update" id="Update" data-dismiss="modal" onclick="FnUpdateData();">Update</button>
+                        <button type="button" class="btn btn-red pull-left" value="Back" data-dismiss="modal" onclick="FnbackButton();">Back</button>
+
+                    </div>
+
+
+
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+}
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

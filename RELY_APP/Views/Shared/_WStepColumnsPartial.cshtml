@@ -1,0 +1,177 @@
+﻿ <script>
+    var CurrentStepId = 0;
+    //funtion to get the step details for the Selected workflow
+    function FnGetColumnsInformation(StepId) {
+        var sourceColumns = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'WStepId', type: 'int' },
+                { name: 'ColumnName', type: 'string' },
+                { name: 'Label', type: 'string' },
+                { name: 'ShouldBeVisible', type: 'bool' },
+                { name: 'Ordinal', type: 'int' },
+                { name: 'OrderByOrdinal', type: 'int' },
+                { name: 'AscDesc', type: 'string' },
+                { name: 'FunctionName', type: 'string' },
+                { name: 'JoinTable', type: 'string' },
+                { name: 'JoinTableColumn', type: 'string' },
+                { name: 'BaseTableJoinColumn', type: 'string' },
+            ],
+            id: "Id",
+            data: { StepId: StepId },
+            url: "/WStepGridColumns/GetByStepId",
+            root: 'Rows',
+        };
+        CurrentStepId = StepId;
+        var dataAdapterColumns = new $.jqx.dataAdapter(sourceColumns)
+        var validateFuncColumns = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        var cellsrendererColumns = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgridColumns').jqxGrid('getrowdata', row);
+                isChanged = true;
+                return '&emsp;<a href="#" onclick="FnDeleteStepColumn(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+
+        };
+        $('#jqxgridColumns').jqxGrid({
+            source: dataAdapterColumns,
+            width: "100%",
+            autoheight: true,
+            columnsresize: true,
+            //pageable: true,
+            //pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'singlerow',
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+            //pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+            columns: [
+                { text: 'ColumnName', datafield: 'ColumnName', validateEverPresentRowWidgetValue: validateFuncColumns},
+                { text: 'Label', datafield: 'Label'},
+                { text: 'Ordinal', datafield: 'Ordinal', validateEverPresentRowWidgetValue: validateFuncColumns},
+                { text: 'ShouldBeVisible', datafield: 'ShouldBeVisible', columntype: 'checkbox' },
+                { text: 'OrderByOrdinal', datafield: 'OrderByOrdinal'},
+                { text: 'AscDesc', datafield: 'AscDesc' },
+                { text: 'FunctionName', datafield: 'FunctionName' },
+                { text: 'JoinTable', datafield: 'JoinTable' },
+                { text: 'JoinTableColumn', datafield: 'JoinTableColumn' },
+                { text: 'BaseTableJoinColumn', datafield: 'BaseTableJoinColumn' },
+                { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrendererColumns, width: '10%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+        });
+
+    }
+    function FnSaveColumnsData() {
+        var arr = [];
+        var rows = $('#jqxgridColumns').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            arr[i][1] = (rows[i].ColumnName == null) ? '' : rows[i].ColumnName;
+            arr[i][2] = (rows[i].Label == null) ? '' : rows[i].Label;
+            arr[i][3] = (rows[i].Ordinal == null || rows[i].Ordinal == '' ) ? 0 : rows[i].Ordinal;
+            arr[i][4] = (rows[i].ShouldBeVisible == null) ? false : rows[i].ShouldBeVisible;
+            arr[i][5] = (rows[i].OrderByOrdinal == null || rows[i].OrderByOrdinal == '' ) ? 0 : rows[i].OrderByOrdinal;
+            arr[i][6] = (rows[i].AscDesc == null) ? '' : rows[i].AscDesc;
+            arr[i][7] = (rows[i].FunctionName == null) ? '' : rows[i].FunctionName;
+            arr[i][8] = (rows[i].JoinTable == null) ? '' : rows[i].JoinTable;
+            arr[i][9] = (rows[i].BaseTableJoinColumn == null) ? '' : rows[i].BaseTableJoinColumn;
+            arr[i][10] = (rows[i].JoinTableColumn == null) ? '' : rows[i].JoinTableColumn;
+        }
+        $.ajax({
+            data: { GridData: arr, StepId: CurrentStepId },
+            url: "/WStepGridColumns/SaveData",
+            type: "POST",
+            cache: false,
+            success: function (data) {
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    alert("Data Updated successfully");
+                    FnGetColumnsInformation(CurrentStepId);
+                }
+            },
+            error: function (reponse) {
+
+            }
+        });
+    }
+     //This method is called when User clicks on delete glymph in grid
+     function FnDeleteStepColumn(Id) {
+         var r = confirm('Columns and other configurations will be deleted. \n Do you want to continue?');
+         if (r == false)
+             return;
+         else {
+             $('#jqxTabs').hide();
+             $('#loadertext').show();
+             $('#btnPrevious').hide();
+             $('#btnNext').hide();
+             $.ajax({
+                 data: { Id: Id, StepId: CurrentStepId },
+                 url: "/WStepGridColumns/DeleteById",
+                 cache: false,
+                 //  type: "POST",
+                 traditional: true,
+                 beforeSend: function () {
+                     $('#jqxTabs').hide();
+                     $('#btnPrevious').hide();
+                     $('#btnNext').hide();
+                     $('#loadertext').show();
+                 },
+                 success: function (data) {
+                     if (data) {
+                         if (data.ErrorMessage) {
+                             alert(data.ErrorMessage);
+                         } else {
+                             $('#loadertext').hide();
+                             alert("Data Updated successfully");
+                            // FnGetParticipantsInformation(CurrentStepId);
+                             FnGetColumnsInformation(CurrentStepId);
+                         }
+                     }
+                     else {
+                         window.location.href = "/Home/Error";
+                     }
+                     $('#jqxTabs').show();
+                     $('#btnPrevious').show();
+                     $('#btnNext').show();
+                     $('#loadertext').hide();
+                 },
+                 complete: function () {
+                     $('#jqxTabs').show();
+                     $('#btnPrevious').show();
+                     $('#btnNext').show();
+                     $('#loadertext').hide();
+                 },
+                 error: function (reponse) {
+                     //  alert("error : " + reponse);
+                 }
+             });
+         }
+     }
+
+</script>    

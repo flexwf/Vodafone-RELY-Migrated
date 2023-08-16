@@ -1,0 +1,154 @@
+﻿@model RELY_APP.ViewModel.LEmailTemplateViewModel
+
+
+<h3>Manage Email Templates</h3>
+<div><a href="/LEmailTemplates/Create">Create</a></div>
+
+<script>
+
+    $(document).ready(function () {
+
+
+
+        //This Grid will load the EmailTemplate
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                // { name: 'Action', type: 'string' },
+                { name: 'Id', type: 'int' },
+                { name: 'TemplateName', type: 'string' },
+                { name: 'EmailSubject', type: 'string' },
+                //{ name: 'URL', type: 'string' }
+
+
+            ],
+
+
+            url: "/LEmailTemplates/GetLEmailTemplates"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+       var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+
+
+           return '&emsp;<button type="button" id="EditButton" name="EditButton" onclick="FnEdit();" class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete()" class="GridButton">Delete</button>&emsp;';
+
+                    };
+
+
+
+
+        $("#jqxLEmailTemplatesGrid").jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            //height: 250,
+            // theme: 'bootstrap',
+            sortable: true,
+            columnsresize: true,
+            editable: false,
+            //columnsreorder: true,
+            //altrows: true,
+            pageable: true,
+            pagesize: 40,
+            pagesizeoptions: ['20', '40', '100'],
+
+            enablebrowserselection: true,
+            //virtualmode: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            // selectionmode: 'checkbox',
+            //showstatusbar: false,
+
+            //rendergridrows: function () {
+            //    return dataAdapter.records;
+            //},
+
+            ready: function () {
+            },
+            // columns: columnsDashBoardToDo
+
+            columns: [
+
+                {
+                    text: 'TemplateName', datafield: 'TemplateName'
+                },
+                {
+                    text: 'EmailSubject', datafield: 'EmailSubject'
+
+                },
+                {
+                    text: 'Actions', width: '15%', cellsrenderer: cellsrenderer
+                },
+
+
+            ],
+        });
+
+
+
+
+
+
+
+    });  //End of document ready
+
+    function FnDelete() {
+        var r = confirm("Do you want to delete Email Template");
+        if (r == false) {
+            return;
+        }
+        else {
+
+            var selectedrowindex = $('#jqxLEmailTemplatesGrid').jqxGrid('selectedrowindex');
+            var rowdata = $('#jqxLEmailTemplatesGrid').jqxGrid('getrowdata', selectedrowindex);
+            var id = rowdata.Id;
+            $.ajax({
+                type: "POST",
+                data: { id: id },
+
+                url: "/LEmailTemplates/DeleteLEmailTemplate",
+                success: function (data) {
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                    }
+                    else {
+                        alert(data.PopupMessage);
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                }
+            });
+        }
+
+    }
+
+
+    function FnEdit() {
+
+        var selectedrowindex = $('#jqxLEmailTemplatesGrid').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxLEmailTemplatesGrid').jqxGrid('getrowdata', selectedrowindex);
+        var id = rowdata.Id;
+
+       
+                var url = '@Url.Action("Edit", "LEmailTemplates", new {Id = "__id__"})';
+                window.location.href = url.replace("__id__", id);
+         
+
+        
+            return;
+        }
+
+</script>
+<div id="jqxLEmailTemplatesGrid"></div>
+
+
+
+
+
+
+
+

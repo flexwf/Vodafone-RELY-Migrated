@@ -1,0 +1,153 @@
+﻿
+<script>
+    $(document).ready(function () {
+        
+        //Binding event
+       
+        $("#jqxPopupgrid").on("bindingcomplete", function (event) {
+                var GridRows = $('#jqxPopupgrid').jqxGrid('getrows')
+                LProductId = document.getElementById('LProdId').value;
+                if (LProductId != null && LProductId != '') {
+                    var rowboundindex = $('#jqxPopupgrid').jqxGrid('getrowboundindexbyid', LProductId);
+                    $('#jqxPopupgrid').jqxGrid('selectrow', rowboundindex);
+                    SelectedProductId = LProductId;
+                    //SelectedProduct = GridRows[rowboundindex].Name;
+                    SelectedProduct = GridRows[rowboundindex].Product;
+                }
+        });
+        //Section ends here
+    });
+
+    //save Selected LProduct from Grid
+    function FnSaveSelectedLProduct() {
+            var item = $('#jqxPopupgrid').jqxGrid('getselectedrowindex');
+        var LProductdata = $('#jqxPopupgrid').jqxGrid('getrowdata', item);
+        //Name | ProductCode(Sys - Cat)
+            LProductId = LProductdata.Id;
+        LProductName = LProductdata.Name;
+        LProductCode = LProductdata.ProductCode;
+            SelectedProductId = LProductId;
+        //SelectedProduct = LProductName
+        if (LProductName == null || LProductName == 'null' || LProductName == 'undefined') {
+            LProductName = '';
+        }
+        SelectedProduct = LProductName + '|' + LProductCode + '(' + LProductdata.SysCat+')';
+            SelecterType = LProductdata.SelecterType;
+            document.getElementById('LProdId').value = LProductId;
+        document.getElementById('LProdCode').value = LProductCode;
+        FnAddProductToGrid();
+    }
+
+    //Load LProduct Grid in a Popup
+    function FnLoadLProductGrid() {
+
+        $.ajax({
+            url: "/LProducts/GetProductsListForRequestCount",
+            dataType: "json",
+            cache: false,
+            type: "POST",
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'int' },
+                        { name: 'SourceProductId', type: 'int' },
+                        { name: 'ProductCode', type: 'string' },
+                        { name: 'Name', type: 'string' },
+                        { name: 'SysCat', type: 'string' },
+                        { name: 'Product', type: 'string' },
+                        { name: 'SysCatId', type: 'int' },
+                        { name: 'SelecterType', type: 'string' },
+                    ],
+                    id: "Id",
+                    url: "/LProducts/GetProductsListForRequest",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                        // $("#jqxPopupgrid").jqxGrid('clear');
+                        $('#jqxPopupgrid').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxPopupgrid').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        // $("#jqxPopupgrid").jqxGrid('clear');
+                        $('#jqxPopupgrid').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxPopupgrid').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    }
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxPopupgrid").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxPopupgrid").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxPopupgrid').jqxGrid({
+                    source: ParentdataAdapter,
+                    width: '100%',
+                    height: '50%',
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    pagesize: 200,
+                    pagesizeoptions: ['50', '100', '200', '500', '1000'],
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting,
+                    showstatusbar: false,
+                       // virtualmode: true,
+                    enablebrowserselection: true,//borrowed this property from SOS as some of zoom levels wasn't working
+                    rendergridrows: function () {
+                        return ParentdataAdapter.records;
+                    },
+                    columns: [
+                        { text: 'ProductCode', datafield: 'ProductCode' },
+                        { text: 'Description', datafield: 'Name' },
+                        //{ text: 'SysCat', datafield: 'SysCat' },
+                        //{ text: 'Product', datafield: 'Product' },
+                    ]
+                });
+                }
+            }
+        });
+    }
+
+    function FnLoadProductsPopup() {
+        FnLoadLProductGrid();
+        $('#LProductModal').modal();
+    }
+
+</script>
+
+<!-- This code displays a popup to get Selected LProducts-->
+<div class="modal fade" id="LProductModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="PopupHeader">
+                    Select Product
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div id="jqxPopupgrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red pull-left" onclick="FnSaveSelectedLProduct();" data-dismiss="modal">Choose</button>&ensp;
+                <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+

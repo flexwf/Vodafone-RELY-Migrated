@@ -1,0 +1,167 @@
+﻿@model RELY_APP.ViewModel.LFSNextStepActionViewModel
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+
+<script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    //This variable is defined to store value if form has any changes since it has loaded
+    var isChanged = false;
+
+    $(document).ready(function () {
+
+
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+     });//end for document.ready
+
+
+    function FnSaveData() {
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize(),
+                 cache : false,
+                 url: "/LFSNextStepActions/SaveData",
+                 success: function (data) {
+                     if (data.success) {
+                         var EntityId = '@ViewBag.EntityId';
+                         alert("Data saved successfully.");
+                         window.location.href = '/LFSNextStepActions/Index?EntityId=' + EntityId + '&EntityType=LProducts'
+                         // window.close();
+                     }
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                 }
+             });
+        }
+    }
+
+    function FnGoBack() {
+        var EntityId = '@ViewBag.EntityId';
+        window.location.href = '/LFSNextStepActions/Index?EntityId=' + EntityId + '&EntityType=LProducts'
+    }
+
+</script>
+
+<div id="jqxLoader">
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @*<h4 class="text-danger text-capitalize" style="color:#e60000;">@ViewBag.Title</h4>*@
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+        <h4 class="text-danger" id="ErrorMessage"></h4>
+        <div id="ErrorMessageDetails"></div>
+        <h4 class="text-danger" id="ValidationMessage"></h4>
+        @Html.Hidden("EntityId")
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.QuestionCode)
+        @Html.HiddenFor(m => m.Response)
+        @Html.HiddenFor(m => m.NextStepId)
+        @Html.HiddenFor(m => m.ResponseId)
+        @Html.HiddenFor(m => m.UpdatedById)
+        @Html.HiddenFor(m => m.CreatedById)
+        @Html.HiddenFor(m => m.CreatedDateTime)
+        @Html.HiddenFor(m => m.UpdatedDateTime)
+
+        <div class="col-md-7 col-lg-7">
+            <div class="col-md-12 col-lg-12" style="min-height:55px;">
+                @Html.LabelFor(model => model.QuestionName, htmlAttributes: new { @class = "col-md-3 col-lg-3 rely-labels ", @style = "text-align: right;" })
+                <div class="col-md-9 col-lg-9">
+                    @*@Html.EditorFor(model => model.QuestionName, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left;pointer-events: none; background-color: lightgray ;" } })*@
+                    @Html.TextAreaFor(model => model.QuestionName, new { @class = "form-control textarea1", @style = "min-height:50px; pointer-events: none; background-color: lightgray ;" })
+                </div>
+            </div>
+
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.Response, htmlAttributes: new { @class = " col-md-3 col-lg-3 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-9 col-lg-9">
+                    @Html.EditorFor(model => model.Response, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left; pointer-events: none; background-color: lightgray ;" } })
+                </div>
+            </div>
+
+
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.NextStepText, htmlAttributes: new { @class = " col-md-3 col-lg-3 rely-labels", @style = "text-align: right; " })
+                <div class="col-md-9 col-lg-9">
+                    @*@Html.EditorFor(model => model.NextStepText, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left; pointer-events: none; background-color: lightgray ;" } })*@
+                    @Html.TextAreaFor(model => model.NextStepText, new { @class = "form-control textarea1", @style = "min-height:90px; pointer-events: none; background-color: lightgray ;" })
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.IsDone, htmlAttributes: new { @class = "col-md-3 col-lg-3 rely-labels", @style = "text-align: right; " })
+                <div class="col-md-9 col-lg-9">
+                    @Html.CheckBoxFor(model => model.IsDone)
+                    @Html.ValidationMessageFor(model => model.IsDone, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.ActionTaken, htmlAttributes: new { @class = " col-md-3 col-lg-3 rely-labels", @style = "text-align: right; " })
+                <div class="col-md-9 col-lg-9">
+                    @*@Html.EditorFor(model => model.ActionTaken, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left; " } })*@
+                    @Html.TextAreaFor(model => model.ActionTaken, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                    @Html.ValidationMessageFor(model => model.ActionTaken, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-12">
+            <br>
+            <button type="button" class="btn btn-borderRed btn-cons" id="BackButton" name="BackButton" onclick="FnGoBack();">Back&nbsp;</button>
+            <button type="button" class="btn btn-red btn-cons" id="save" name="save" onclick=" FnSaveData();"><b>Save&nbsp;</b></button>
+            @*<label for="FileUpload" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Add Supporting Docs &nbsp;<i class="fa fa-folder"></i></label>
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+            <label for="FileUpload1" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Add Management Summary &nbsp;<i class="fa fa-folder"></i></label>
+            <button type="button" name="FileUpload1" id="FileUpload1" onclick="FnAttach();" style="display:none;"></button>
+            <label for="FileUpload2" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Add Accounting Memo &nbsp;<i class="fa fa-folder"></i></label>
+            <button type="button" name="FileUpload2" id="FileUpload2" onclick="FnAttach();" style="display:none;"></button>
+            <label for="FileUpload3" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Set Accounting Scenario &nbsp;<i class="fa fa-folder"></i></label>
+            <button type="button" name="FileUpload3" id="FileUpload3" onclick="FnSetAccScenario();" style="display:none;"></button>*@
+
+        </div>
+
+    </div>
+
+}
+
+
+<br>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script>
+
+    function FnClose() {
+        document.getElementById('divObligations').style.display = 'none';
+        ResetObligation();
+        ResetObligationFlag();
+    }
+    
+
+</script>
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

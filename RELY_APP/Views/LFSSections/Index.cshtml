@@ -1,0 +1,401 @@
+﻿@model RELY_APP.ViewModel.LFSSectionItemViewModel
+
+@{
+    
+    var ValidData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ValidData);
+    var ErrorData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ErrorData);
+}
+
+    <div class="boxes">
+
+        <a class="top_links" href="#" id="FileUpload" onclick="fileupload()">Upload </a>
+        <a class="top_links" href="#" id="csvExport" onclick="DownloadLFSSections()">Download </a>
+        <a class="top_links" href="#" id="DownloadTemplate" onclick="DownloadTemplate();">Download Template </a>
+        <div id="jqxgrid">
+        </div>
+    </div>
+<br />
+@*<div style="margin-left:10px; float: left;">
+    <input type="button" id="csvExport" value="Export to CSV" onclick="DownloadLFSSections();" />
+</div>*@
+
+
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+
+<script type="text/javascript">
+    var IsHideButton=@ViewBag.HideButton;
+$(document).ready(function () {
+
+    var ValidDataGrid=@Html.Raw(Json.Encode(ValidData));
+    var ErrorDataGrid=@Html.Raw(Json.Encode(ErrorData));
+    var PopUpErrorMessage = '@ViewBag.PopUpErrorMessage';
+    if (PopUpErrorMessage) {
+        alert(PopUpErrorMessage);
+        window.location.reload();
+    }
+
+    $("#jqxgridInvalidRecords").hide();
+    $("#jqxgridValidRecords").hide();
+    $("#HeadingValid").hide();
+    $("#HeadingInValid").hide();
+    if (IsHideButton == 1) {
+        $("#HeadingValid").show();
+        $("#HeadingInValid").show();
+        $("#HeadingValid").show();
+        $("#jqxgridInvalidRecords").show();
+        $("#jqxgridValidRecords").show();
+        $("#btnSaveValidRecords").show();
+    }
+    else {
+        if (ErrorDataGrid != 'null') {
+            $("#HeadingInValid").show();
+            $("#HeadingValid").show();
+            $("#jqxgridInvalidRecords").show();
+            $("#jqxgridValidRecords").show();
+        }
+        $("#btnSaveValidRecords").hide();
+    }
+   
+        //Valid Grid and Invalid Grid Coding
+        var source = {
+            dataType: "json",
+            cache : false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+               // { name: 'SurveyId', type: 'string' },
+                { name: 'Survey', type: 'string' },
+                { name: 'ChapterCode', type: 'string' },
+                { name: 'SectionName', type: 'string' },
+                { name: 'SectionCode', type: 'string' },
+                { name: 'Ordinal', type: 'string' },
+                { name: 'InternalNotes', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+
+            ],
+
+            id: "Id",
+           localdata:ValidDataGrid
+        };
+
+          var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridValidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    //columnsresize: true,
+                    //columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                      columns: [
+                        //{ text: 'Id#', datafield: 'Id' },
+                         // { text: 'SurveyId', datafield: 'SurveyId', width: 100 },
+                          { text: 'Survey', datafield: 'Survey', width: 100 },
+                          { text: 'ChapterCode', datafield: 'ChapterCode', width: 100 },
+                          { text: 'SectionName', datafield: 'SectionName' },
+                          { text: 'SectionCode', datafield: 'SectionCode', width: 180 },
+                          { text: 'Ordinal', datafield: 'Ordinal', width: 100 },
+                          { text: 'InternalNotes', datafield: 'InternalNotes', width: 100 },
+
+                    ]
+                });
+
+        //===============================================For error
+         var source = {
+             dataType: "json",
+             cache : false,
+             dataFields: [
+                { name: 'Id', type: 'string' },
+               // { name: 'SurveyId', type: 'string' },
+                { name: 'Survey', type: 'string' },
+                { name: 'ChapterCode', type: 'string' },
+                { name: 'SectionName', type: 'string' },
+                { name: 'SectionCode', type: 'string' },
+                { name: 'Ordinal', type: 'string' },
+                { name: 'InternalNotes', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+                { name: 'SrNo', type: 'int' },
+                { name: 'ValidationMessage', type: 'string' },
+            ],
+            localdata:ErrorDataGrid
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridInvalidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                   // columnsresize: true,
+                   // columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                     columns: [
+                        //{ text: 'Id#', datafield: 'Id' },
+                         { text: 'Row No.', datafield: 'SrNo' },
+                         { text: 'Validation Message', datafield: 'ValidationMessage' },
+                        // { text: 'SurveyId', datafield: 'SurveyId', width: 100 },
+                         { text: 'Survey', datafield: 'Survey', width: 100 },
+                         { text: 'ChapterCode', datafield: 'ChapterCode', width: 100 },
+                         { text: 'SectionName', datafield: 'SectionName' },
+                         { text: 'SectionCode', datafield: 'SectionCode', width: 180 },
+                         { text: 'Ordinal', datafield: 'Ordinal', width: 100 },
+                         { text: 'InternalNotes', datafield: 'InternalNotes', width: 100 },
+                     //   { text: 'Uploaded On', datafield: 'CreatedDateTime', cellsformat: 'dd/MM/yyyy' },
+                        //{ text: 'UpdatedBy', datafield: 'UPdatedBy' },
+                       // { text: 'Updated DateTime', datafield: 'UpdatedDateTime', cellsformat: 'dd/MM/yyyy' },
+
+                    ]
+                });
+
+       //=============end error
+
+        //End Valid and Invalid Grid Vijay
+        //End code vijay
+         document.getElementById("Done").addEventListener("click", function(){
+         window.location.href="/LFSSections/Index";
+        $('#dialog').dialog('close');
+    });
+
+
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache: false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "post",
+            success: function (data) { },
+            error: function (respose) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        if ('@TempData["Error"]') {
+            alert('@TempData["Error"]')
+        }
+
+        var source = {
+            dataType: "json",
+            cache: false,            
+            dataFields: [
+                { name: 'Id', type: 'string' },
+               // { name: 'SurveyId', type: 'string' },
+                { name: 'SurveyName', type: 'string' },
+                { name: 'ChapterCode', type: 'string' },
+                { name: 'SectionName', type: 'string' },
+                { name: 'SectionCode', type: 'string' },
+                { name: 'Ordinal', type: 'string' },
+                { name: 'InternalNotes', type: 'string' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UPdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+            ],
+            id: "Id",
+            url: "/LFSSections/GetAllSections"
+        };
+        // This function is used for displaying row details
+        var initrowdetails = function (index, parentElement, gridElement, datarecord) {
+
+           // var SurveyId = "<div style='margin: 10px;'><b>SurveyId:</b> " + datarecord.SurveyId + "</div>";
+            var Survey = "<div style='margin: 10px;'><b>Survey:</b> " + datarecord.Survey + "</div>";
+            var ChapterCode = "<div style='margin: 10px;'><b>ChapterCode:</b> " + datarecord.ChapterCode + "</div>";
+            var SectionName = "<div style='margin: 10px;'><b>SectionName:</b> " + datarecord.SectionName + "</div>";
+            var SectionCode = "<div style='margin: 10px;'><b>SectionCode:</b> " + datarecord.SectionCode + "</div>";
+            var Ordinal = "<div style='margin: 10px;'><b>Ordinal:</b> " + datarecord.Ordinal + "</div>";
+            var InternalNotes = "<div style='margin: 10px;'><b>InternalNotes:</b> " + datarecord.InternalNotes + "</div>";
+
+           // $().append(SurveyId);
+            $().append(Survey);
+            $().append(ChapterCode);
+            $().append(SectionName);
+            $().append(SectionCode);
+            $().append(Ordinal);
+            $().append(InternalNotes);
+
+            var CreatedBy = "<div style='margin: 10px;'><b>CreatedBy:</b> " + datarecord.CreatedBy + "</div>";
+            var CreatedDateTime = "<div style='margin: 10px;'><b>Created DateTime:</b> " + datarecord.CreatedDateTime + "</div>";
+            var UpdatedBy = "<div style='margin: 10px;'><b>UpdatedBy:</b> " + datarecord.UpdatedBy + "</div>";
+            var UpdateDateTime = "<div style='margin: 10px; '><b>Updated DateTime:</b> " + datarecord.UpdatedDateTime + "</div>";
+            $().append(CreatedBy);
+            $().append(CreatedDateTime);
+            $().append(UpdatedBy);
+            $().append(UpdateDateTime);
+
+
+         }
+   // }
+
+               var dataAdapter = new $.jqx.dataAdapter(source)
+
+                $('#jqxgrid').jqxGrid({
+
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    rowdetails: true,
+                    initrowdetails: initrowdetails,
+                    theme: 'bootstrap',
+                    sortable: true,
+                   // columnsresize: true,
+                   // columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    showstatusbar: false,
+                    ready: function () {
+
+                    },
+
+                    columns: [
+                        //{ text: 'Id#', datafield: 'Id' },
+                       // { text: 'SurveyId', datafield: 'SurveyId', width: 100 },
+                        { text: 'Survey', datafield: 'SurveyName', width: 100 },
+                        { text: 'ChapterCode', datafield: 'ChapterCode', width: 100 },
+                        { text: 'SectionName', datafield: 'SectionName' },
+                        { text: 'SectionCode', datafield: 'SectionCode', width: 180 },
+                        { text: 'Ordinal', datafield: 'Ordinal', width: 100 },
+                        { text: 'InternalNotes', datafield: 'InternalNotes', width: 100 },
+                        { text: 'Uploaded On', datafield: 'CreatedDateTime', cellsformat: 'dd/MM/yyyy' },
+                        //{ text: 'UpdatedBy', datafield: 'UPdatedBy' },
+                       // { text: 'Updated DateTime', datafield: 'UpdatedDateTime', cellsformat: 'dd/MM/yyyy' },
+
+                    ]
+               });
+        // this file download only Google Chrome browser
+                //$("#csvExport").jqxButton();
+                //$("#csvExport").click(function () {
+                //    $("#jqxgrid").jqxGrid('exportdata', 'csv', 'Sections');
+                //});
+            });
+
+
+
+          // Following Coding Done By Vijay
+
+// To Download Template
+     function DownloadTemplate()
+    {
+
+      window.location.href='/LFSSections/DownloadTemplate';
+
+    }
+
+         function SaveValidRecords()
+         {
+             var GridArray = [];
+             var GridRows = $('#jqxgridValidRecords').jqxGrid('getrows')
+             var collength = 6;
+             if (GridRows.length > 0) {
+                 for (var i = 0; i < GridRows.length; i++) {              //For Row
+                     GridArray[i] = [];
+                     var IdVal = 0;
+                    // GridArray[i][0] = 'SurveyId:' + String(GridRows[i].SurveyId);
+                     GridArray[i][0] = 'Survey:' + String(GridRows[i].Survey);
+                     GridArray[i][1] = 'ChapterCode:' + String(GridRows[i].ChapterCode);
+                     GridArray[i][2] = 'SectionName:' + String(GridRows[i].SectionName);
+                     GridArray[i][3] = 'SectionCode:' + String(GridRows[i].SectionCode);
+                     GridArray[i][4] = 'Ordinal:' + String(GridRows[i].Ordinal);
+                     GridArray[i][5] = 'InternalNotes:' + String(GridRows[i].InternalNotes);
+                 }
+             }
+        //var arr = [];
+        //var rows = $('#jqxgridValidRecords').jqxGrid('getrows');
+        //for (var i = 0; i < rows.length; i++)
+        //{
+        //    arr[i] = [];
+        //    arr[i][0] = rows[i].SurveyId;
+        //    arr[i][1] = rows[i].ChapterCode;
+        //    arr[i][2] = rows[i].SectionName;
+        //    arr[i][3] = rows[i].SectionCode;
+        //    arr[i][4] = rows[i].Ordinal;
+        //    arr[i][5] = rows[i].InternalNotes;
+        //}
+        $.ajax({
+                 data: "GridArray=" + GridArray + "&collength=" + collength,
+                 url: "/LFSSections/SaveData",
+                 type: "POST",
+                 success: function (data) {
+                     if (data.ErrorMessage) {
+                         alert(data.ErrorMessage)
+                         window.location.href = "/LFSSections/Index";
+                     } else {
+
+                         alert('Data Saved Successfully.');
+                         window.location.href = "/LFSSections/Index";
+                     }
+                 },
+                 error: function (reponse) {
+                     //  alert("error : " + reponse);
+                 }
+             });
+
+    }
+
+
+    function DownloadLFSSections() {
+        window.location.href = '/LFSSections/DownloadLFSSections';
+    }
+</script>
+@*<body class="jqx-layout-group-default">
+
+        <div id="jqxWidget" style="font-size:13px; font-family: Verdana; float: left;">
+            <div id="jqxgrid"></div>
+            <div style="margin-top: 10px;">
+               <div style="margin-left:10px; float: left;">
+                    <input type="button" id="csvExport" value="Export to CSV" />
+               </div>
+
+                </div>
+        </div>
+    </body>*@
+
+
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+
+
+@Scripts.Render("~/bundles/jQuery-File-Upload")
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+<div id="VallidInvalidGrid" class="col-md-12 col-lg-12">
+
+    <div id="InValidDatadiv" class="tab-content" style="padding:10px;">
+        <h2 id="HeadingInValid">Invalid Records</h2>
+        <div id="jqxgridInvalidRecords"></div>
+    </div>
+
+    <div id="ValidDataDiv" class="tab-content" style="padding:10px;">
+        <h2 id="HeadingValid">Valid Records</h2>
+        <div id="jqxgridValidRecords"></div>
+        <br />
+        <button type="submit" class="btn btn-red btn-cons" id="btnSaveValidRecords" name="save" onclick="SaveValidRecords();"><b>Save Valid Records&nbsp;</b></button>
+
+    </div>
+
+</div>

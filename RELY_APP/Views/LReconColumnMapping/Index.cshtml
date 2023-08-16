@@ -1,0 +1,195 @@
+﻿
+<div style="padding:10px;">
+    @using (Html.BeginForm("SaveGridSelection", "LReconColumnMapping", FormMethod.Post, new { FileFormatId = "frm" , SysCatId = "frm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("model")
+        <div class="form-horizontal">
+            <div class="col-md-5">
+                @Html.Label("Select SysCat", new { @class = "control-label col-md-4" })
+                <div class="col-md-8">
+                    @Html.DropDownList("SysCat", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null }}, new { @class = "form-control col-md-8", onchange = "GetFileFormat(this.value)" })
+                    @*&emsp;<input type="button" value="Go" class="btn btn-info">*@
+                </div>
+            </div>
+            <div class="col-md-5">
+                @Html.Label("Select File Format", new { @class = "control-label col-md-4" })
+                <div class="col-md-8">
+                    @Html.DropDownList("Format", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-8", onchange = "GetGrid()" })
+                    @*&emsp;<input type="button" value="Go" class="btn btn-info">*@
+                </div>
+            </div>
+
+
+        </div>
+
+    }
+
+    <br>&ensp;<br>
+    <div id="jqxgrid">
+
+    </div>
+
+    <div class="col-md-12">
+        <p style="color:red;display:none;" id="Note">NOTE: These Labels might have been used in structuring the extracts. Please be careful while changing them</p>
+    </div>
+    <br>
+    <button class="btn btn-red btn-cons" id="SaveButton" style="display:none;" onclick="SaveSelection()">Save &nbsp;</button>
+</div>
+
+<script>
+    var SysCatId = document.getElementById('SysCat').value;
+    $(document).ready(function () {
+        $.getJSON("/LReconColumnMapping/BindSysCatDropDown", function (data) {
+            $.each(data, function (i, data) {      // bind the dropdown list using json result              
+                $('<option>',
+                    {
+                        value: data.Id,
+                        text: data.SysCat
+                    }).html(data.SysCat).appendTo("#SysCat");
+            });  
+        })
+    });
+    function GetFileFormat(SysCatId) {
+        $("#Format").empty()
+        if (SysCatId != '') {
+            var procemessage = "<option value=null> Please wait...</option>";
+            $("#Format").html(procemessage).show();
+            var url = "/LReconColumnMapping/BindFileFormatDropDown/";
+
+            $.ajax({
+                url: url,
+                data: { SysCatId: SysCatId },
+                cache: false,
+                type: "POST",
+                success: function (data) {
+                    if (data.length != 0) {
+                        var markup = "<option value=null>-- Select Here --</option>";
+                        for (var x = 0; x < data.length; x++) {
+                            markup += "<option value=\"" + data[x].Id + "\">" + data[x].FormatName + "</option>";
+                        }
+                        $("#Format").html(markup).show();
+
+                    } else {
+                        var procemessage = "<option value=0> No Records Found..</option>";
+                        $("#Format").html(procemessage).show();
+                    }
+                },
+                error: function (reponse) {
+                    alert("error : " + reponse);
+                }
+            });
+        }
+    }
+   
+    function GetGrid() {
+        var SysCatId = document.getElementById('SysCat').value;
+        var FileFormatId = document.getElementById('Format').value;
+        var source = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'FileFormatId', type:'int' },
+                { name: 'ColumnName', type: 'string' },
+                { name: 'Label', type: 'string' },
+                { name: 'DisplayOnForm', type: 'bool' },
+                { name: 'OrdinalPosition', type: 'int' },
+                { name: 'IsProductCodeColumn', type: 'bool' },
+            ],
+            data: { SysCatId: SysCatId, FileFormatId: FileFormatId },
+            url: "/LReconColumnMapping/GetLReconColumnMappingBySysCat"
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        //todisable checkbox
+        var cellbeginedit = function (row, datafield, columntype, value) {
+            var data = $('#jqxgrid').jqxGrid('getrowdata', row);
+
+            if (data.IsMandatory == true) { alert("This Object is not modifiable"); return false; }
+
+            return true;
+
+        };
+
+        $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            autoheight: false,
+            height: '150%',
+            theme: 'bootstrap',
+            sortable: false,
+            columnsresize: false,
+            columnsreorder: false,
+            altrows: true,
+            showstatusbar: true,
+            keyboardnavigation: true,
+            //  selectionmode:'none',
+            editable: true,
+         
+            ready: function () {
+
+            },
+
+            columns: [
+                { text: 'Column Name', datafield: 'ColumnName', editable: false, width: '20%', pinned: true },
+                {
+                    text: 'Label', columntype: 'textbox', datafield: 'Label', width: '25%'
+                    , initeditor: function (row, column, editor) {
+                        editor.attr('maxlength', 100);//max length of label is 100 chars
+                    }
+                },
+                { text: 'Display on Form', datafield: 'DisplayOnForm', columntype: 'checkbox', width: '18%' },
+                { text: 'Ordinal', datafield: 'OrdinalPosition', width: '20%' },
+                { text: 'Product Code Column', datafield: 'IsProductCodeColumn', columntype: 'checkbox', width: '20%' },
+                //{ text: 'Actions', datafield: 'Id', editable: false }
+            ]
+        });
+        //make save button visible
+        document.getElementById('SaveButton').style.display = 'block'
+    }
+
+    
+    function SaveSelection() {
+        var items = $('#jqxgrid').jqxGrid('getrows')
+        var SysCatId = document.getElementById('SysCat').value;
+        var FileFormatId = document.getElementById('Format').value;
+        
+        var arr = [];
+        //console.log(items)
+        for (var i = 0; i < items.length; i++) {
+            arr[i]=[];
+            arr[i][0] = items[i].ColumnName
+            //On Submit check If Display on Form is checked then Label is manadatory.
+            if ((items[i].Label == null || items[i].Label == '') && Boolean(items[i].DisplayOnForm) == true) {
+                alert('Please add Label for all selected columns')
+                return;
+            }
+            arr[i][1] = items[i].Label == null ? '' : String(items[i].Label).split(',').join('.');//We are using comma to seperate values so cannot allow comma in label
+            arr[i][2] = items[i].DisplayOnForm
+            arr[i][3] = items[i].OrdinalPosition
+            arr[i][4] = items[i].IsProductCodeColumn
+           
+        }
+        console.log(arr)
+        var GridData = arr.join(',');
+
+        $.ajax({
+            data: { GridData: GridData, FileFormatId: FileFormatId, SysCatId: SysCatId },
+            url: "/LReconColumnMapping/SaveGridSelection",
+            type: "POST",
+            cache:false,
+            // traditional: true,
+            success: function (data) {
+                alert('Recon Column Mapping has been sucessfully Modified');
+                window.location.reload();
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        })
+        //if (items.length > 0) {
+        //    document.getElementById('frm').submit();
+        //}
+    }
+
+</script>

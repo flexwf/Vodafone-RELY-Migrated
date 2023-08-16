@@ -1,0 +1,179 @@
+﻿@{
+    ViewBag.UserRole = System.Web.HttpContext.Current.Session["CurrentRoleName"];
+}
+
+<script>
+    $(document).ready(function () {
+        if ('@TempData["LastLoginMessage"]') {
+            $("#LoginMessage").modal();
+            setTimeout(function () {
+                $('#LoginMessage').modal('hide')
+            }, 6000);
+        }
+
+        if ('@TempData["LastActiveUrl"]') {
+            //alert("Actual URL is : " + '@TempData["LastActiveUrl"]');
+            var LastActiveUrl = '@TempData["LastActiveUrl"]'.replace(new RegExp('amp;', 'g'), '');
+            //alert( " replaced url is:     "+LastActiveUrl);
+            window.location.href = '' + LastActiveUrl + ' ';
+         }
+
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'WorkFlow', type: 'string' },
+                { name: 'Tabname', type: 'string' },
+                { name: 'Count', type: 'int' },
+                //{ name: 'URL', type: 'string' }
+
+
+            ],
+            data: { RoleId: '@ViewBag.RoleId', UserId: '@ViewBag.UserId' },
+
+            url: "/Home/GetDataForDashBoardToDo"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+
+        var cellsrenderer = function (row, cell, value) {
+
+            var rowdata = $('#jqxDashBoardToDoGrid').jqxGrid('getrowdata', row);
+            var WorkFlowName = rowdata.WorkFlow;
+            return '<a href="/GenericGrid/Index?WorkFlow=' + WorkFlowName + '"/>' + value + '</a>'
+        }
+
+        $("#jqxDashBoardToDoGrid").jqxGrid({
+            source: dataAdapter,
+            width: 500,
+            height: 250,
+           // theme: 'bootstrap',
+            sortable: true,
+            columnsresize: true,
+            editable: false,
+            //columnsreorder: true,
+            //altrows: true,
+            pageable: true,
+            pagesize: 10,
+            pagesizeoptions: ['10', '15','20'],
+
+            enablebrowserselection: true,
+            //virtualmode: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            // selectionmode: 'checkbox',
+            //showstatusbar: false,
+
+            //rendergridrows: function () {
+            //    return dataAdapter.records;
+            //},
+
+            ready: function () {
+            },
+            // columns: columnsDashBoardToDo
+
+            columns: [
+                {
+                    text: 'Workflow', datafield: 'WorkFlow', width: '40%'
+                },
+                {
+                    text: 'Step', datafield: 'Tabname', width: '35%'
+                },
+                {
+                    text: 'Count', datafield: 'Count', width: '25%', cellsrenderer: cellsrenderer
+
+                },
+
+
+             ],
+        });
+
+       // FnPendingWork();
+    }); //End of Document Ready
+
+   //function FnPendingWork() {
+
+   //     var rows = $("#jqxDashBoardToDoGrid").jqxGrid('getRows');
+   //     if (rows == null || rows == 'undefined' || rows.length == 0) {
+   //        alert("You have completed your all task. No pending Work To Do....");
+
+   //     }
+   // }
+
+
+</script>
+
+<script>
+
+
+</script>
+
+<style>
+    .modal {
+        text-align: center;
+        padding: 0 !important;
+    }
+
+        .modal:before {
+            content: '';
+            display: inline-block;
+            height: 100%;
+            vertical-align: middle;
+            margin-right: -4px; /* Adjusts for spacing */
+        }
+
+    .modal-dialog {
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+    }
+</style>
+
+    <p style="font-size:small; text-align:right; vertical-align:text-top"> @TempData["LastLoginMessage"] </p>
+    <h4>Welcome @ViewBag.UserRole</h4>
+
+
+@*<label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; @TempData["LastLoginMessage"]</label>*@
+
+
+<h4>Following task is waiting for your Approval:-</h4>
+
+@*Foolowing dialog box will display uses last activity*@
+
+
+@*<div id="LoginMessage" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%;">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+
+
+                <div class="modal-body">
+                    @TempData["LastLoginMessage"]
+                </div>
+
+
+                <div class="modal-footer">
+
+                </div>
+            </div>
+
+        </div>
+    </div>*@
+
+
+
+
+
+
+
+
+
+<div id="jqxDashBoardToDoGrid"></div>
+
+
+

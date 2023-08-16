@@ -1,0 +1,78 @@
+﻿ function FnGetSupportingDocumentList(EntityId){
+            if(EntityId == null ){
+             EntityId = '@ViewBag.EntityId';
+            }
+
+            var source = {
+            dataType: "json",
+            dataFields: [
+            { name: 'FileName', type: 'string' },
+            { name: 'OriginalFileName', type: 'string' },
+            { name: 'Description', type: 'string' },
+            { name: 'Label', type: 'string' },
+            { name: 'LoginEmail', type: 'string' },
+            { name: 'CreatedDateTime', type: 'date' },
+            { name: 'Id', type: 'string' }
+            ],
+            id: "Id",
+            cache: false,
+            data: {EntityType:'@ViewBag.EntityType',EntityId: EntityId},
+            url: "/Home/GetSupportingDocuments"
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source);
+
+            var FormType = '@ViewBag.FormType';
+
+            if(FormType == 'Review'){
+            var SupportingDocumentscellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            return '&emsp;<button type="button" onclick="FnDownloadSupportingDoc('+value+');" title="Download" class="GridButton"><i class="fa fa-download" style="color:red" aria-hidden="true"></i></button>&emsp;';
+            };
+            } else {
+
+            var SupportingDocumentscellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            return '&emsp;<button type="button" onclick="FnDownloadSupportingDoc('+value+');" title="Download" class="GridButton"><i class="fa fa-download" style="color:red" aria-hidden="true"></i></button>&emsp;<button type="button" onclick="FnDeleteSupportingDoc('+value+');" title="Delete" class="GridButton" id="DeleteButton"><i class="fa fa-trash" style="color:red;" aria-hidden="true"></i></button>';
+            };
+            }
+
+            $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            //autoheight: true,
+            height:125,
+            theme: 'bootstrap',
+            sortable: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            //pageable: true,
+            filterable: true,
+            autoshowcolumnsmenubutton:false,//down arrow always visible for filter and sorting
+            // selectionmode: 'checkbox',
+            showstatusbar: false,
+            ready: function () {
+            },
+            columns: [
+            { text: 'Date Uploaded', datafield: 'CreatedDateTime',cellsformat: 'dd/MM/yyyy' },
+            { text: 'Original File Name', datafield: 'OriginalFileName' },
+            { text: 'Content', datafield: 'Description' },
+            { text: 'Uploaded By', datafield: 'LoginEmail' },
+            { text: 'Step', datafield: 'Label' },
+            { text: 'Actions', datafield: 'Id',cellsrenderer:SupportingDocumentscellsrenderer }
+            ]
+            });
+            }
+
+
+            function FnDownloadSupportingDoc(Id) {
+            window.location.href = '/LSupportingDocuments/DownloadSupportingDocument/' + Id
+            }
+
+            function FnDeleteSupportingDoc(Id) {
+                var r = confirm("Are you sure to delete the document?");
+                if (r == false) {
+                    return;
+                }
+                else {
+                    window.location.href = '/LSupportingDocuments/Delete/' + Id
+                }
+            }

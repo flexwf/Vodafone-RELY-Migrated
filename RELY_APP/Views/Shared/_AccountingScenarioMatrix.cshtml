@@ -1,0 +1,725 @@
+﻿@{
+    var EntityId = (int)ViewBag.EntityId;
+}
+
+<script>
+
+    var dataAdapterScenario = undefined;
+    var dataAdapterProduct = undefined;
+    var EditedRowsIndexArray = [];
+    var ExistingRows=[];
+
+
+    $(document).ready(function () {
+
+
+
+
+        ////////////////////////////////////
+
+        //Get the edited Rows
+
+
+
+        $('#ManualScenario').on('cellvaluechanged', function (event) {
+            // event arguments.
+            var args = event.args;
+            // column data field.
+            var datafield = event.args.datafield;
+
+            var rowBoundIndex = args.rowindex;
+            var rowdata = $("#ManualScenario").jqxGrid('getrowdata', rowBoundIndex);
+
+
+            //Following Array will contain index of edited rows only
+            if (EditedRowsIndexArray.indexOf(rowBoundIndex) == -1) {
+                EditedRowsIndexArray.push(rowBoundIndex );
+            }
+
+
+    });
+
+    ///////////////////////////////////////////////////////////
+
+        //save return url
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        // Method to load jqxtabs in view.
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+        if (sessionStorage.CurrentTab) {
+            $('#jqxTabs').jqxTabs('select', sessionStorage.CurrentTab)
+            switch (Number(sessionStorage.CurrentTab)) {
+                case 0:
+                    FnGetGrid('Basic');
+                    break;
+                case 1:
+                    FnGetGrid('Special');
+                    break;
+                case 2:
+                    FnGetManualScenarioGrid();
+                    break;
+                case 3:
+                    FnGetOverviewGrid()
+                    break;
+            }
+        }
+        else {
+            $('#jqxTabs').jqxTabs('select', 0)
+            FnGetGrid('Basic');
+        }
+        $('#jqxTabs').on('selected', function (event) {
+            var selectedTab = event.args.item;
+            switch (selectedTab) {
+                case 0:
+                    FnGetGrid('Basic');
+                    break;
+                case 1:
+                    FnGetGrid('Special');
+                    break;
+                case 2:
+                    FnGetManualScenarioGrid();
+                    break;
+                case 3:
+                    FnGetOverviewGrid()
+                    break;
+            }
+        });
+
+        $("#SurveyMatrixBasic").on('cellvaluechanged', function (event) {
+            // event arguments.
+            var args = event.args;
+            // column data field.
+            var datafield = event.args.datafield;
+            // row's bound index.
+            var rowBoundIndex = args.rowindex;
+            // new cell value.
+            var value = args.newvalue;
+            // old cell value.
+            var oldvalue = args.oldvalue;
+        });
+        $("#SurveyMatrixSpecial").on('cellvaluechanged', function (event) {
+            // event arguments.
+            var args = event.args;
+            // column data field.
+            var datafield = event.args.datafield;
+            // row's bound index.
+            var rowBoundIndex = args.rowindex;
+            // new cell value.
+            var value = args.newvalue;
+            // old cell value.
+            var oldvalue = args.oldvalue;
+            //alert(value)
+        });
+
+         /*Section for dropdown data starts here*/
+        var Productsource = {
+            dataType: "json",
+            cache: false,
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType'},
+            id: 'Id',
+            url: "/LAccountingScenarios/GetProductAccountingScenarioMatrix"
+
+        };
+        dataAdapterProduct = new $.jqx.dataAdapter(Productsource, { async: false, autoBind: true })
+
+        var Scenariosource = {
+            dataType: "json",
+            cache: false,
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Reference', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType'},
+            id: 'Id',
+            url: "/LAccountingScenarios/GetCompletedList"
+
+        };
+        dataAdapterScenario = new $.jqx.dataAdapter(Scenariosource, { async: false, autoBind: true })
+        /*Section for dropdown data ends here*/
+
+
+    });//document.ready
+
+      window.onbeforeunload = function () {
+        var selectedItem = $('#jqxTabs').jqxTabs('selectedItem');
+        if (typeof (Storage) !== "undefined") {
+            sessionStorage.CurrentTab = selectedItem;
+        } else {
+            //Means No Web Storage support..
+        }
+    }
+
+    //Method to load grid
+    function FnGetGrid(TabName) {
+
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Category', type: 'string' },
+                { name: 'QuestionCode', type: 'string' },
+                { name: 'QuestionName', type: 'string' },
+                { name: 'ReadableName', type: 'string' },
+                { name: 'ObjectType', type: 'string' },
+                { name: 'SysCat', type: 'string' },
+                { name: 'Response', type: 'string' },
+                { name: 'ScenarioDescription', type: 'string' },
+                { name: 'Comments', type: 'string' },
+                { name: 'ResponseId', type: 'string' },
+                { name: 'ProductId', type: 'string' },
+            ],
+            id:'ResponseId',
+            data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType', TabName: TabName },
+            url: "/LAccountingScenarios/GetAccountingScenarioMatrix"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        var Matrixcellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties, rowData) {
+            var ProductId = rowData.ProductId;//rowdata contains keyvalue pair information for the current row
+            return '&emsp;<button type="button"  onclick=FnSaveComments(' + value + ',\'' + TabName + '\'); " title="Save Comments" class="GridButton"><i class="fa fa-floppy-o" style="color:red;" aria-hidden="true"></i></button>&emsp;<button type="button"  onclick=FnEditResponse(' + value + ',' + rowData.ProductId +'); " title="Edit" class="GridButton"><i class="fa fa-pencil-square-o" style="color:red;" aria-hidden="true"></i></button>';
+        };
+
+        $('#SurveyMatrix' + TabName).jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            //pageable: true,
+            //pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //showfilterrow: true,
+            sortable: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            editable:true,
+           // theme: 'gridlabels',
+           // pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Q', datafield: 'QuestionName', width:'10%',editable:false
+                },
+
+                {
+                    text: 'Situation', datafield: 'ReadableName', editable: false
+                },
+                {
+                    text: 'Object Type', datafield: 'ObjectType', editable: false
+                },
+                {
+                    text: 'Product', datafield: 'SysCat', width: '20%',editable: false
+                },
+                {
+                    text: 'Scenario', datafield: 'Response', editable: false
+                },
+                {
+                    text: 'Scenario Description', datafield: 'ScenarioDescription', editable: false
+                },
+                {
+                    text: 'Comments', datafield: 'Comments', editable: true
+                },
+                {
+                    text: 'Actions', datafield: 'ResponseId', editable: true, cellsrenderer: Matrixcellsrenderer, editable: false
+                }
+            ]
+
+        });
+
+
+        $("#SurveyMatrix" + TabName).bind('rowselect', function (event) {
+            var selectedRowIndex = event.args.rowindex;
+        });
+    }
+
+    //function to save comments
+    //The ‘Save’ icon will save ‘Comments’ in LFSResponses
+    function FnSaveComments(ResponseId,TabName) {
+        var selectedrowindex = $("#SurveyMatrix" + TabName).jqxGrid('selectedrowindex');
+        var rowdata = $("#SurveyMatrix" + TabName).jqxGrid('getrowdata', selectedrowindex);
+        console.log(rowdata)
+        $.ajax({
+            data: { ResponseId: ResponseId, Comments: rowdata.Comments },
+            cache: false,
+            url: "/LAccountingScenarios/SaveResponseComments",
+            dataType: "json",
+            type: "GET",
+            success: function (data) {
+                alert('comments saved sucessfully')
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+    }
+
+    //function to open change screen
+    function FnEditResponse(ResponseId, ProductId) {
+        @*window.location.href = '/LAccountingScenarios/ChangeAccountingScenario?ResponseId=' + ResponseId + '&WorkflowId=' + '@ViewBag.WorkFlowId' + '&ProductId=' + ProductId;*@
+        window.location.href = '/LAccountingScenarios/ChangeAccountingScenario?ResponseId=' + ResponseId  + '&ProductId=' + ProductId;
+    }
+
+    //function to load Manual Scenario
+    function FnGetManualScenarioGrid() {
+
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Situation', type: 'string' },
+                { name: 'ObjectType', type: 'string' },
+                { name: 'Product', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Reference', type: 'string' },
+                { name: 'Comments', type: 'string' }
+
+            ],
+            id: 'Id',
+            data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType'},
+            url: "/LAccountingScenarios/GetManualAccountingScenario"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+         $.ajax({
+             type: "GET",
+             cache: false,
+                               data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType'},
+                               url: "/LAccountingScenarios/GetManualAccountingScenario",
+                               success: function (data) {
+                                   ExistingRows = data;
+
+                                },
+                                error: function (response) {
+                                }
+                            });
+
+        var validateFunc = function (datafield, value) {
+           //Validation not applied yet
+            return true;
+        }
+
+        //var cellclass = function (row, datafield, value, rowdata) {
+        //    for (var i = 0; i < editedRows.length; i++) {
+        //        if (editedRows[i].index == row) {
+        //            return "ChangeFontColor";
+        //        }
+        //    }
+        //}
+
+        $('#ManualScenario').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+           // pageable: true,
+           // pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+            selectionmode: 'multiplecellsadvanced',
+            //pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Situation', datafield: 'Situation', filtertype: 'input'
+
+                },
+                {
+                    text: 'Object Type', datafield: 'ObjectType', filtertype: 'input'
+
+                },
+                {
+                    text: 'Product', datafield: 'Product', validateEverPresentRowWidgetValue: validateFunc, columntype: 'dropdownlist',
+                    createeditor: function (row, cellvalue, editor) {
+                        // console.log(clientSourceDA);
+                        editor.jqxDropDownList({ displayMember: 'Name', valueMember: 'Id', source: dataAdapterProduct, filterable: true, searchMode: 'contains'});
+                    },
+
+                    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                        var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                        inputTag.jqxDropDownList({ source: dataAdapterProduct, displayMember: 'Name', valueMember: 'Id', width: '100%', filterable: true, searchMode: 'contains' });
+                        $(document).on('keydown.Id', function (event) {
+                            if (event.keyCode == 13) {
+                                if (event.target === inputTag[0]) {
+                                    addCallback();
+                                }
+                                else if ($(event.target).ischildof(inputTag)) {
+                                    addCallback();
+                                }
+                            }
+                        });
+                        return inputTag;
+                    },
+                    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                        var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                        if (!selectedItem)
+                            return "";
+                        var value = selectedItem.label;
+
+                        return value;
+                    },
+                    resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                        htmlElement.jqxDropDownList('clearSelection');
+                    }
+
+                },
+                {
+                    text: 'Scenario', datafield: 'Reference', filtertype: 'input', columntype: 'dropdownlist',
+                    createeditor: function (row, cellvalue, editor) {
+                        // console.log(clientSourceDA);,displayfield:'CatName'
+                        editor.jqxDropDownList({ displayMember: 'Reference', valueMember: 'Id', source: dataAdapterScenario, filterable: true, searchMode: 'contains' });
+                        editor.on('change', function (event)//This function will save CategoryId in Edit
+                        {
+                            var args = event.args;
+                            if (args) {
+                                // index represents the item's index.
+                                var index = args.index;
+                                var item = args.item;
+                                // get item's label and value.
+                                var label = item.label;
+                                var value = item.value;
+                               // $("#ManualScenario").jqxGrid('setcellvalue', row, "CategoryId", value);
+                            }
+                        });
+                    },
+                    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                        var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                        inputTag.jqxDropDownList({ source: dataAdapterScenario, displayMember: 'Reference', valueMember: 'Id', width: '100%', filterable: true, searchMode: 'contains' });
+                        $(document).on('keydown.Id', function (event) {
+                            if (event.keyCode == 13) {
+                                if (event.target === inputTag[0]) {
+                                    addCallback();
+                                }
+                                else if ($(event.target).ischildof(inputTag)) {
+                                    addCallback();
+                                }
+                            }
+                        });
+                        return inputTag;
+                    },
+                    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                        var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                        if (!selectedItem)
+                            return "";
+                        var value = selectedItem.label;
+                        //update the corresponding Id with respect to the record selected
+                        // $("#jqxgrid").jqxGrid('setcellvalue', rowBoundIndex, "CanBeDisplayed", true);
+                        return value;
+                    },
+                    resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                        htmlElement.jqxDropDownList('clearSelection');
+                    }
+
+                },
+
+                {
+                    text: 'Scenario Description', datafield: 'Description', filtertype: 'input'
+
+                },
+                {
+                    text: 'Comments', datafield: 'Comments', filtertype: 'input'
+
+                }
+                //{
+                //    text: 'Actions', datafield: 'Id', width: '10%', editable: false, validateEverPresentRowWidgetValue: validateFunc,
+                //    initEverPresentRowWidget: function (datafield, htmlElement) {
+                //        var input = htmlElement.find('input');
+                //        input.attr('readonly', true);
+                //        input.attr('disabled', true);
+                //        htmlElement.addClass('jqx-fill-state-disabled');
+                //    }
+                //}
+            ]
+
+        });
+    }
+
+    //Load Overview Grid
+    function FnGetOverviewGrid() {
+ var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Category', type: 'string' },
+                { name: 'QuestionCode', type: 'string' },
+                { name: 'ReadableName', type: 'string' },
+                { name: 'Situation', type: 'string' },
+                { name: 'ObjectType', type: 'string' },
+                { name: 'Product', type: 'string' },
+                { name: 'Response', type: 'string' },
+                { name: 'ScenarioDescription', type: 'string' },
+                { name: 'Comments', type: 'string' },
+                { name: 'ResponseId', type: 'string' },
+                { name: 'Scenario', type: 'string' }
+            ],
+           // id:'ResponseId',
+            data: {EntityId:'@ViewBag.EntityId',EntityType:'@ViewBag.EntityType'},
+            url: "/LAccountingScenarios/GetOverviewAccountingScenario"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+        $('#OverviewScenario').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            //pageable: true,
+            //pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //showfilterrow: true,
+            sortable: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            editable:true,
+           // theme: 'gridlabels',
+            //pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Q', datafield: 'QuestionCode', width: '10%',editable:false
+                },
+                {
+                    text: 'Category', datafield: 'Category', editable: false
+                },
+                {
+                    text: 'Situation', datafield: 'Situation', editable: false
+                },
+                {
+                    text: 'Object Type', datafield: 'ObjectType', editable: false
+                },
+                {
+                    text: 'Product', datafield: 'Product', width: '20%',editable: false
+                },
+                {
+                    text: 'Scenario', datafield: 'Scenario', editable: false
+                },
+                {
+                    text: 'Scenario Description', datafield: 'ScenarioDescription', editable: false
+                },
+                {
+                    text: 'Comments', datafield: 'Comments', editable: false
+                }
+            ]
+
+        });
+    }
+
+    //Save Manual Grid
+
+    function FnSaveManualGrid() {
+
+
+
+        var GlobalArr = [];
+
+        var GridRows = $("#ManualScenario").jqxGrid('getrows');
+
+        //////////////////////////////////////////////////////////////////
+       //To bind ProductId instead of ProductName in GridRows to avoid the problem of duplicate Product names
+        for (var i = 0; i < GridRows.length; i++)
+        {
+
+            //Section to get productID
+            if (GridRows[i].Product)
+            {
+                for (var j = 0; j < dataAdapterProduct.records.length; j++)
+                {
+                    if (dataAdapterProduct.records[j].Name == GridRows[i].Product)
+                    {
+                        GridRows[i].Product = dataAdapterProduct.records[j].Id;
+
+                        break;
+                    }
+                }
+            }
+
+
+
+        }
+
+        /////////////////////////////////////////////////////////////////
+
+         var oldLenght = ExistingRows.length;
+         var newlenght = GridRows.length;
+         var Lenghtdifference = newlenght - oldLenght;
+
+
+        var counts = 0;
+        if (GridRows.length > 0) {
+
+            for (var i = 0; i < GridRows.length; i++) {
+
+
+                var id = GridRows[i].Id;
+                //Only Edited Rows will add in GlobalArr Array
+                 //if (EditedRowsIndexArray.indexOf(i) != -1 || id == 'undefined' || id == '' || id === undefined) {
+                if (EditedRowsIndexArray.indexOf(i) != -1) {
+
+                    GlobalArr[counts] = [];
+                    GlobalArr[counts][0] = GridRows[i].Id;
+                    GlobalArr[counts][1] = GridRows[i].ObjectType;
+                    GlobalArr[counts][2] = GridRows[i].Product;
+                    GlobalArr[counts][3] = GridRows[i].Reference;
+                    GlobalArr[counts][4] = GridRows[i].Situation;
+                    GlobalArr[counts][5] = GridRows[i].Description;
+                    GlobalArr[counts][6] = GridRows[i].Comments
+                    counts = counts+1
+                }
+
+            }
+
+             //Only Newly added Rows will add in GlobalArr Array
+            if (Lenghtdifference > 0) {
+                var k = GridRows.length;
+                for (var j = 0; j < Lenghtdifference; j++ , k++) {
+                    GlobalArr[counts] = [];
+                    //GlobalArr[counts][0] = GridRows[j].Id;
+                    GlobalArr[counts][0] = 0;
+                    GlobalArr[counts][1] = GridRows[j].ObjectType;
+                    GlobalArr[counts][2] = GridRows[j].Product;
+                    GlobalArr[counts][3] = GridRows[j].Reference;
+                    GlobalArr[counts][4] = GridRows[j].Situation;
+                    GlobalArr[counts][5] = GridRows[j].Description;
+                    GlobalArr[counts][6] = GridRows[j].Comments;
+                    counts = counts + 1
+
+                }
+
+            }
+        }
+
+        //if (EditedRowsIndexArray.indexOf(i) != -1 || id == 'undefined' || id == '' || id === undefined) {
+
+        //    for (var i = 0; i < rows.length; i++) {
+        //        GlobalArr[i] = [];
+        //        GlobalArr[i][0] = rows[i].Id;
+        //        GlobalArr[i][1] = rows[i].ObjectType;
+        //        GlobalArr[i][2] = rows[i].Product;
+        //        GlobalArr[i][3] = rows[i].Reference;
+        //        GlobalArr[i][4] = rows[i].Situation;
+        //        GlobalArr[i][5] = rows[i].Description;
+        //        GlobalArr[i][6] = rows[i].Comments;
+        //    }
+
+        //}
+
+
+
+        //form submit
+        document.getElementById('FormData').value = GlobalArr;
+        document.getElementById('frm').submit();
+
+    }
+
+    function FnRedirectToEdit() {
+        var EntityType = '@ViewBag.EntityType';
+        var WorkFlowId = '@ViewBag.WorkFlowId';
+        var StepId = '@ViewBag.StepId';
+        var EntityId = '@ViewBag.EntityId';
+
+        if (EntityType == 'LRequests') {
+            //window.location.href = '/LRequests/Edit/' + EntityId + '?WorkFlowId=' + WorkFlowId + '&StepId=' + StepId;
+            window.location.href = '/LRequests/Edit/' + EntityId;
+        }
+        else if (EntityType == 'LProducts') {
+            window.location.href = '/LProducts/Edit/' + EntityId;
+        }
+    }
+
+    //function to download Overview grid
+    function FnExportOverviewGrid() {
+
+        var EntityId = '@ViewBag.EntityId' ;
+        var EntityType = '@ViewBag.EntityType';
+        window.location.href = '/LAccountingScenarios/DownloadOverviewAccountingScenarioMatrix?EntityId=' + EntityId + '&EntityType=' + EntityType;
+        //if (EntityType == 'LRequests') {
+        //    window.location.href = '/LAccountingScenarios/DownloadOverviewAccountingScenarioMatrix/EntityId=' + EntityId + '?EntityType=' + EntityType;
+        //}
+        //else if (EntityType == 'LProducts') {
+        //    window.location.href = '/LAccountingScenarios/DownloadOverviewAccountingScenarioMatrix/EntityId=' + EntityId + '?EntityType=' + EntityType;
+        //}
+
+    //start--------------------------date: 23/06/2018 comment just for making download icon un-use--------------
+        //var rows = $("#OverviewScenario").jqxGrid('getRows');
+        //    if (rows == null || rows == 'undefined' || rows.length == 0 ) {
+        //        alert("Nothing to download");
+        //        return;
+        //    }
+        //    $("#OverviewScenario").jqxGrid('exportdata', 'xls', 'jqxgridOverview');
+    //end--------------------------date: 23/06/2018 comment just for making download icon un-use--------------
+    }
+
+</script>
+
+
+<div id="jqxTabs">
+    <ul>
+        <li>Basic Scenarios</li>
+        <li>Special Cases</li>
+        <li>Manually added Scenarios</li>
+        <li>Overview</li>
+    </ul>
+    <div>
+        <div id="SurveyMatrixBasic"></div>
+    </div>
+    <div>
+        <div id="SurveyMatrixSpecial"></div>
+    </div>
+    <div>
+        @using (Html.BeginForm("SaveManualAccountingScenario", "LAccountingScenarios", FormMethod.Post, new { id = "frm", name = "frm" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.Hidden("FormData")
+            <div id="ManualScenario"></div>
+            <br>
+            <button class="btn btn-red" onclick="FnSaveManualGrid()">Save</button>
+            <br>
+        }
+        <br>
+    </div>
+    <div>
+        <br>
+        <i class="fa fa-download" aria-hidden="true" title="Download" onclick="FnExportOverviewGrid()" id="Download" style="cursor:pointer;font-size:15px !important;color:red"></i>
+        <div id="OverviewScenario"></div>
+    </div>
+</div>
+<br>
+    <button type="button" class="btn btn-borderRed btn-cons" id="BackButton" name="BackButton" onclick="FnRedirectToEdit()">Back&nbsp;</button>
+

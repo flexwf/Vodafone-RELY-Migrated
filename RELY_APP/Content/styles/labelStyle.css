@@ -1,0 +1,16 @@
+﻿.rely-labels {
+    /*Font-family: "Arial" ;Font-weight: normal;*/
+    text-align: left !important;
+    color: black !important;
+    font-weight: normal;
+    font-size:12px;
+}
+
+
+.gridlabels {
+    font-size: 8px;
+}
+
+.ui-dialog.custom-dialog {
+    z-index: 500!important;
+}

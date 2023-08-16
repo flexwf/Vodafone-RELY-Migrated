@@ -1,0 +1,496 @@
+﻿@model RELY_APP.ViewModel.RSysCatViewModel
+<a style="cursor:pointer" onclick="fnShowPopUp();">Create</a>
+<div id="jqxgrid">
+</div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    <!-- POP up window code-->
+    <div id="syscatpopup" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <div id="ErrorMessage"></div>                  
+                    <h4 class="modal-title" id="popupHeaderAdd">
+                        Create SysCat
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px">
+                                @Html.LabelFor(model => model.System, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                @Html.DropDownListFor(model => model.System, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;",id="sys", @onchange = "fnGetSysName();" })
+                                @Html.ValidationMessageFor(model => model.System, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px;margin-top:10px">
+                                @Html.LabelFor(model => model.Category, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10" style="margin-top:10px">
+                                @Html.DropDownListFor(model => model.Category, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", id = "cat", @onchange = "fnGetCatName();" })
+                                @Html.ValidationMessageFor(model => model.Category, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px;margin-top:10px">
+                                @Html.LabelFor(model => model.SysCat, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10" style="margin-top:10px">
+                                @Html.EditorFor(model => model.SysCat, new { htmlAttributes = new { @class = "form-control", id = "syscat" } })
+                                @Html.ValidationMessageFor(model => model.SysCat, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px;margin-top:10px">
+                                @Html.LabelFor(model => model.SysCatCode)
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10" style="margin-top:10px">
+                                @Html.EditorFor(model => model.SysCatCode, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly",id = "syscatcode" } })
+                               
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">   
+                    @*button on create pop up*@
+                    <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+<script>    
+    //var editedRows = new Array();
+    //var dataAdapterCategory = undefined;
+    //var dataAdapterSystem = undefined;   
+    //var columnname;
+    //var sysname;
+    //var syscode;
+    var dataAdapter = undefined;
+    var system;
+    var category;
+    var sysid;
+    var catid;
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache:false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+
+            }
+        });
+        fnGetRSysCat();
+    });
+    function fnGetSysName() {        
+        sysid = document.getElementById('sys').value;       
+    }
+    function fnGetCatName() {        
+        catid = document.getElementById('cat').value;       
+    }
+    //function to get all the syscat on grid
+    function fnGetRSysCat() {
+        var source = {
+            dataType: "json",
+            cache: false,
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'SysName', type: 'string' },
+                { name: 'SystemId', type: 'int' },
+                { name: 'CatName', type: 'string' },
+                { name: 'CategoryId', type: 'int' },
+                { name: 'SysCat', type: 'string' },
+                { name: 'SysCatCode', type: 'string' } //to show field of syscat code
+            ],
+            id: 'Id',
+            url: "/RSysCat/GetRSysCat"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);            
+            if (Number(rowdata.Id) != 0 && rowdata.CompanyCode) {
+                return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>';
+               
+            }
+            //else {
+            //    isChanged = true;
+            //    return '&emsp;<a href="#" onclick="FnDeleteGridRow(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+            //}
+        };
+        //function myformatter(cellvalue, options, rowObject) {
+        //    return cellvalue + ' ' + rowObject.sysname + ' ' + rowObject.CatName;
+        //}
+        //var cellclass = function (row, datafield, value, rowdata) {
+        //    for (var i = 0; i < editedRows.length; i++) {
+        //        if (editedRows[i].index == row) {
+        //            return "ChangeFontColor";
+        //        }
+        //    }
+        //}
+        $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            filterable: true,
+            altrows: true, //to give alternate colors to grid row
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'multiplecellsadvanced',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+            columns: [{
+                text: 'System', datafield: 'SysName' /*, validateEverPresentRowWidgetValue: validateFunc,*/ /*cellclassname: cellclass, columntype: 'dropdownlist'*/
+                //createeditor: function (row, cellvalue, editor) {
+                //    // console.log(clientSourceDA);
+                //    editor.jqxDropDownList({ displayMember: 'Name', valueMember: 'Id', source: dataAdapterSystem });
+
+                //},
+                //createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                //    var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                //    inputTag.jqxDropDownList({ source: dataAdapterSystem, displayMember: 'Name', valueMember: 'Id', width: '100%' });
+                //    $(document).on('keydown.Id', function (event) {
+                //        if (event.keyCode == 13) {
+                //            if (event.target === inputTag[0]) {
+                //                addCallback();
+                //            }
+                //            else if ($(event.target).ischildof(inputTag)) {
+                //                addCallback();
+                //            }
+                //        }
+                //    });
+                //    return inputTag;
+                //},
+                //getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                //    var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                //    if (!selectedItem)
+                //        return "";
+                //    var value = selectedItem.label;
+                //    columnname = value;
+                //    return value;
+
+                //},
+                //resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                //    htmlElement.jqxDropDownList('clearSelection');
+                //}
+
+            },
+            {
+                text: 'Category', datafield: 'CatName', filtertype: 'input'/*, cellclassname: cellclass , columntype: 'dropdownlist'*/,
+                //createeditor: function (row, cellvalue, editor) {
+                //    // console.log(clientSourceDA);,displayfield:'CatName'
+                //    editor.jqxDropDownList({ displayMember: 'Name', valueMember: 'Id', source: dataAdapterCategory });
+                //    editor.on('change', function (event)//This function will save CategoryId in Edit
+                //    {
+                //        var args = event.args;
+                //        if (args) {
+                //            // index represents the item's index.
+                //            var index = args.index;
+                //            var item = args.item;
+                //            // get item's label and value.
+                //            var label = item.label;
+                //            var value = item.value;
+
+                //            $("#jqxgrid").jqxGrid('setcellvalue', row, "CategoryId", value);
+                //        }
+                //    });
+                //},
+                //createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                //    var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                //    inputTag.jqxDropDownList({ source: dataAdapterCategory, displayMember: 'Name', valueMember: 'Id', width: '100%' });
+                //    $(document).on('keydown.Id', function (event) {
+                //        if (event.keyCode == 13) {
+                //            if (event.target === inputTag[0]) {
+                //                addCallback();
+                //            }
+                //            else if ($(event.target).ischildof(inputTag)) {
+                //                addCallback();
+                //            }
+                //        }
+                //    });
+                //    return inputTag;
+                //},
+                //getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                //    var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                //    if (!selectedItem)
+                //        return "";
+                //    var value = selectedItem.label;
+                //    sysname = value;
+                //    syscode = columnname + '_' + sysname;
+                //    return value;
+                //},
+                //resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                //    htmlElement.jqxDropDownList('clearSelection');
+                //}
+
+            },
+            {
+                text: 'Sys Cat', datafield: 'SysCat'/*,  filtertype: 'input', cellclassname: cellclass, editable: false/*, validateEverPresentRowWidgetValue: validateFunc*/
+            },
+            // Date: 25th june 2018 start ----RSysCatCode column added in grid and generate concatenated value of System and Category
+            {
+                text: 'SysCat Code', datafield: 'SysCatCode',/* cellclassname: cellclass, editable: false,*/
+                //initEverPresentRowWidget: function (datafield, htmlElement) {
+                //    var input = htmlElement.find('input');
+                //    input.attr('readonly', true);
+                //    input.attr('disabled', true);
+                //    htmlElement.addClass('jqx-fill-state-disabled');
+                //},
+                //createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                //    var inputTag = $("<div id='Typediv' style='border: none;'></div>").appendTo(htmlElement);
+                //    return inputTag;
+                //},
+                //getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                //    return syscode;
+                //},
+
+                //cellsrenderer: function (row, columnfield, value) {
+                //    //return '<div  style="color:#e60000;"></div>';
+                //    return '<div style="height: 100%; background-color: #ddd;"><span style=" position: relative; margin: 4px;">' + value + '</span></div>'
+
+                //}
+            },
+            // Date: 25th june 2018 end ----RSysCatCode column added in grid and generate concatenated value of System and Category
+            {
+                text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%'/*, , editable: false,validateEverPresentRowWidgetValue: validateFunc,*/
+                //initEverPresentRowWidget: function (datafield, htmlElement) {
+                //    var input = htmlElement.find('input');
+                //    input.attr('readonly', true);
+                //    input.attr('disabled', true);
+                //    htmlElement.addClass('jqx-fill-state-disabled');
+                //}
+            }
+            ]
+        });
+    }
+
+    //this method is use to open modal pop up
+    function fnShowPopUp() {
+        $("#btncreate").show();
+        $("#popupHeaderAdd").show();      
+        $("input.form-control").val('');
+        $('.text-danger').text(""); /*to clear validation message*/
+        document.getElementById('sys').value = '';
+        document.getElementById('cat').value = '';
+        $('#syscatpopup').modal(); //modal pop up opens
+        $("#sys").change(function () {
+            if ($("#syscatcode").val() != "") {
+                $("#syscatcode").val("");
+            }
+            system = $(this).find("option:selected").text();
+        });
+        $("#cat").change(function () {           
+            category = $(this).find("option:selected").text();                 
+            $("#syscatcode").val(system + "_"+ category );
+        });
+        $("#syscatcode").val("");
+    }
+
+    //function to add new data
+    $("#btncreate").click(function (event) {
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            $("#btncreate").show();
+            $("#popupHeaderAdd").show();         
+            $.ajax({
+                type: "POST",
+                data: $("#frm").serialize() + "&sysid=" + sysid + "&catid=" + catid,
+                cache:false,
+                url: "/RSysCat/Create",               
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetRSysCat();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#syscatpopup").modal({ "backdrop": "static" });
+                    }
+
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+        else {
+            event.stopPropagation();
+        }
+    });   
+    
+    //This method is called when User clicks on delete glymph in grid
+    function FnDelete(Id) {
+        var r = confirm("Are you sure to delete the selected SysCat?");
+        if (r == false) {
+            return;
+        }
+        else {
+            $.ajax({
+                data: { Id: Id },
+                cache: false,
+                url: "/RSysCat/Delete",
+                traditional: true,
+                success: function (data) {                    
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        }
+                        else {
+                            alert(data.PopupMessage);
+                        }
+                        fnGetRSysCat();
+                    }
+                    else {
+                        //Any unhanded error has been caught
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");  //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+/*--------------------------------------------------------below method is commented by Rakhi Singh on 10/09/18-------------------------------------------------------*/
+            //var Categorysource = {
+        //    dataType: "json",
+        //    type: "GET",
+        //    dataFields: [
+        //        { name: 'Id', type: 'int' },
+        //        { name: 'CompanyCode', type: 'string' },
+        //        { name: 'Name', type: 'string' },
+        //        { name: 'Description', type: 'string' }
+        //    ],
+        //    id: 'Id',
+        //    url: "/RSysCat/BindProductCategoryDropdown"
+
+        //};
+        //dataAdapterCategory = new $.jqx.dataAdapter(Categorysource, { async: false, autoBind: true })
+
+        /////For Product System Dropdown
+        //var ProductSystemsource = {
+        //    dataType: "json",
+        //    type: "GET",
+        //    dataFields: [
+        //        { name: 'Id', type: 'int' },
+        //        { name: 'CompanyCode', type: 'string' },
+        //        { name: 'Name', type: 'string' },
+        //        { name: 'Description', type: 'string' }
+        //    ],
+        //    id: 'Id',
+        //    url: "/RSysCat/BindProductSystemDropdown"
+
+        //};
+        //dataAdapterSystem = new $.jqx.dataAdapter(ProductSystemsource, { async: false, autoBind: true })
+    @*<input type="button" class="btn btn-red" value="Save" onclick="FnAddRSysCat();">*@
+     ////function to delete unsaved grid row from grid
+    //function FnDeleteGridRow(Id) {
+    //    var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //}
+    //Add Types Function
+
+    //function FnAddRSysCat() {
+    //    //SS is adding a workaroung so as to Bind Id of selected dropdown by looping throughdataAdapter of selected dropdown instead of binding Id in Grid. Will replace if efficient system found
+    //    var arr = [];
+    //    var rows = $('#jqxgrid').jqxGrid('getrows');
+    //    for (var i = 0; i < rows.length; i++) {
+    //        arr[i] = [];
+    //        arr[i][0] = rows[i].Id;
+    //        //Section to get SysId
+    //        if (rows[i].SysName) {
+    //            for (var j = 0; j < dataAdapterSystem.records.length; j++) {
+    //                if (dataAdapterSystem.records[j].Name == rows[i].SysName) {
+    //                    arr[i][1] = dataAdapterSystem.records[j].Id;
+    //                    break;
+    //                }
+    //            }
+    //        }
+    //        //Section to add CategoryId
+    //        if (rows[i].CatName) {
+    //            for (var k = 0; k < dataAdapterCategory.records.length; k++) {
+    //                if (dataAdapterCategory.records[k].Name == rows[i].CatName) {
+    //                    arr[i][2] = dataAdapterCategory.records[k].Id;
+    //                    break;
+    //                }
+    //            }
+    //        }
+
+    //        arr[i][3] = rows[i].SysCat;
+    //        arr[i][4] = rows[i].SysCatCode;
+    //    }
+
+    //    $.ajax({
+    //        data: { GridData: arr },
+    //        url: "/RSysCat/EditRSysCat",
+    //        type: "POST",
+    //        // traditional: true,
+    //        success: function (data) {
+    //            if (data) {
+    //                if (data.ErrorMessage) {
+    //                    alert(data.ErrorMessage);
+    //                } else {
+    //                    alert("Data Updated successfully");
+    //                }
+    //            }
+    //            else {
+    //                window.location.href = "/Home/Error";
+    //            }
+    //            window.location.reload();
+    //        },
+    //        error: function (reponse) {
+    //            //  alert("error : " + reponse);
+    //        }
+    //    });
+
+    //}
+     // validation function
+        //var validateFunc = function (datafield, value) {
+        //    switch (datafield) {
+        //        case "SysCat":
+        //            if (value.length == 0) {
+        //                return { message: "SysCat is required", result: false };
+        //            }
+        //            return true;
+        //        case "Id":
+        //            if (value.length > 0) {
+        //                return { message: "Cannot Enter value in this field", result: false };
+        //            }
+        //            return true;
+        //    }
+        //    return true;
+        //}
+
+     //keyboardnavigation: false,
+            //enablebrowserselection: true,
+            //showeverpresentrow: true,
+            //everpresentrowposition: "top",
+            //editable: true,
+            //localization: {
+            //    addrowstring: "Add",
+            //    udpaterowstring: "Update",
+            //    deleterowstring: "Delete",
+            //    resetrowstring: "Clear",
+            //    everpresentrowplaceholder: "Type: "
+            //},
+</script>

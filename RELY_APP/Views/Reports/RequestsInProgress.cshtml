@@ -1,0 +1,305 @@
+﻿
+
+<script type="text/javascript">
+    var SelectedStatus = '';
+    //var Interval = 0;
+    //var NumberOfBuckets = 0;
+
+    $(document).ready(function () {
+        //$("#jqxDateTimeInputStartDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+        //$("#jqxDateTimeInputEndDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+        //fnRequestsInProgress();
+        $("#divRequestInProgress").hide();
+        $("#DownloadExcel").hide();
+        fnGetStatusDropDown();
+        //$("#csvExport").jqxButton();
+        //$("#csvExport").click(function () {
+
+        //    var dt = new Date();
+
+        //    // Display the month, day, and year. getMonth() returns a 0-based number.  
+        //    var month = dt.getMonth() + 1;
+        //    var day = dt.getDate();
+        //    var year = dt.getFullYear();
+        //    var currentDate = day + '-' + month + '-' + year;
+        //    $("#jqxgrid").jqxGrid('exportdata', 'csv', 'RequestsInProgress_' + currentDate);
+
+        //});
+
+        $("#jqxgrid").bind('bindingcomplete', function () {
+            var localizationobj = {};
+            filterstringcomparisonoperators = ['empty', 'not empty', 'contains', 'contains(match case)',
+                'does not contain', 'does not contain(match case)', 'equal', 'equal(match case)', 'null', 'not null'];
+            filternumericcomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterdatecomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterbooleancomparisonoperators = ['equal', 'not equal'];
+            localizationobj.filterstringcomparisonoperators = filterstringcomparisonoperators;
+            localizationobj.filternumericcomparisonoperators = filternumericcomparisonoperators;
+            localizationobj.filterdatecomparisonoperators = filterdatecomparisonoperators;
+            localizationobj.filterbooleancomparisonoperators = filterbooleancomparisonoperators;
+            // apply localization.
+            $("#jqxgrid").jqxGrid('localizestrings', localizationobj);
+        });    
+
+        fnShowRequestInProgress();
+
+        //fnFilterByNameRequestInProgress();
+    });
+
+    
+
+    function fnRequestsInProgress(Interval,NumberOfBuckets) {
+
+        var sourceRequestsInProgress = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'Status', type: 'string' },
+                { name: 'CreationDate', type: 'string' },
+                { name: 'StatusDate', type: 'string' },
+                { name: 'Age', type: 'int' },
+                //{ name: 'DateInterval', type: 'string' },
+                { name: 'SurveyStatus', type: 'string' }
+            ],
+            data: { Interval: Interval, NumberOfBuckets: NumberOfBuckets },
+            url: "/Reports/GetRequestsInProgress"
+        };
+        var dataAdapterRequestsInProgress = new $.jqx.dataAdapter(sourceRequestsInProgress);
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterRequestsInProgress,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 50,
+            filterable: true,
+            showfilterrow: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            pagesizeoptions: ['50', '100', '200', '500', '1000'],
+            ready: function () {
+            },
+            columns: [
+
+                { text: 'Request ID', datafield: 'Id' },
+                { text: 'Name', datafield: 'Name' },
+                { text: 'Status', datafield: 'Status' },
+                { text: 'CreationDate', datafield: 'CreationDate' },
+                { text: 'StatusDate', datafield: 'StatusDate' },
+                { text: 'Age', datafield: 'Age' },
+                { text: 'DateInterval', datafield: 'DateInterval' },
+                { text: 'SurveyStatus', datafield: 'SurveyStatus' }
+            ]
+        });
+    }
+
+    function fnFilterByNameRequestInProgress() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtName').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $("#jqxgrid").jqxGrid('removefilter', 'Status');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreationDate');
+        $("#jqxgrid").jqxGrid('addfilter', 'Name', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+        //alert(filtervalue);
+    }
+
+
+
+    function fnFilterByStatusRequestInProgress(Status) {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = Status;
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreationDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'StatusDate');
+        $("#jqxgrid").jqxGrid('addfilter', 'Status', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+        //alert(filtervalue);
+    }
+
+    function fnFilterByCreationDateRequestInProgress() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtCreationDate').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $("#jqxgrid").jqxGrid('removefilter', 'Status');
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'StatusDate');
+        $("#jqxgrid").jqxGrid('addfilter', 'CreationDate', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+        //alert(filtervalue);
+    }
+
+    function fnFilterByStatusDateRequestInProgress() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtStatusDate').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $("#jqxgrid").jqxGrid('removefilter', 'Status');
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreationDate');
+        $("#jqxgrid").jqxGrid('addfilter', 'StatusDate', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+        //alert(filtervalue);
+    }
+
+
+    function fnGetStatusDropDown() {
+        var sourceStatus = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Name', type: 'string' },
+            ],
+            data: { BaseTableName: 'LRequests' },
+            url: "/Reports/GetStatus"
+        };
+        var dataAdapterStatus = new $.jqx.dataAdapter(sourceStatus)
+        $('#StatusDropdownlist').jqxDropDownList({
+            filterable: true,
+            source: dataAdapterStatus,
+            searchMode: 'containsignorecase',
+            width: '150px',
+            height: '25px',
+            displayMember: "Name",
+            valueMember: "Name"
+        });
+        $('#StatusDropdownlist').on('change', function (event) {
+            var args = event.args;
+            if (args) {
+                // index represents the item's index.
+                var index = args.index;
+                var item = args.item;
+                // get item's label and value.
+                var label = item.label;
+                var value = item.value;
+                SelectedStatus = label;
+                //fnRequestPerStatus(label);
+            }
+        });
+    }
+
+    function fnShowRequestInProgress()
+    {
+        //alert('Hello');
+        //var txtInterval = $('#txtInterval').val();
+        //var txtNumberOfBuckets = $('#txtBuckets').val();
+        //if (txtInterval == "") {
+        //    alert("Please fill Interval");
+        //    $('#txtInterval').focus();
+        //    return;
+        //}
+        //if (txtNumberOfBuckets == "") {
+        //    alert("Please fill Number of buckets");
+        //    $('#txtBuckets').focus();
+        //    return;
+        //}
+        $("#divRequestInProgress").show();
+        $("#DownloadExcel").show();
+        fnRequestsInProgress(0, 0);
+
+    }
+    function fnSearchByStatusRequestInProgress() {
+
+        fnFilterByStatusRequestInProgress(SelectedStatus);
+    }
+
+    function DownloadRequestInProg() {
+        //var txtInterval = $('#txtInterval').val();
+        //var txtNumberOfBuckets = $('#txtBuckets').val();
+        //if (txtInterval == "") {
+        //    alert("Please fill Interval");
+        //    $('#txtInterval').focus();
+        //    return;
+        //}
+        //if (txtNumberOfBuckets == "") {
+        //    alert("Please fill Number of buckets");
+        //    $('#txtBuckets').focus();
+        //    return;
+        //}
+        window.location.href = '/Reports/DownloadRequestInProg?Interval=' + 0 + '&NumberofBuckets=' + 0;
+    }    
+</script>
+
+
+<div class="col-md-12 col-lg-12">
+    @*<div class="col-md-8 col-lg-8 boxes">
+        <div class="col-md-4 col-lg-4">
+            <label for="Interval" class="rely-labels col-lg-4 col-md-4">Interval:</label>
+            <input type="text" class="form-control col-lg-2 col-md-2" id="txtInterval" onkeypress="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" onkeyup="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" style="width:50%" />
+        </div>
+        <div class="col-md-4 col-lg-4">
+            <label for="Buckets" class="rely-labels col-lg-5 col-md-5"># Of Buckets:</label>
+            <input type="text" class="form-control col-lg-2 col-md-2" id="txtBuckets" onkeypress="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" onkeyup="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" style="width:50%"/>
+        </div>
+        <div class="col-md-1 col-lg-1">
+            <input type="button" id="GetDetails" class="btn btn-red" onclick="fnShowRequestInProgress();" value="Go" />
+        </div>
+        
+    </div>*@
+    <div id="divRequestInProgress" class="boxes">
+        @*<div id="DownloadExcel" class="col-md-1 col-lg-1">
+            <h class="text-danger text-capitalize"><i id="csvExport" onclick="DownloadRequestInProg();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i></h>
+        </div>*@
+        <div class="col-lg-1 col-md-1">
+            <button type="button" class="btn btn-red-SideLayout btn-cons" id="csvExport" name="csvExport" onclick=" DownloadRequestInProg();">Download</button>
+        </div>
+        <div class="col-md-12 col-lg-12 rely-labels" style="display:none">
+
+            <div class="pull-left">
+                <div class="col-md-2 col-lg-2">
+
+                    <label for="Name" class="rely-labels col-lg-4 col-md-4">Name:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtName" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByNameRequestInProgress();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2">
+
+                    <label for="Status" class="rely-labels col-lg-4 col-md-4">Status:</label>
+                    <div id="StatusDropdownlist" class="col-lg-4 col-md-4" style="background:white !important;"></div>&nbsp;
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnSearchByStatusRequestInProgress();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2">
+
+                    <label for="CreationDate" class="rely-labels">Creation Date:</label>
+                    <div><input type="text" class="form-control col-lg-4 col-md-4" id="txtCreationDate" /></div>&nbsp;
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByCreationDateRequestInProgress();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2">
+
+                    <label for="StatusDate" class="rely-labels">Status Date:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtStatusDate" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByStatusDateRequestInProgress();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <br />
+
+            </div>
+        </div>
+        <br />
+        <div id="jqxgrid"></div>
+    </div>
+</div>

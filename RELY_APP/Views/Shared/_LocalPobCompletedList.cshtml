@@ -1,0 +1,198 @@
+﻿
+<script>
+    $(document).ready(function () {
+        //Sction to display LPob grid in popup
+       // FnLoadLPobGrid();
+        //Binding event
+        var LPobName = '';
+        $("#jqxPopupgrid").on("bindingcomplete", function (event) {
+            var LPob = document.getElementById('LPobId').value
+            if (LPob && LPob != 0) {
+                var GridRows = $('#jqxPopupgrid').jqxGrid('getrows')
+                    var LPobId = LPob;
+                    var rowboundindex = $('#jqxPopupgrid').jqxGrid('getrowboundindexbyid', LPobId);
+                    $('#jqxPopupgrid').jqxGrid('selectrow', rowboundindex);
+                    LPobName = GridRows[rowboundindex].Name;
+                    SelectedPobCatalogueId = GridRows[rowboundindex].PobCatalogueId;
+                    CatalogueId = GridRows[rowboundindex].PobCatalogueId;
+                    SelectedLocalPOBId = LPobId;
+                SelectedLocalPOB = LPobName;
+                fnGetGpobDetails();
+                fnGetCopaDetails();
+                fnGetLPobSSPDetails(LPobId);
+                    //document.getElementById('PobName').value = GridRows[rowboundindex].Name;
+                    document.getElementById('LPobName').value = GridRows[rowboundindex].Name;
+                    //document.getElementById('PobType').value = GridRows[rowboundindex].LLocalPOBType;
+                    document.getElementById('PobDescription').value = GridRows[rowboundindex].Description;
+
+                    //document.getElementById('GPob1').value = GridRows[rowboundindex].POB1;
+                    //document.getElementById('Copa2').value = GridRows[rowboundindex].COPA2;
+                    //document.getElementById('Copa5').value = GridRows[rowboundindex].COPA5;
+                    //document.getElementById('GPob2').value = GridRows[rowboundindex].Retention;
+                    //document.getElementById('Copa22').value = GridRows[rowboundindex].COPA22;
+                    //document.getElementById('Copa52').value = GridRows[rowboundindex].COPA52;
+                    //GlobalPOBValue[0] = GridRows[rowboundindex].POB1;
+                    //Copa2Value[0] = GridRows[rowboundindex].COPA2;
+                    //Copa5Value[0] = GridRows[rowboundindex].COPA5;
+                    //GlobalPOBValue[1] = GridRows[rowboundindex].Retention;
+                    //Copa2Value[1] = GridRows[rowboundindex].COPA22;
+                    //Copa5Value[1] = GridRows[rowboundindex].COPA52;
+
+            }
+        });
+        //Section ends here
+    });
+
+    //save Selected LPob from Grid
+    function FnSaveSelectedLPob() {
+        var LPobId = '';
+        var LPobName = '';
+        //hide Edit LocalPob button
+        //document.getElementById("EditLPobLink").style.display = 'none';
+            var item = $('#jqxPopupgrid').jqxGrid('getselectedrowindex');
+            var LPobdata = $('#jqxPopupgrid').jqxGrid('getrowdata', item);
+            //console.log(LPobdata)
+            LPobId = LPobdata.Id;
+        LPobName = LPobdata.Name;
+
+            SelectedLocalPOBId = LPobId;
+            SelectedLocalPOB = LPobName;
+        SelectedPobCatalogueId = LPobdata.PobCatalogueId; CatalogueId = SelectedPobCatalogueId;
+            document.getElementById('LPobId').value = LPobId;
+            document.getElementById('LPobName').value = LPobName;
+            //document.getElementById('PobName').value = LPobdata.Name;
+            //document.getElementById('PobType').value = LPobdata.LLocalPOBType;
+            document.getElementById('PobDescription').value = LPobdata.Description;
+
+            //document.getElementById('GPob1').value = LPobdata.POB1;
+            //document.getElementById('Copa2').value = LPobdata.COPA2;
+            //document.getElementById('Copa5').value = LPobdata.COPA5;
+            //document.getElementById('GPob2').value = LPobdata.Retention;
+            //document.getElementById('Copa22').value = LPobdata.COPA22;
+            //document.getElementById('Copa52').value = LPobdata.COPA52;
+            //GlobalPOBValue[0] = LPobdata.POB1;
+            //Copa2Value[0] = LPobdata.COPA2;
+            //Copa5Value[0] = LPobdata.COPA5;
+            //GlobalPOBValue[1] = LPobdata.Retention;
+            //Copa2Value[1] = LPobdata.COPA22;
+            //Copa5Value[1] = LPobdata.COPA52;
+    }
+
+    //Load LPob Grid in a Popup
+    function FnLoadLPobGrid() {
+
+        var LPobIdList = '';
+        if (document.getElementById('LPobId'))
+            LPobIdList = document.getElementById('LPobId').value
+        $.ajax({
+            url: "/LProducts/GetLocalPobCounts",
+            dataType: "json",
+            type: "POST",
+            cache: false,
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'string' },
+                        { name: 'Name', type: 'string' },
+                        { name: 'LLocalPOBType', type: 'string' },
+                        { name: 'Description', type: 'string' },
+                        //{ name: 'POB1', type: 'string' },
+                        //{ name: 'COPA2', type: 'string' },
+                        //{ name: 'COPA5', type: 'string' },
+                        //{ name: 'Retention', type: 'string' },
+                        //{ name: 'COPA22', type: 'string' },
+                        //{ name: 'COPA52', type: 'string' },
+                        { name: 'PobCatalogueId', type: 'int' },
+                    ],
+                    id: "Id",
+                   // data: { PortfolioList: PortfolioList, LPobId: LPobIdList },
+                    data: { UnderlyingProductId:'@Model.Id'},
+                    url: "/LProducts/GetLocalPob",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                       // $("#jqxPopupgrid").jqxGrid('clear');
+                        $('#jqxPopupgrid').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxPopupgrid').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                       // $("#jqxPopupgrid").jqxGrid('clear');
+                        $('#jqxPopupgrid').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxPopupgrid').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    }
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxPopupgrid").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxPopupgrid").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxPopupgrid').jqxGrid({
+                        source: ParentdataAdapter,
+                        height: '50%',
+                        width: "100%",
+                        columnsresize: true,
+                        pageable: true,
+                        pagesize: 200,
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting,
+                        sortable: true,
+                        keyboardnavigation: false,
+                        pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return ParentdataAdapter.records;
+                        },
+                        columns: [
+                            { text: 'Name', datafield: 'Name' },
+                            //{ text: 'LPOB Type', datafield: 'LLocalPOBType' },
+                            //{ text: 'GPOB', datafield: 'POB1' },
+                            //{ text: 'COPA2', datafield: 'COPA2' },
+                            //{ text: 'COPA5', datafield: 'COPA5' },
+                            //{ text: 'Retention', datafield: 'Retention' },
+                            //{ text: 'COPA2(Ret.)', datafield: 'COPA22' },
+                            //{ text: 'COPA5(Ret.)', datafield: 'COPA52' },
+                        ]
+                    });
+                }
+            }
+        });
+    }
+
+    function FnLoadPopup() {
+        FnLoadLPobGrid();
+        $('#LPobModal').modal();
+    }
+
+</script>
+
+<!-- This code displays a popup to get Selected LPobs-->
+<div class="modal fade" id="LPobModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="PopupHeader">Select Local Pob</h4>
+            </div>
+            <div class="modal-body">
+                <div id="jqxPopupgrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red pull-left" onclick="FnSaveSelectedLPob();" data-dismiss="modal">Ok</button>&ensp;
+                <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>

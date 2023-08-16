@@ -1,0 +1,397 @@
+﻿@{
+    var comments = ViewBag.Comment as string;
+    var TabList = (List<RELY_APP.ViewModel.WStepsViewModel>)ViewBag.GenericGridTabs;
+    var GenericGridGridColumnDetailsList = (List<RELY_APP.ViewModel.GenericGridColumnsViewModel>)ViewBag.GridColumns;
+    var WorkflowDetails = (RELY_APP.ViewModel.RWorkflowViewModel)ViewBag.WorkflowDetails;
+    var BotButtons = (List<string>)ViewBag.BottomButtons;
+    int TabCount = 0;
+}
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>
+&ensp;
+<div class="boxes">
+    <h5 class="text-danger text-capitalize">@WorkflowDetails.UILabel &ensp;<i class="fa fa-download" aria-hidden="true" onclick="DownloadGenericGrid()" style="cursor:pointer;font-size:15px !important"></i></h5>
+    @Html.Raw(ViewBag.TopLinks)
+    <div id='jqxTabs' class="inner-tabs ">
+        @*Display Tabs along with Count of records in each of the grid contained within tab*@
+        <ul class="nav nav-tabs tabs tabs-container-border ">
+            @foreach (var i in TabList)
+            {
+                var TabId = "Tab" + i.Name.Replace(" ", "");
+                <li style="margin-left: 5px;">@i.Label <span class="badge" id=@TabId>0</span></li>
+            }
+
+        </ul>
+
+        @*Display data grid in each tab (using loop)*@
+
+        @for (var i = 0; i < TabList.Count(); i++)
+        {
+            var GridId = "Grid" + TabList.ElementAt(i).Name.Replace(" ", "");
+            var ButtonId = "Button" + TabList.ElementAt(i).Name.Replace(" ", "");
+            <div class="tab-content" style="padding:10px;">
+                <div id=@GridId></div>
+                <br>
+                <p style="width:auto;text-decoration:underline;text-transform:uppercase;color:red;">@TabList[i].Banner</p>
+                <br>
+                <textarea class="textarea1" style="height:100px;" placeholder="Enter Comments for Mass Action" onchange="FnAttachComment(this.value);"></textarea>@*onfocus="FnAttachComment(this.value);"*@
+                <br>&ensp;<br>
+                @Html.Raw(BotButtons.ElementAt(i))
+                @*<p id=@ButtonId></p>*@
+                <br>
+            </div>
+        }
+    </div>
+
+</div>
+
+
+
+<script src="~/Scripts/jqxdata.export.js"></script>
+<script src="~/Scripts/jqxgrid.export.js"></script>
+<script type="text/javascript">
+    var TabArray=[];
+
+
+    //This function will export grid in csv of current tab
+    //function FnExportGridcsv()
+    //{
+    //    var xx=$('#jqxTabs').jqxTabs('selectedItem');
+    //var TabName=TabArray[xx];
+    //    window.location.href='/GenericGrid/ExportGenericGrid?SelectedTabIndex='+xx+'&TabName='+TabName;
+
+    //}
+
+    //Global variable to save grid's list'
+    var GridArray = [];
+    var IsGridReloading = true;//variable to retain grid state
+    $(document).ready(function ()
+    {
+        //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            cache: false,
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        //This line adds tabs in the view
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+
+        var StepArray = @Html.Raw(Json.Encode(TabList));
+        var IsDefaultSet=false;
+        //Populate data in different grids available on the page
+        for (var i = 0; i < StepArray.length; ++i)
+        {
+            var GridId = "Grid" + StepArray[i].Name.replace(' ', '');
+            TabArray.push(StepArray[i].Name.replace(' ', ''));
+           // FnGetGrid(GridId);
+            FnGetGridCount(GridId);//get counts for the tab and set along with the TabName.
+            //Set the default tab if is default is set to true at min ordinal
+            if(StepArray[i].IsDefault==true&&IsDefaultSet==false)
+            {
+                $('#jqxTabs').jqxTabs('select', i);
+                FnGetGrid(GridId);//loading default tab only.
+                IsDefaultSet = true;
+            }
+            $("#" + GridId).on("bindingcomplete", function (event) {
+
+            });
+            document.getElementById(GridId).addEventListener('dblclick', function () {
+                var selectedrowindex = $('#' + GridId).jqxGrid('selectedrowindex');
+            });
+        }
+
+        //Load Generic Grid on demand
+        $('#jqxTabs').on('tabclick', function (event) {
+            var clickedItem = event.args.item;
+            if (TabArray.length > (clickedItem)) {
+                var GridId = "Grid" + StepArray[clickedItem].Name.replace(' ', '');
+                FnGetGrid(GridId);
+            }
+        });
+        //LOad tab content when selected
+        //$('#jqxTabs').on('selected', function (event) {
+        //    var clickedItem = event.args.item;
+        //        var GridId = "Grid" + StepArray[clickedItem].Name.replace(' ', '');
+        //        FnGetGrid(GridId);
+        //});
+
+        //this line is added to display any message from controller as popup
+        if ('@TempData["Message"]')
+        {
+            alert('@TempData["Message"]')
+        }
+        if ('@TempData["Error"]')
+        {
+            alert('@TempData["Error"]')
+        }
+
+        //Get role from session and make that tab selected in view
+        var length = $('#jqxTabs').jqxTabs('length');
+        var WFName = '@HttpContext.Current.Session["Workflow"]'
+        var CurrentRole = '@HttpContext.Current.Session["CurrentRoleName"]'
+        if (sessionStorage.CurrentTab && sessionStorage.Workflow == WFName && CurrentRole == sessionStorage.PreviousRole)
+        {
+           // $('#jqxTabs').jqxTabs('select', sessionStorage.CurrentTab)
+        }
+        IsGridReloading = false;//Loading is finished
+    });
+
+    window.onbeforeunload = function () {
+        var selectedItem = $('#jqxTabs').jqxTabs('selectedItem');
+        var CurrentRole = '@HttpContext.Current.Session["CurrentRoleName"]'
+        if (typeof (Storage) !== "undefined") {
+            // Code for localStorage/sessionStorage.
+            var CurrentGrid = GridArray[selectedItem];
+            sessionStorage.CurrentGrid = CurrentGrid;
+            sessionStorage.CurrentTab = selectedItem;
+            sessionStorage.Workflow = '@HttpContext.Current.Session["Workflow"]'
+            sessionStorage.PreviousRole=CurrentRole;
+        } else {
+            // Sorry! No Web Storage support..
+        }
+    }
+
+    function FnGetGridCount(GridId) {
+         var JsonArray = @Html.Raw(Json.Encode(GenericGridGridColumnDetailsList));
+        var ConfigIdArray= @Html.Raw(Json.Encode(TabList));
+        var TabName = GridId.replace('Grid', '');
+        var WStepID=0;
+        for(var j=0;j<ConfigIdArray.length;++j)//look for config Id based on tab Name and assign it to WStepID variable
+        {
+            if(ConfigIdArray[j].Name.replace(' ','')==TabName)
+            {
+                WStepID=ConfigIdArray[j].Id;
+            }
+        }
+        $.ajax({
+            data: { WStepID: WStepID, TabName: TabName },
+            url: "/GenericGrid/GetGenericGridCounts",
+            dataType: "json",
+            cache: false,
+            type: "POST",
+            success: function (counts) {
+                //code to display row counts in tab headings
+                document.getElementById('Tab' + TabName).innerHTML = counts;
+            }
+        });
+
+    }
+
+    //This function will load data in the generic Grid grid
+    function FnGetGrid(GridId) {
+        //Loop though list of columns passed in viewbag and  populate arrays of datafiels and columns of grid
+        //Apply filter of relevant TabName (Removing Grid from GridId gives tabname)
+        var JsonArray = @Html.Raw(Json.Encode(GenericGridGridColumnDetailsList));
+        @*var DataArray= @Html.Raw(Json.Encode(ViewBag.GridData));*@
+        var ConfigIdArray= @Html.Raw(Json.Encode(TabList));
+        var WorkflowName='@HttpContext.Current.Session["Workflow"]'
+        var TabName = GridId.replace('Grid', '');
+        var datafields = new Array();
+        var columns = new Array();
+        var WStepID=0;
+        for(var j=0;j<ConfigIdArray.length;++j)//look for config Id based on tab Name and assign it to WStepID variable
+        {
+            if(ConfigIdArray[j].Name.replace(' ','')==TabName)
+            {
+                WStepID=ConfigIdArray[j].Id;
+            }
+        }
+
+        //The below function will add action links in action column of the grid
+        //function definition in below line doesn't have any code ({}), still it is required, please do not delete
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, rowdata, displayfield, columnproperties) { };
+
+        //make an ajax call to get counts, if it succeeds, then bring other data (such as columns etc)
+        $.ajax({
+            data: { WStepID: WStepID ,TabName:TabName},
+            url: "/GenericGrid/GetGenericGridCounts",
+            dataType: "json",
+            cache: false,
+            type: "POST",
+            success: function (counts) {
+                datafields.push({ name: 'Actions', type: 'string' });
+                columns.push({ text: 'Actions', datafield: 'Actions', editable: false, width: '15%', exportable : false,
+                    cellsrenderer: function (row, colum, value) {
+                        var cell = '<div style="margin-top:5px;">';
+                        //cell += '<div style="background: #058dc7; float: left; width: ' + value + 'px; height: 16px;"></div>';
+                        cell += '<div style="margin-left: 5px; float: left;">' + String(value) + '</div>';
+                        cell += '</div>';
+                        return cell;
+                    },
+                     pinned: true, menu: false, sortable: false //SG - 13Feb2019 - For freezing ACtions Column even while scrolling to right
+                });
+                //Get Column details by iterating through list of columns
+                for (var i = 0; i < JsonArray.length; i++) {
+                    if (WStepID == JsonArray[i].WStepId) {
+                        if (JsonArray[i].DataType == 'nvarchar' || JsonArray[i].DataType == 'nchar') {
+                            columns.push({ text: JsonArray[i].Label, datafield: JsonArray[i].ColumnName, editable: false, width: '15%' });
+                            datafields.push({ name: JsonArray[i].ColumnName, type: 'string' });//JsonArray[i].DataType
+                        }
+                        else if (JsonArray[i].DataType == 'date' || JsonArray[i].DataType == 'datetime') {
+                            datafields.push({ name: JsonArray[i].ColumnName, type: 'date' });//JsonArray[i].DataType
+                            columns.push({ text: JsonArray[i].Label, datafield: JsonArray[i].ColumnName, editable: false, width: '15%', cellsformat: "dd-MM-yyyy" }); //commented to get only date not time, cellsformat: "dd/MM/yyyy hh:mm"
+                        }
+                        else if (JsonArray[i].DataType == 'bit') {
+                            columns.push({ text: JsonArray[i].Label, datafield: JsonArray[i].ColumnName, columntype: 'checkbox', editable: false, width: '10%' });
+                            datafields.push({ name: JsonArray[i].ColumnName, type: 'bool' });//JsonArray[i].DataType
+                        }
+                        else if (JsonArray[i].DataType == 'int') {
+                            columns.push({ text: JsonArray[i].Label, datafield: JsonArray[i].ColumnName, editable: false, width: '10%' });
+                            datafields.push({ name: JsonArray[i].ColumnName, type: 'int' });//JsonArray[i].DataType
+                        }
+                        else {
+                            columns.push({ text: JsonArray[i].Label, datafield: JsonArray[i].ColumnName, editable: false, width: '15%' });
+                            datafields.push({ name: JsonArray[i].ColumnName, type: 'string' });//JsonArray[i].DataType
+                        }
+                    }
+                }
+                //Id is required datafield
+                datafields.push({ name: 'Id', type:'int' });
+
+                var source = {
+                    dataType: "json",
+                    dataFields: datafields,
+                    data: { WStepID: WStepID, TabName: TabName },
+                    url: "/GenericGrid/GetGridData",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                        $("#" + GridId).jqxGrid('updatebounddata', 'filter');
+                        $("#" + GridId).jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        // $("#" + GridId).jqxGrid('clear');
+                        $("#" + GridId).jqxGrid('updatebounddata', 'sort');
+                        $("#" + GridId).jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        source.totalrecords = counts;
+                    }
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source, {downloadComplete: function (data) {},});
+                //code to display row counts in tab headings
+                document.getElementById('Tab' + TabName).innerHTML = counts;//datainformations.rowscount;
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#" + GridId).jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#" + GridId).jqxGrid('updatebounddata');
+                } else {
+                    //Grid Definition
+                    $("#" + GridId).jqxGrid(
+                        {
+                            source: dataAdapter,
+                            width: "100%",
+                            columnsresize: true,
+                            pageable: true,
+                            pagesize: 200,
+                            filterable: true,
+                            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                            sortable: true,
+                            keyboardnavigation: false,
+                            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+                            virtualmode: true, //Used for server side paging
+                            selectionmode: 'checkbox',
+
+                            rendergridrows: function () {
+                                return dataAdapter.records;
+                            },
+                            columns: columns
+                        });
+                }
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        GridArray.push("#" + GridId);
+    }
+
+    ////This function is called when User clicks on review link in Non WFGrid
+    //function FnReview(TransactionId,WStepID) {
+    //    window.location.href='/GenericGrid/Review?TransactionId='+TransactionId+'&WStepID='+WStepID;
+    //}
+
+    function DownloadGenericGrid()
+    {
+        //var JsonArray = @Html.Raw(Json.Encode(GenericGridGridColumnDetailsList));
+        var ConfigIdArray= @Html.Raw(Json.Encode(TabList));
+        //var WorkflowName = '@HttpContext.Current.Session["Workflow"]'
+        //var StepArray = @Html.Raw(Json.Encode(TabList));
+        //var IsDefaultSet=false;
+        //var datafields = new Array();
+        //var columns = new Array();
+        var WStepID = 0;
+        var xx = $('#jqxTabs').jqxTabs('selectedItem');
+        var TabName = TabArray[xx];
+        for (var j = 0; j < ConfigIdArray.length; ++j)//look for config Id based on tab Name and assign it to WStepID variable
+        {
+            if (ConfigIdArray[j].Name.replace(' ', '') == TabName)
+            {
+                WStepID = ConfigIdArray[j].Id;
+                break;
+            }
+        }
+        @*var WFName = '@HttpContext.Current.Session["Workflow"]';*@
+        window.location.href = '/GenericGrid/DownloadGridData?WStepID=' + WStepID + '&TabName=' + TabName;
+    }
+
+    ////This function is called when User clicks on Dashboard link in Non WFGrid//
+    //function FnDashboard(TransactionId)
+    //{
+    //    window.location.href = '/GenericGrid/DownloadDashboardFile?TransactionId='+TransactionId;
+    //}
+
+    function FnClickBottomButtons(ActionName, TabName, StepId, TransacId, WorkflowId, StepParticipantActionId,ActionUrl)
+    {
+        var TransactionId = [];
+         if (Number(TransacId) == 0)//If TransacId=0 which means it is a mass action multiple rows are selected
+         {
+             var GridId = "#Grid" + TabName.replace(' ', '');
+             var rowindexes = $(GridId).jqxGrid('getselectedrowindexes');
+
+             console.log(rowindexes.length);
+             for (var i = 0; i < rowindexes.length - 1; i++)
+             {
+                 var data = $(GridId).jqxGrid('getrowdata', rowindexes[i]);
+                 if (data != undefined) {
+                     console.log(i);
+                     console.log(data.Id);
+                     TransactionId.push(data.Id)
+                 }
+             }
+             //special case when TransactionId is 0 itself.
+             if (TransactionId.length == 0)
+                 TransactionId.push(Number(TransacId));
+         }
+         else {
+             TransactionId.push(Number(TransacId));//individual Action
+        }
+        FnClickSecondaryButtons(ActionName, WorkflowId, StepId, null, TransactionId, GlobalComment, StepParticipantActionId, ActionUrl);
+    }
+
+    //This function is used to store comments typed on any of the text area in every WF tab
+    var GlobalComment = '';
+    function FnAttachComment(Comment)
+    {
+        GlobalComment = Comment;
+    }
+</script>
+
+@*/*SS:-Below style has been added on page to remove the up arrow disappearing issue in JqxGrid */*@
+<style>
+    .jqx-icon-arrow-up {
+        width: 15px !important;
+        height: 15px !important;
+        color: black !important;
+        padding-left: 0px !important;
+    }
+</style>

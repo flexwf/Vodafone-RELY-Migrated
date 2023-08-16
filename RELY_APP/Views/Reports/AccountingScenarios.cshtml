@@ -1,0 +1,324 @@
+﻿
+
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#jqxDateTimeInputStartDate").jqxDateTimeInput({ width: '200px', height: '30px', formatString: "dd/MM/yyyy" });
+        $("#jqxDateTimeInputEndDate").jqxDateTimeInput({ width: '200px', height: '30px', formatString: "dd/MM/yyyy" });
+        //fnAccountingScenarios();
+
+        var date = new Date();
+        date.setMonth(date.getMonth() - 6);
+        $('#jqxDateTimeInputStartDate').jqxDateTimeInput('setDate', date);
+
+        //$("#csvExport").jqxButton();
+        //$("#csvExport").click(function () {
+
+        //    var dt = new Date();
+
+        //    // Display the month, day, and year. getMonth() returns a 0-based number.  
+        //    var month = dt.getMonth() + 1;
+        //    var day = dt.getDate();
+        //    var year = dt.getFullYear();
+        //    var currentDate = day + '-' + month + '-' + year;
+        //    $("#jqxgrid").jqxGrid('exportdata', 'csv', 'AccountingScenarios_' + currentDate);
+
+        //});
+
+        $("#jqxgrid").bind('bindingcomplete', function () {
+            var localizationobj = {};
+            filterstringcomparisonoperators = ['empty', 'not empty', 'contains', 'contains(match case)',
+                'does not contain', 'does not contain(match case)', 'equal', 'equal(match case)', 'null', 'not null'];
+            filternumericcomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterdatecomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterbooleancomparisonoperators = ['equal', 'not equal'];
+            localizationobj.filterstringcomparisonoperators = filterstringcomparisonoperators;
+            localizationobj.filternumericcomparisonoperators = filternumericcomparisonoperators;
+            localizationobj.filterdatecomparisonoperators = filterdatecomparisonoperators;
+            localizationobj.filterbooleancomparisonoperators = filterbooleancomparisonoperators;
+            // apply localization.
+            $("#jqxgrid").jqxGrid('localizestrings', localizationobj);
+
+        });    
+
+        
+        //fnFilterByNameRequestInProgress();
+    });
+
+    function fnGetAccountingScenario() {
+        var StartDate = $('#jqxDateTimeInputStartDate').jqxDateTimeInput('getDate');
+        var EndDate = $('#jqxDateTimeInputEndDate').jqxDateTimeInput('getDate');
+        var formattedStartDate = $.jqx.dataFormat.formatdate(StartDate, 'yyyy-MM-dd');
+        var formattedEndDate = $.jqx.dataFormat.formatdate(EndDate, 'yyyy-MM-dd');
+        fnAccountingScenarios(formattedStartDate, formattedEndDate);
+
+    }
+
+    function fnAccountingScenarios(StartDate,EndDate) {
+
+      
+        var sourceAccountingScenarios = {
+            dataType: "json",
+            cache:false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'CreateDate', type: 'string' },
+                { name: 'Product', type: 'string' },
+                { name: 'Scenario', type: 'string' },
+                { name: 'ScenarioCategory', type: 'string' },
+                { name: 'ScenarioTrigger', type: 'string'}
+            ],
+            data: { StartDate: StartDate, EndDate: EndDate },
+            url: "/Reports/GetAccountingScenarios"
+        };
+
+        var dataAdapterAccountingScenarios = new $.jqx.dataAdapter(sourceAccountingScenarios);
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterAccountingScenarios,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            //pagesizeoptions: ['50', '100', '200'],
+            ready: function () {
+            },
+            columns: [
+                { text: 'Request ID', datafield: 'Id' },
+                { text: 'Request', datafield: 'Name' },
+                { text: 'Create date', datafield: 'CreateDate' },
+                { text: 'Product', datafield: 'Product' },
+                { text: 'Scenario', datafield: 'Scenario' },
+                { text: 'Category', datafield: 'ScenarioCategory' },
+                { text: 'Trigger', datafield: 'ScenarioTrigger' }
+            ]
+        });
+    }
+
+    
+    function fnFilterByNameAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtName').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtCreateDate').val("");
+        $('#txtProduct').val("");
+        $('#txtScenario').val("");
+        $('#txtCategory').val("");
+        $('#txtTrigger').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'CreateDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'Product');
+        $("#jqxgrid").jqxGrid('removefilter', 'Scenario');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioCategory');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioTrigger');
+        $("#jqxgrid").jqxGrid('addfilter', 'Name', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    function fnFilterByCreateDateAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtCreateDate').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtName').val("");
+        $('#txtProduct').val("");
+        $('#txtScenario').val("");
+        $('#txtCategory').val("");
+        $('#txtTrigger').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'Product');
+        $("#jqxgrid").jqxGrid('removefilter', 'Scenario');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioCategory');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioTrigger');
+        $("#jqxgrid").jqxGrid('addfilter', 'CreateDate', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    function fnSearchByProductAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtProduct').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtName').val("");
+        $('#txtCreateDate').val("");
+        $('#txtScenario').val("");
+        $('#txtCategory').val("");
+        $('#txtTrigger').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreateDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'Scenario');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioCategory');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioTrigger');
+        $("#jqxgrid").jqxGrid('addfilter', 'Product', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    function fnFilterByScenarioAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtScenario').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtName').val("");
+        $('#txtCreateDate').val("");
+        $('#txtProduct').val("");
+        $('#txtCategory').val("");
+        $('#txtTrigger').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreateDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'Product');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioCategory');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioTrigger');
+        $("#jqxgrid").jqxGrid('addfilter', 'Scenario', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    function fnFilterByCategoryAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtCategory').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtName').val("");
+        $('#txtCreateDate').val("");
+        $('#txtProduct').val("");
+        $('#txtScenario').val("");
+        $('#txtTrigger').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreateDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'Product');
+        $("#jqxgrid").jqxGrid('removefilter', 'Scenario');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioTrigger');
+        $("#jqxgrid").jqxGrid('addfilter', 'ScenarioCategory', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    function fnFilterByTriggerAccountingScenario() {
+        var filtergroup = new $.jqx.filter();
+        var filtervalue = $('#txtTrigger').val();
+        var filtercondition = 'contains';
+        var filter1 = filtergroup.createfilter('stringfilter', filtervalue, filtercondition);
+        var filter_or_operator = 1;
+        filtergroup.addfilter(filter_or_operator, filter1);
+        $('#txtName').val("");
+        $('#txtCreateDate').val("");
+        $('#txtProduct').val("");
+        $('#txtScenario').val("");
+        $('#txtCategory').val("");
+        $("#jqxgrid").jqxGrid('removefilter', 'Name');
+        $("#jqxgrid").jqxGrid('removefilter', 'CreateDate');
+        $("#jqxgrid").jqxGrid('removefilter', 'Product');
+        $("#jqxgrid").jqxGrid('removefilter', 'Scenario');
+        $("#jqxgrid").jqxGrid('removefilter', 'ScenarioCategory');
+        $("#jqxgrid").jqxGrid('addfilter', 'ScenarioTrigger', filtergroup);
+        $("#jqxgrid").jqxGrid('applyfilters');
+    }
+
+    
+    function fnDownloadAccountingSenario() {
+        var StartDate = $('#jqxDateTimeInputStartDate').jqxDateTimeInput('getDate');
+        var EndDate = $('#jqxDateTimeInputEndDate').jqxDateTimeInput('getDate');
+        var formattedStartDate = $.jqx.dataFormat.formatdate(StartDate, 'yyyy-MM-dd');
+        var formattedEndDate = $.jqx.dataFormat.formatdate(EndDate, 'yyyy-MM-dd');
+        window.location.href = '/Reports/DownloadAccountingSenario?StartDate=' + formattedStartDate + '&EndDate=' + formattedEndDate;
+    }
+</script>
+
+<div class="col-md-12 col-lg-12">
+    <div class="col-md-12 col-lg-12 boxes">
+        <div class="col-md-5 col-lg-5">
+            <div  class=" col-lg-7 col-md-7 rely-labels">Request Create Date Between </div>
+            <div id='jqxDateTimeInputStartDate'></div>
+        </div>
+        <div class="col-md-3 col-lg-3">
+            <div  class=" col-lg-3 col-md-3 rely-labels">and: </div>
+            <div id='jqxDateTimeInputEndDate'></div>
+        </div>
+        <div class="col-md-4 col-lg-4">
+            <input type="button" id="GetDetails" class="btn btn-red" value="Go" onclick="fnGetAccountingScenario();" />
+            @*<i id="csvExport" onclick="fnDownloadAccountingSenario();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i>*@
+            <input type="button" id="csvExport" class="btn btn-red" value="Download" onclick="fnDownloadAccountingSenario();" />
+        </div>
+
+    </div>
+    <div class=" col-md-12 col-lg-12 boxes" style="display:none;">
+
+        <div class="col-md-12 col-lg-12 rely-labels" style="display:none;">
+            <div class="pull-left">
+                @*<div class="col-md-2 col-lg-2">
+                        System:
+                    </div>*@
+                @*<div id="WftypesDropdownlist" class="col-lg-2" style="background:white !important;"></div>&nbsp;*@
+                <div class="col-md-2 col-lg-2" style="display:none;">
+
+                    <label for="Name" class="rely-labels col-lg-4 col-md-4">Name:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtName" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByNameAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-4 col-lg-4">
+
+                    <label for="CreateDate" class="rely-labels">Create Date:</label>
+                    <div><input type="text" class="form-control col-lg-6 col-md-6" id="txtCreateDate" /></div>&nbsp;
+                    <input type="button" class="btn-red col-lg-6 col-md-6" value="Go" onclick="fnFilterByCreateDateAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2" style="display:none;">
+
+                    <label for="Status" class="rely-labels col-lg-4 col-md-4">Product:</label>
+                    <div><input type="text" class="form-control col-lg-4 col-md-4" id="txtProduct" /></div>&nbsp;
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnSearchByProductAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2" style="display:none;">
+
+                    <label for="StatusDate" class="rely-labels">Scenario:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtScenario" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByScenarioAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2" style="display:none;">
+
+                    <label for="StatusDate" class="rely-labels">Category:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtCategory" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByCategoryAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+                <div class="col-md-2 col-lg-2" style="display:none;">
+
+                    <label for="StatusDate" class="rely-labels">Trigger:</label>
+                    <input type="text" class="form-control col-lg-4 col-md-4" id="txtTrigger" />
+                    <input type="button" class="btn-red col-lg-4 col-md-4" value="Go" onclick="fnFilterByTriggerAccountingScenario();" style="height:25px; text-align: center;" />&ensp;
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <br />
+
+    </div>
+    <br/>
+    <div id="jqxgrid"></div>
+</div>

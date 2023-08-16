@@ -1,0 +1,450 @@
+﻿@model RELY_APP.ViewModel.LReconFileFormatsViewModel
+<a style="cursor:pointer" onclick="fnShowPopUp();">Create</a>
+<div id="jqxgrid">
+</div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- POP up window code-->
+    <div id="reconfileformat" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="popupHeaderEdit">
+                        Update File Format
+                    </h4>
+                    <h4 class="modal-title" id="popupHeaderAdd">
+                        Create File Format
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px">
+                                @Html.LabelFor(model => model.SysCat, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                @Html.DropDownListFor(model => model.SysCat, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", @onchange = "fnGetSysCatName();" })
+                                @Html.ValidationMessageFor(model => model.SysCat, "", new { @class = "text-danger" })
+                            </div>
+
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px; margin-top:10px">
+                                @Html.LabelFor(model => model.FormatName, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                @Html.EditorFor(model => model.FormatName, new { htmlAttributes = new { @class = "form-control focus", @style = "margin-top:10px;" } })
+                                @Html.ValidationMessageFor(model => model.FormatName, "", new { @class = "text-danger" })
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @*button on Edit pop up*@
+                    <button id="btnedit" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Save</button>
+
+                    @*button on create pop up*@
+                    <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+<script>
+    //var editedRows = new Array();
+   // var dataAdapterSysCatName = undefined;
+    var syscatid;
+    $(document).ready(function () {
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            cache:false,
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        fnGetReconFileFormat();
+    });
+
+    //function to open modal pop up
+    function fnShowPopUp() {
+        $("#btncreate").show();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").show();
+        $("#popupHeaderEdit").hide();
+        $("input.form-control").val('');
+        $('.text-danger').text(""); /*to clear validation message*/
+        document.getElementById('SysCat').value = '';        
+        document.getElementById('FormatName').value= '';
+        $('#reconfileformat').modal(); //modal pop up opens
+    }
+
+    //function to load data on page
+    function fnGetReconFileFormat() {
+        var LReconFileFormatSource = {
+            dataType: "json",
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'SysCatId', type: 'int' },
+                { name: 'SysCat', type: 'string' },
+                { name: 'FormatName', type: 'string' }
+            ],
+            id: 'Id',
+            url: '/LReconFileFormats/GetLReconFileFormats'
+        };
+
+        var dataAdapter = new $.jqx.dataAdapter(LReconFileFormatSource)
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            if (Number(rowdata.Id) != 0 && rowdata.CompanyCode) {
+                //return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>';
+                return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>&emsp;<a href="#" onclick="Edit(' + rowdata.Id + ')"><i class="fa fa-pencil-square-o" style="color:red;font-size:15px !important;" aria-hidden="true"  title="Edit"></i>';
+            }
+            //else {
+            //    isChanged = true;
+            //    return '&emsp;<a href="#" onclick="FnDeleteGridRow(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+            //}
+        };
+        $('#jqxgrid').jqxGrid({
+            source: LReconFileFormatSource,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            //keyboardnavigation: false,
+            //enablebrowserselection: true,
+            //showeverpresentrow: true,
+            //everpresentrowposition: "top",
+            //editable: true,
+            //localization: {
+            //    addrowstring: "Add",
+            //    udpaterowstring: "Update",
+            //    deleterowstring: "Delete",
+            //    resetrowstring: "Clear",
+            //    everpresentrowplaceholder: "Type: "
+            //},
+            selectionmode: 'multiplecellsadvanced',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'SysCat', datafield: 'SysCat'/*, cellclassname: cellclass, filtertype: 'input', columntype: 'dropdownlist',*/
+                    //createeditor: function (row, cellvalue, editor) {
+                    //    // console.log(clientSourceDA);,displayfield:'CatName'
+                    //    editor.jqxDropDownList({ displayMember: 'SysCat', valueMember: 'Id', source: dataAdapterSysCatName });
+                    //    editor.on('change', function (event)//This function will save CategoryId in Edit
+                    //    {
+                    //        var args = event.args;
+                    //        if (args) {
+                    //            // index represents the item's index.
+                    //            var index = args.index;
+                    //            var item = args.item;
+                    //            // get item's label and value.
+                    //            var label = item.label;
+                    //            var value = item.value;
+                    //            $("#jqxgrid").jqxGrid('setcellvalue', row, "SysCatId", value);
+                    //        }
+                    //    });
+                    //},
+                    //createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                    //    var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                    //    inputTag.jqxDropDownList({ source: dataAdapterSysCatName, displayMember: 'SysCat', valueMember: 'Id', width: '100%' });
+                    //    $(document).on('keydown.Id', function (event) {
+                    //        if (event.keyCode == 13) {
+                    //            if (event.target === inputTag[0]) {
+                    //                addCallback();
+                    //            }
+                    //            else if ($(event.target).ischildof(inputTag)) {
+                    //                addCallback();
+                    //            }
+                    //        }
+                    //    });
+                    //    return inputTag;
+                    //},
+
+                    //getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                    //    var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                    //    if (!selectedItem)
+                    //        return "";
+                    //    var value = selectedItem.label;
+                    //    //update the corresponding Id with respect to the record selected
+                    //    // $("#jqxgrid").jqxGrid('setcellvalue', rowBoundIndex, "CanBeDisplayed", true);
+                    //    return value;
+                    //},
+                    //resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                    //    htmlElement.jqxDropDownList('clearSelection');
+                    //}
+
+                },
+                {
+                    text: 'Format Name', datafield: 'FormatName'/*, cellclassname: cellclass, filtertype: 'input'*/
+
+                },
+                {
+                    text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%'/*, editable: false,*/
+                    //initEverPresentRowWidget: function (datafield, htmlElement) {
+                    //    var input = htmlElement.find('input');
+                    //    input.attr('readonly', true);
+                    //    input.attr('disabled', true);
+                    //    htmlElement.addClass('jqx-fill-state-disabled');
+                    //}
+                }
+            ]
+        });
+    }    
+       
+    //to get selected value of dropdown
+    function fnGetSysCatName() {
+        syscatid = document.getElementById('SysCat').value;        
+    }
+
+    //to create new file format
+    $("#btncreate").click(function (event) {
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            $("#btncreate").show();
+            $("#popupHeaderAdd").show();
+            $("#popupHeaderEdit").hide();
+            $("#btnedit").hide();
+            $.ajax({
+                type: "POST",
+                data: $("#frm").serialize() + "&syscatid=" + syscatid,
+                cache:false,
+                url: "/LReconFileFormats/Create",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetReconFileFormat();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#reconfileformat").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+        else {
+            event.stopPropagation();
+        }
+    });
+
+    //This function is use to save the edited data
+     $("#btnedit").click(function (event) {
+         $("#frm").validate();
+         if ($('#frm').valid()) {            
+             var id =  document.getElementById('Id').value            
+              $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&id=" + id + "&syscatid=" + syscatid,               
+                url: '@Url.Action("Update", "LReconFileFormats")',
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetReconFileFormat();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#reconfileformat").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+              });
+         }
+         else {
+             event.stopPropagation();
+         }
+     });
+
+    //to load pop up in edit mode
+    function Edit(id) {
+        $("#btncreate").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").show();
+        $("#btnedit").show();
+        $.ajax({
+            type: "Get",
+            url: '@Url.Action("Edit", "LReconFileFormats")',
+            dataType: "html",
+            cache: false,
+            data: { id: id },
+            success: function (data) {
+                var obj = JSON.parse(data);
+                console.log(obj);
+                //alert(obj.SysCatId);
+                document.getElementById('SysCat').value = obj.SysCatId;
+                syscatid = obj.SysCatId;
+                document.getElementById('FormatName').value = obj.FormatName;
+                document.getElementById('Id').value = obj.Id;
+                $("#reconfileformat").modal("show");
+                $("#reconfileformat .modal-content").html(data.html);
+            }
+        });
+        fnGetReconFileFormat();
+    }
+
+    //to delete selected file format
+    function FnDelete(Id) {
+        var r = confirm("Are you sure to delete the selected recon file format?");
+        if (r == false) {
+            return;
+        }
+        else {
+            $.ajax({
+                data: { Id: Id },
+                cache: false,
+                url: "/LReconFileFormats/Delete",
+                traditional: true,
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        }
+                        else {
+                            alert(data.PopupMessage);
+                        }
+                        fnGetReconFileFormat();
+                    }
+                    else {
+                        //Any unhanded error has been caught
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");  //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+/*------------------------------------------------below method is commented by Rakhi Singh as per requirement----------------------------------------*/
+    @*<input type="button" class="btn btn-red" value="Save" onclick="FnAddLReconFileFormat();">*@
+
+    //to bind dropdown of syscat
+    //var SysCatSource = {
+    //    dataType: "json",
+    //    type: "GET",
+    //    dataFields: [
+    //        { name: 'Id', type: 'int' },
+    //        /* { name: 'CompanyCode', type: 'string' }*/
+    //        { name: 'SysCat', type: 'string' }
+    //    ],
+    //    id: 'Id',
+    //    url: "/LReconFileFormats/BindSysCatDropDown"
+    //};
+
+    //dataAdapterSysCatName = new $.jqx.dataAdapter(SysCatSource, { async: false, autoBind: true })
+
+     //var cellclass = function (row, datafield, value, rowdata) {
+        //    for (var i = 0; i < editedRows.length; i++) {
+        //        if (editedRows[i].index == row) {
+        //            return "ChangeFontColor";
+        //        }
+        //    }
+        //}
+    //function FnDeleteGridRow(Id) {
+    //    var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //}
+
+
+    //function FnDelete(Id) {
+
+    //     var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //    $.ajax({
+    //        data: { Id: Id },
+    //        url: "/LReconFileFormats/DeleteLReconFileFormats",
+    //        //  type: "POST",
+    //        traditional: true,
+    //        success: function (data) {
+    //            if (data) {
+    //                var ResponseObj = data;
+    //                if (ResponseObj.ErrorMessage) {
+    //                    alert(ResponseObj.ErrorMessage)
+    //                }
+    //                else if (ResponseObj.PopupMessage) {
+    //                    alert(ResponseObj.PopupMessage)
+    //                }
+    //                if (ResponseObj.RedirectToUrl) {
+    //                    window.location.href = ResponseObj.RedirectToUrl;
+    //                }
+
+    //            }
+    //            else {
+    //                //Any unhanded error has been caught
+    //                window.location.href = "/Home/Error";
+    //            }
+    //        },
+    //        error: function (reponse) {
+    //            //  alert("error : " + reponse);
+    //        }
+    //    });
+    //}
+
+    //function FnAddLReconFileFormat() {
+    //    var arr = [];
+    //    var rows = $('#jqxgrid').jqxGrid('getrows');
+    //    for (var i = 0; i < rows.length; i++) {
+    //        arr[i] = [];
+    //        arr[i][0] = rows[i].Id;
+
+    //        //Section to get SysCatId
+    //        if (rows[i].SysCat)
+    //            for (var j = 0; j < dataAdapterSysCatName.records.length; j++) {
+    //                if (dataAdapterSysCatName.records[j].SysCat == rows[i].SysCat) {
+    //                    arr[i][1] = dataAdapterSysCatName.records[j].Id;
+    //                    break;
+    //                }
+    //            }
+    //        arr[i][2] = rows[i].FormatName;
+    //    }
+
+    //    console.log(arr)
+    //    $.ajax({
+    //        data: { GridData: arr },
+    //        url: "/LReconFileFormats/EditLReconFileFormats",
+    //        type: "POST",
+    //        // traditional: true,
+    //        success: function (data) {
+    //            window.location.reload();
+    //        },
+    //        error: function (reponse) {
+    //            //  alert("error : " + reponse);
+    //        }
+    //    });
+
+    //}
+
+</script>
+

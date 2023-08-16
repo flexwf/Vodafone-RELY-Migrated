@@ -1,0 +1,418 @@
+﻿
+
+@{
+//var ValidData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ValidData);
+//var ErrorData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ErrorData);
+}
+<script>
+        var SysCatId = '';
+        var FileFormatId = '';
+        var datafieldsForValid = new Array();
+        var columnsForValid = new Array();
+        var datafieldsforError = new Array();
+        var columnsforError = new Array();
+
+        var ErrorDataGrid = '';
+        var ValidDataGrid = '';
+        var data = new Array();
+
+        var datafields = new Array();
+        var columns = new Array();
+        $(document).ready(function () {
+            $.getJSON("/LReconFileUpload/BindSysCatDropDown", function (data) {
+                $.each(data, function (i, data) {      // bind the dropdown list using json result
+                    $('<option>',
+                        {
+                            value: data.Id,
+                            text: data.SysCat
+                        }).html(data.SysCat).appendTo("#SysCat");
+                });
+            })
+
+            $("#HeadingInValid").hide();
+            $("#HeadingValid").hide();
+            $("#btnSaveValidRecords").hide();
+
+            document.getElementById("Done").addEventListener("click", function () {
+
+                alert('Make sure file being uploaded have records of only Syscat which was selected from dropdown.Incase of wrong or multiple Syscat data upload system behaviour may be inconsistent');
+
+                SysCatId = document.getElementById('SysCat').value;
+                 FileFormatId = document.getElementById('Format').value;
+                $.ajax({
+
+                    type: "GET",
+                    data: { SysCatId: SysCatId, FileFormatId: FileFormatId },
+                    cache: false,
+                    url: "/LReconFileUpload/UploadFile",
+                    success: function (data) {
+                        $('#dialog').dialog('close');
+                        if (data.PopUpErrorMessage) {
+                            alert(data.PopUpErrorMessage);
+                            return;
+                        }
+
+                        if (data.PopUpSuccessMessage) {
+                            alert(data.PopUpSuccessMessage);
+                        }
+
+                        $('#VallidInvalidGrid').show();
+
+
+
+                        if (data.HideSaveButton == true) {
+                            //donot show any grid here.
+                            FnGetValidRecordGrid();
+                            $('#VallidInvalidGrid').hide();
+                            $("#jqxgridValidRecords").hide();
+                            //FnGetInvalidRecordsGrid();
+                            $("#jqxgridReferenceData").hide();
+                            $('#successMsgDiv').show();
+                            $("#btnSaveValidRecords").show();
+                            $("#btnSubmit").hide();
+                        }
+                        if (data.HideSaveButton == false) {
+                            //show invalid grid data
+                            //show invalid grid data
+                            counts = data.ErrorRowsCount;
+                            //ErrorDataGrid = data.ErrorData;
+                            //FnGetValidRecordGrid();
+                            FnGetInvalidRecordsGrid();
+                            $('#InValidDatadiv').show();
+                            $('#warningMsgDiv').show();
+                            $("#btnSaveValidRecords").hide();
+                        }
+                    },
+                    error: function (reponse) {
+                        console.log(reponse);
+                        alert("error");
+                    }
+                 })
+
+            });
+
+            //            ValidDataGrid = data.ValidData;
+            //            ErrorDataGrid = data.ErrorData;
+
+
+            //            if (data.HideButton == true) {
+            //                FnGetValidRecordGrid();
+            //                FnGetInvalidRecordsGrid();
+            //                $("#jqxgridReferenceData").hide();
+            //                $("#btnSaveValidRecords").show();
+            //                $("#btnSubmit").hide();
+
+            //            }
+            //            if (data.HideButton == false) {
+            //                FnGetValidRecordGrid();
+            //                FnGetInvalidRecordsGrid();
+            //                $('#InValidDatadiv').show();
+            //                $('#warningMsgDiv').show();
+            //                $("#btnSaveValidRecords").hide();
+            //            }
+
+
+            //        },
+            //        error: function (reponse) {
+            //           // console.log(reponse);
+            //            alert("error");
+            //        }
+
+            //    })
+
+            //});
+
+        });//End of Document.ready
+
+
+        function GetFileFormat(SysCatId) {
+            $("#Format").empty()
+            if (SysCatId != '') {
+                var procemessage = "<option value=null> Please wait...</option>";
+                $("#Format").html(procemessage).show();
+                var url = "/LReconFileUpload/BindFileFormatDropDown/";
+
+                $.ajax({
+                    url: url,
+                    data: { SysCatId: SysCatId },
+                    cache: false,
+                    type: "POST",
+                    success: function (data) {
+                        if (data.length != 0) {
+                            var markup = "<option value=null>-- Select Here --</option>";
+                            for (var x = 0; x < data.length; x++) {
+                                markup += "<option value=\"" + data[x].Id + "\">" + data[x].FormatName + "</option>";
+                            }
+                            $("#Format").html(markup).show();
+
+                        } else {
+                            var procemessage = "<option value=0> No Records Found..</option>";
+                            $("#Format").html(procemessage).show();
+                        }
+                    },
+                    error: function (reponse) {
+                        alert("error : " + reponse);
+                    }
+                });
+            }
+        }
+
+
+
+        //===============================================Code For Valid and Invalid Grid==================================
+        function FnGetValidRecordGrid() {
+            $.ajax({
+                type: "GET",
+                data: { FileFormatId: FileFormatId },
+                cache:false,
+                url: "/LReconFileUpload/GetAttributesForCSVData",
+                success: function (data) {
+                    if (data.length > 0) {
+
+                        //Loop though list of columns and populate arrays of datafiels of grid
+                        for (var i = 0; i < data.length; ++i) {
+                                datafieldsForValid.push({ name: data[i].Label, type: 'string' });
+                                columnsForValid.push({ text: data[i].Label, datafield: data[i].Label, editable: true });
+
+                        }
+                    }
+
+                    var source = {
+                        dataType: "json",                        
+                        dataFields: datafieldsForValid,
+                        localdata: ValidDataGrid
+                    };
+                    var dataAdapter = new $.jqx.dataAdapter(source);
+
+                    $('#jqxgridValidRecords').jqxGrid({
+                        source: dataAdapter,
+                        width: '100%',
+                        autoheight: true,
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: true,
+                        altrows: true,
+                        pageable: true,
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        // selectionmode: 'checkbox',
+                        showstatusbar: false,
+                        ready: function () {
+                        },
+                        columns: columnsForValid
+                    });
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            })
+        }
+
+        function FnGetInvalidRecordsGrid() {
+            $.ajax({
+                type: "GET",
+                cache :false,
+                data: { FileFormatId: FileFormatId },
+                url: "/LReconFileUpload/GetAttributesForCSVData",
+                success: function (data) {
+                    if (data.length > 0) {
+                        datafieldsforError.push({ name: 'SrNo', type: 'int' });
+                        datafieldsforError.push({ name: 'ValidationMessage', type: 'string' });
+
+                        columnsforError.push({ text: 'Row No.', datafield: 'SrNo' })
+                        columnsforError.push({ text: 'Validation Message', datafield: 'ValidationMessage' })
+
+                        //Loop though list of columns and populate arrays of datafiels of grid
+                        for (var i = 0; i < data.length; ++i) {
+                            datafieldsforError.push({ name: data[i].ColumnName, type: 'string' });
+                            columnsforError.push({ text: data[i].Label, datafield: data[i].ColumnName, editable: true });
+                        }
+                    }
+
+                    
+                    //var source = {
+                    //    dataType: "json",
+                    //    dataFields: datafieldsforError,
+                    //    localdata: ErrorDataGrid
+                    //};
+                    //var dataAdapter = new $.jqx.dataAdapter(source);
+
+                    //$('#jqxgridInvalidRecords').jqxGrid({
+                    //    source: dataAdapter,
+                    //    width: '100%',
+                    //    autoheight: true,
+                    //    theme: 'bootstrap',
+                    //    sortable: true,
+                    //    columnsresize: true,
+                    //    columnsreorder: true,
+                    //    altrows: true,
+                    //    pageable: true,
+                    //    filterable: true,
+                    //    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    //    // selectionmode: 'checkbox',
+                    //    showstatusbar: false,
+                    //    ready: function () {
+                    //    },
+                    //    columns: columnsforError
+                    //});
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            })
+
+
+            //The below code will load a grid  on this page
+            var Parentsource = {
+                dataType: "json",
+                dataFields: datafieldsforError,
+                data: { SysCatId: SysCatId, FileFormatId: FileFormatId },
+                id: "Id",
+                url: "/LReconFileUpload/GetInvalidRecords",
+                // update the grid and send a request to the api
+                filter: function () {
+                    // $("#jqxPopupgrid").jqxGrid('clear');
+                    $('#jqxgridInvalidRecords').jqxGrid('updatebounddata', 'filter');
+                    $('#jqxgridInvalidRecords').jqxGrid('clearselection');
+                },
+                // update the grid and send a request to the api
+                sort: function () {
+                    // $("#jqxPopupgrid").jqxGrid('clear');
+                    $('#jqxgridInvalidRecords').jqxGrid('updatebounddata', 'sort');
+                    $('#jqxgridInvalidRecords').jqxGrid('clearselection');
+                },
+                root: 'Rows',
+                beforeprocessing: function (data) {
+                    Parentsource.totalrecords = counts;
+                }
+            };
+            var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+            $('#jqxgridInvalidRecords').jqxGrid({
+                source: ParentdataAdapter,
+                width: '100%',
+                theme: 'bootstrap',
+                sortable: true,
+                columnsresize: true,
+                columnsreorder: true,
+                altrows: true,
+                pageable: true,
+                pagesize: 200,
+                pagesizeoptions: ['50', '100', '200', '500'],
+                filterable: true,
+                editable: false,
+                enablebrowserselection: true,
+                //showeverpresentrow: true,
+                showstatusbar: false,
+                virtualmode: true,
+                rendergridrows: function () {
+                    return ParentdataAdapter.records;
+                },
+                columns: columnsforError
+            });
+        }
+
+        //To Save Data
+        function FnSaveValidRecords() {
+            //store data in db
+                $.ajax({
+                    type: "POST",
+                    data: "SysCatId=" + SysCatId + "&FileFormatId=" + FileFormatId,
+                    cache : false,
+                    url: "/LReconFileUpload/SaveData",
+                    success: function (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage)
+                        } else {
+                            alert('Data Saved Successfully.');
+                            window.location.href = "/LReconFileUpload/Index";
+                        }
+                    },
+                    error: function (reponse) {
+                        console.log(reponse);
+                        alert("error");
+                    }
+                })
+        }
+
+
+</script>
+<h3>Upload Recon File (csv ^ separated) :-</h3>
+
+<div style="padding:10px;">
+    @using (Html.BeginForm("UploadFile", "LReconFileUpload", FormMethod.Post, new { FileFormatId = "frm", SysCatId = "frm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("model")
+        <div class="form-horizontal">
+            <div class="col-md-5">
+                @*@Html.Label("Select SysCat (csv ^ separate)", new { @class = "control-label col-md-4" })*@
+                @Html.Label("Select SysCat", new { @class = "control-label col-md-4" })
+                <div class="col-md-7">
+                    @*<div class="col-md-8">*@
+                    @Html.DropDownList("SysCat", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-7", onchange = "GetFileFormat(this.value)" })
+                    @*&emsp;<input type="button" value="Go" class="btn btn-info">*@
+                </div>
+            </div>
+            <div class="col-md-5">
+                @*@Html.Label("Select File Format", new { @class = "control-label col-md-4" })*@
+                @Html.Label("Select Column Mapping", new { @class = "control-label col-md-6" })
+                <div class="col-md-6">
+                    @Html.DropDownList("Format", new List<SelectListItem> { new SelectListItem { Text = "-- Select Here --", Value = null } }, new { @class = "form-control col-md-7" })
+                    @*&emsp;<input type="button" value="Go" class="btn btn-info">*@
+                </div>
+            </div>
+            <div class="col-md-2">
+                @*<button class="btn btn-red btn-cons" id="UploadButton" onclick="UploadFile()">Upload &nbsp;</button>*@
+                <label for="FileUpload" class="CustomFileUpload-SideLayout" style="font-weight:normal; padding:4px;">Upload</label>
+                <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+
+                @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back</button>*@
+                @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="btnSubmit" name="btnSubmit" onclick="SaveAndRedirect();"><b>Save&nbsp;</b></button>*@
+                <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="btnSaveValidRecords" name="btnSaveValidRecords" onclick="FnSaveValidRecords();"><b>Save Valid Records&nbsp;</b></button>
+
+
+            </div>
+
+
+
+        </div>
+        <div id="VallidInvalidGrid" class="col-md-12 col-lg-12">
+
+            <div id="InValidDatadiv" class="tab-content" style="padding:10px;">
+                <h2 id="HeadingInValid">Invalid Records</h2>
+                <span id="warningMsgDiv" style="color:red;display:none;font-family:initial">Save button will get enabled  only when there are no invalid records.</span>
+                <div id="jqxgridInvalidRecords"></div>
+            </div>
+
+            <div id="ValidDataDiv" class="tab-content" style="padding:10px;">
+                <h2 id="HeadingValid">Valid Records</h2>
+                <div id="jqxgridValidRecords"></div>
+            </div>
+
+        </div>
+
+
+    }
+
+   </div> 
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }
+
+
+    @*div for Upload Utility*@
+    <div id="dialog" style="display: none;width:100%" align="center">
+        @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+    </div>
+    @*Section to display list of files which are currently uploaded in system*@
+    <div class="col-md-8" id="FileDiv">
+    </div>
+
+
+
+    <script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

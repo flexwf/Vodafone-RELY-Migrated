@@ -1,0 +1,171 @@
+﻿@model RELY_APP.ViewModel.SSPDimensionViewModel
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+<script>
+    $(document).ready(function () {
+        var NewSSPId = '@ViewBag.NewSSPId';
+        document.getElementById("SspId").value = NewSSPId;
+        document.getElementById("EffectiveEndDate").value = "31/12/2099";
+        $("#SSPDate1").jqxDateTimeInput({
+            width: '270px',
+            height: '25px',
+        });
+        /* Whenever a new ssp created, it needs to have a start date 1.1.2010*/
+     $('#SSPDate1').jqxDateTimeInput('setDate', new Date(2010, 00, 01));
+       /* $('#SSPDate1').jqxDateTimeInput('setDate', new Date());*/
+        //$("#SSPDate2").jqxDateTimeInput({
+        //    width: '300px',
+        //    height: '25px',
+        //});
+        //$('#SSPDate2').jqxDateTimeInput('setDate', new Date(3500, 11, 11));//31-12-3500 default end date
+        var Source = '@ViewBag.Source';
+        if (Source == 'Product' || Source == 'LocalPob') {
+            document.getElementById('BackButton').style.display = 'none';
+            document.getElementById('save').innerHTML = 'Save & Close';
+        } else {
+            document.getElementById('BackButton').style.display = 'block';
+            document.getElementById('save').innerHTML = 'Save';
+        }
+    });//End of document ready
+    function FnbackButton() {
+        //window.location.href = "/SSPDimensions/Index";
+        alert("Functionality Coming Soon.");
+    }
+    function FnSaveData() {
+        var Amount = document.getElementById("SspAmount").value;
+        /*if (Amount == 0) {
+            var r = confirm("Amount is 0, do you want to continue?");
+            if (r == false) {
+                return;
+            }
+        }*/
+        var SSPDate1 = null;
+        var SSPDate2 = null;
+
+        if ($("#SSPDate1").length > 0) {
+            CheckSSPFields = true;
+            SSPDate1 = $('#SSPDate1').jqxDateTimeInput('getText');
+        }
+        if (SSPDate1 == null || SSPDate1 == '') {
+            alert("Start Date is mandatory");
+            return;
+        }
+        //if ($("#SSPDate2").length > 0) {
+        //    CheckSSPFields = true;
+        //    SSPDate2 = $('#SSPDate2').jqxDateTimeInput('getText');
+        //}
+        document.getElementById("EffectiveStartDate").value = SSPDate1;
+        //document.getElementById("EffectiveEndDate").value = SSPDate2;
+
+       $("#frm").validate();
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize(),
+                 cache:false,
+                 url: "/SSPDimensions/Create",
+                 success: function (data) {
+                     if (data.ErrorMessage) {
+                         alert(data.ErrorMessage);
+                     }
+                     else {
+                         alert("Data saved successfully.");
+                         if (data.Source == 'Product' || data.Source == 'LocalPob') {
+                             window.close();
+                         }
+                         window.location.href = "/SSPDimensions/Index";
+                     }
+                 },
+                 error: function (reponse) {
+                     console.log(reponse);
+                 }
+             });
+        }
+    }
+    function FnOpenExistingSSP() {
+        /*$('#SSPDate1').jqxDateTimeInput('setDate', new Date());*/
+        FnLoadGrid();
+    }
+</script>
+
+<h3>Manage SSP Dimensions</h3>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ErrorMessage"></h4>
+    <div id="ErrorMessageDetails"></div>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.HiddenFor(m => m.EffectiveStartDate)
+    @Html.Hidden("FormType")
+    @Html.Hidden("Source")
+    @Html.Hidden("EntityId")
+    <div class="col-md-11 col-lg-11">
+        @*<div class="col-md-5 col-lg-5 col-sm-5">*@
+        <div class="col-md-6 col-lg-6 col-sm-6" style="min-height:100px;">
+            @Html.LabelFor(model => model.SspId, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.SspId, new { htmlAttributes = new { @class = "form-control input-sm readonly", @style = "min-height:30px; text-align: left;background-color: lightgrey ;pointer-events: none;" } })
+                @Html.ValidationMessageFor(model => model.SspId, "", new { @class = "text-danger" })
+                @*<a href="#" onclick="FnOpenExistingSSP();">Choose existing SSP to create new version</a>*@
+                <button type="button"  class=" GridButton" onclick="FnOpenExistingSSP();">
+                    Choose existing SSP to create new version
+                </button>
+            </div>
+
+        </div>
+        <div class="col-md-6 col-lg-6" style="min-height:100px;">
+            @Html.LabelFor(model => model.SspAmount, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                @Html.EditorFor(model => model.SspAmount, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; text-align: left;background-color: white ;" } })
+                @Html.ValidationMessageFor(model => model.SspAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-6" style="min-height:80px;">
+            @Html.LabelFor(model => model.EffectiveStartDate, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                <div id="SSPDate1"></div>
+                @Html.ValidationMessageFor(model => model.EffectiveStartDate, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-6" style="min-height:80px;">
+            @Html.LabelFor(model => model.EffectiveEndDate, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                <input type="text" name="EffectiveEndDate" id="EffectiveEndDate" value="31/12/2099" readonly
+                       class="form-control input-sm"
+                       style="min-height:30px; text-align: left;background-color: lightgrey ;">
+                @*@Html.EditorFor(model => model.EffectiveEndDate, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; text-align: left;background-color: lightgrey ;pointer-event:none; readonly" } })*@
+                @Html.ValidationMessageFor(model => model.EffectiveEndDate, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @*</div>*@
+    </div>
+
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/SSPDImensions/Index'">Back&nbsp;</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick="FnSaveData();">Save & Close</button>
+    </div>
+    <br/>
+    <div class="col-md-11 col-lg-11" id="SSPGrid" style="display:none;">
+        <span>Selected SSP Details</span>
+        <div id="jqxGridSSPSelected"></div>
+    </div>
+</div>
+
+    }
+    <br>
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }
+    @Html.Partial("_ExistingSSPsPartial")
+    <script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+    <link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+

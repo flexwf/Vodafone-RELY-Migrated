@@ -1,0 +1,278 @@
+﻿<script>
+    var CurrentParticipantId = 0;
+    var ShowinStepId = 0;
+    //funtion to get the step details for the Selected workflow
+    function FnGetParticipantActionsInformation(ParticipantId, StepId) {
+
+        var sourceParticipantActions = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'WActionId', type: 'int' },
+                { name: 'ActionName', type: 'string' },
+                { name: 'Label', type: 'string' },
+                { name: 'Glymph', type: 'string' },
+                { name: 'ShowInStepId', type: 'int' },
+                { name: 'ButtonOnWfGrid', type: 'bool' },
+                { name: 'ButtonOnForm', type: 'bool' },
+                { name: 'VisibilityFunction', type: 'string' },
+                { name: 'ParticipantId', type: 'int' },
+                { name: 'ParticipantName', type: 'string' },
+                { name: 'ParticipantType', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'IsLinkOverWFGrid', type: 'bool' },
+                { name: 'ValidationFunction', type: 'string' },
+                { name: 'SendToStepId', type: 'int' },
+                { name: 'SendToStepName', type: 'string' },
+                { name: 'ActionUrl', type: 'string' },
+            ],
+            id: "Id",
+            data: { ParticipantId: ParticipantId, StepId : StepId },
+            url: "/WStepParticipantActions/GetByParticipantIdStepId",
+            root: 'Rows',
+        };
+        CurrentParticipantId = ParticipantId;
+        ShowinStepId = StepId;
+        var dataAdapterParticipantActions = new $.jqx.dataAdapter(sourceParticipantActions)
+        
+        var cellsrendererParticipants = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgridParticipantActions').jqxGrid('getrowdata', row);
+            
+                isChanged = true;
+                return '&emsp;<a href="#" onclick="FnDeleteStepPaticipantActions(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+
+        };
+        var validateFuncParticipantActions = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        //dataAdapterActionsDropDown
+        $('#jqxgridParticipantActions').jqxGrid({
+            source: dataAdapterParticipantActions,
+            width: "100%",
+            autoheight : true,
+            columnsresize: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'singlerow',
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+            columns: [
+                //{ text: 'Action', datafield: 'WActionId' },
+                {
+                    text: 'ActionName', datafield: 'ActionName',
+                    columntype: 'dropdownlist', validateEverPresentRowWidgetValue: validateFuncParticipantActions,
+                    createeditor: function (row, cellvalue, editor) {
+                        editor.jqxDropDownList({ displayMember: 'Name', valueMember: 'Id', source: dataAdapterActionsDropDown });
+                    },
+
+                    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                        var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                        inputTag.jqxDropDownList({ source: dataAdapterActionsDropDown, displayMember: 'Name', valueMember: 'Id', width: '100%' });
+                        $(document).on('keydown.Id', function (event) {
+                            if (event.keyCode == 13) {
+                                if (event.target === inputTag[0]) {
+                                    addCallback();
+                                }
+                                else if ($(event.target).ischildof(inputTag)) {
+                                    addCallback();
+                                }
+                            }
+                        });
+                        return inputTag;
+                    },
+                    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                        var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                        if (!selectedItem)
+                            return "";
+                        var value = selectedItem.label;
+                        return value;
+                    },
+                    resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                        htmlElement.jqxDropDownList('clearSelection');
+                    }
+
+                },
+
+                { text: 'Label', datafield: 'Label', width: '10%'  },
+                { text: 'Glymph', datafield: 'Glymph', hidden: true, width: '5%'  }, //hidding the column as per requirement
+                //{ text: 'ShowInStepId', datafield: 'ShowInStepId' },
+                { text: 'ButtonOnGrid', datafield: 'ButtonOnWfGrid', columntype: 'checkbox',width:'5%' },
+                { text: 'ButtonOnForm', datafield: 'ButtonOnForm', columntype: 'checkbox', width: '5%' },
+                { text: 'VisibilityFunction', datafield: 'VisibilityFunction', width: '10%'},
+                { text: 'IsLinkOverGrid', datafield: 'IsLinkOverWFGrid', columntype: 'checkbox', width: '5%'},
+                { text: 'Description', datafield: 'Description', width: '10%' },
+                { text: 'ValidationFunction', datafield: 'ValidationFunction', width: '10%' },
+                {
+                    text: 'Send To', datafield: 'SendToStepName',
+                    columntype: 'dropdownlist',
+                    createeditor: function (row, cellvalue, editor) {
+                        editor.jqxDropDownList({ displayMember: 'Name', valueMember: 'Id', source: dataAdapterSendToStepDropDown });
+                    },
+                    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                        var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                        inputTag.jqxDropDownList({ source: dataAdapterSendToStepDropDown, displayMember: 'Name', valueMember: 'Id', width: '100%' });
+                        $(document).on('keydown.Id', function (event) {
+                            if (event.keyCode == 13) {
+                                if (event.target === inputTag[0]) {
+                                    addCallback();
+                                }
+                                else if ($(event.target).ischildof(inputTag)) {
+                                    addCallback();
+                                }
+                            }
+                        });
+                        return inputTag;
+                    },
+                    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                        var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                        if (!selectedItem)
+                            return "";
+                        var value = selectedItem.label;
+                        return value;
+                    },
+                    resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                        htmlElement.jqxDropDownList('clearSelection');
+                    }
+
+                },
+                { text: 'ActionUrl', datafield: 'ActionUrl', width: '15%'  },
+                { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrendererParticipants, width: '10%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+        });
+
+    }
+    function FnSaveParticipantActionsData() {
+        var arr = [];
+        var rows = $('#jqxgridParticipantActions').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            if (rows[i].ActionName) {
+                for (var j = 0; j < dataAdapterActionsDropDown.records.length; j++) {
+                    if (dataAdapterActionsDropDown.records[j].Name == rows[i].ActionName) {
+                        arr[i][1] = dataAdapterActionsDropDown.records[j].Id;
+                        break;
+                    }
+                }
+            }
+            arr[i][2] = (rows[i].Label == null) ? '' : rows[i].Label;
+            arr[i][3] = (rows[i].Glymph == null) ? '' : rows[i].Glymph;
+            arr[i][4] = ShowinStepId;
+            arr[i][5] = (rows[i].ButtonOnWfGrid == null) ? false : rows[i].ButtonOnWfGrid;
+            arr[i][6] = (rows[i].ButtonOnForm == null) ? false : rows[i].ButtonOnForm;
+            arr[i][7] = (rows[i].VisibilityFunction == null) ? '' : rows[i].VisibilityFunction;
+            arr[i][8] = CurrentParticipantId;
+            arr[i][9] = "Role";
+            arr[i][10] = (rows[i].Description == null) ? '' : rows[i].Description;
+            arr[i][11] = (rows[i].IsLinkOverWFGrid == null) ? false : rows[i].IsLinkOverWFGrid;
+            arr[i][12] = (rows[i].ValidationFunction == null) ? '' : rows[i].ValidationFunction;
+            
+            
+            if (rows[i].SendToStepName) {
+                for (var j = 0; j < dataAdapterSendToStepDropDown.records.length; j++) {
+                    if (dataAdapterSendToStepDropDown.records[j].Name == rows[i].SendToStepName) {
+                        arr[i][13] = dataAdapterSendToStepDropDown.records[j].Id;
+                        break;
+                    }
+                }
+            } else {
+                arr[i][13] = '';
+            }
+            arr[i][14] = (rows[i].ActionUrl == null) ? '' : rows[i].ActionUrl;
+        }
+        $.ajax({
+            data: { GridData: arr, StepId: CurrentStepId, ParticipantId: CurrentParticipantId },
+            url: "/WStepParticipantActions/SaveData",
+            type: "POST",
+            cache: false,
+            success: function (data) {
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    alert("Data Updated successfully");
+                    FnGetParticipantActionsInformation(CurrentParticipantId, CurrentStepId)
+                }
+            },
+            error: function (reponse) {
+
+            }
+        });
+    }
+
+    function FnDeleteStepPaticipantActions(Id) {
+
+        var r = confirm('All Participant actions and other configurations will be deleted. \n Do you want to continue?');
+        if (r == false)
+            return;
+        else {
+            $('#jqxTabs').hide();           
+            $('#loadertext').show();
+            $('#btnPrevious').hide();
+            $('#btnNext').hide();
+            $.ajax({
+                data: { Id: Id },
+                url: "/WStepParticipantActions/DeleteById",
+                cache: false,
+                //  type: "POST",
+                traditional: true,
+                beforeSend: function () {
+                    $('#jqxTabs').hide();
+                    $('#btnPrevious').hide();
+                    $('#btnNext').hide();                    
+                    $('#loadertext').show();
+                },
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        } else {
+                            alert("Data Updated successfully");
+                            FnGetParticipantActionsInformation(CurrentParticipantId, CurrentStepId);
+                        }                        
+                    }
+                    else {
+                        $('#loadertext').hide();
+                        window.location.href = "/Home/Error";
+                    }
+                    $('#jqxTabs').show();
+                    $('#btnPrevious').show();
+                    $('#btnNext').hide();
+                    $('#loadertext').hide();
+                },
+                complete: function () {
+                    $('#jqxTabs').show();
+                    $('#btnPrevious').show();
+                    $('#btnNext').hide();
+                    $('#loadertext').hide();
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+
+</script>

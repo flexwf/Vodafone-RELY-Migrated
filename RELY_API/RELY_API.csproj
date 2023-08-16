@@ -1,0 +1,863 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
+  <Import Project="..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props" Condition="Exists('..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FE7FF0EE-C279-459C-AA83-8DB2D8587245}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RELY_API</RootNamespace>
+    <AssemblyName>RELY_API</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <MvcBuildViews>false</MvcBuildViews>
+    <UseIISExpress>true</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <Use64BitIISExpress />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>RELY_API.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>RELY_API.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AWSSDK.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.Core.3.3.106.8\lib\net45\AWSSDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.S3.3.3.110.54\lib\net45\AWSSDK.S3.dll</HintPath>
+    </Reference>
+    <Reference Include="AWSSDK.SimpleNotificationService, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
+      <HintPath>..\packages\AWSSDK.SimpleNotificationService.3.3.3.14\lib\net45\AWSSDK.SimpleNotificationService.dll</HintPath>
+    </Reference>
+    <Reference Include="CsvHelper, Version=6.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>..\packages\CsvHelper.6.1.1\lib\net45\CsvHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.0.86.0\lib\20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=1.0.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>..\packages\Microsoft.Office.Interop.Excel.15.0.4795.1000\lib\net20\Microsoft.Office.Interop.Excel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NPOI.2.3.0\lib\net40\NPOI.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OOXML, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NPOI.2.3.0\lib\net40\NPOI.OOXML.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OpenXml4Net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NPOI.2.3.0\lib\net40\NPOI.OpenXml4Net.dll</HintPath>
+    </Reference>
+    <Reference Include="NPOI.OpenXmlFormats, Version=2.3.0.0, Culture=neutral, PublicKeyToken=0df73ec7942b34e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\NPOI.2.3.0\lib\net40\NPOI.OpenXmlFormats.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.DirectoryServices.AccountManagement" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Text.Encodings.Web, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
+    <Reference Include="System.Web.Routing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.3\lib\net45\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest">
+    </Reference>
+    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.3\lib\net45\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.3\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.3\lib\net45\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.3\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="WebGrease">
+      <Private>True</Private>
+      <HintPath>..\packages\WebGrease.1.5.2\lib\WebGrease.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime">
+      <Private>True</Private>
+      <HintPath>..\packages\Antlr.3.4.1.9004\lib\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.ApplicationInsights">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.2.2.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.Agent.Intercept">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.Agent.Intercept.2.0.6\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.DependencyCollector">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.DependencyCollector.2.2.0\lib\net45\Microsoft.AI.DependencyCollector.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.PerfCounterCollector">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.PerfCounterCollector.2.2.0\lib\net45\Microsoft.AI.PerfCounterCollector.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.ServerTelemetryChannel">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.WindowsServer.TelemetryChannel.2.2.0\lib\net45\Microsoft.AI.ServerTelemetryChannel.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.WindowsServer">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.WindowsServer.2.2.0\lib\net45\Microsoft.AI.WindowsServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AI.Web">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.Web.2.2.0\lib\net45\Microsoft.AI.Web.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Areas\HelpPage\ApiDescriptionExtensions.cs" />
+    <Compile Include="Areas\HelpPage\App_Start\HelpPageConfig.cs" />
+    <Compile Include="Areas\HelpPage\Controllers\HelpController.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageAreaRegistration.cs" />
+    <Compile Include="Areas\HelpPage\HelpPageConfigurationExtensions.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\CollectionModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ComplexTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\DictionaryModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\EnumValueDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\IModelDocumentationProvider.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\KeyValuePairModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelDescriptionGenerator.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameAttribute.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ModelNameHelper.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterAnnotation.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\ParameterDescription.cs" />
+    <Compile Include="Areas\HelpPage\ModelDescriptions\SimpleTypeModelDescription.cs" />
+    <Compile Include="Areas\HelpPage\Models\HelpPageApiModel.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\HelpPageSampleKey.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ImageSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\InvalidSample.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\ObjectGenerator.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
+    <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
+    <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\CreateDebugEntryController.cs" />
+    <Compile Include="Controllers\GAuthorizableObjectsController.cs" />
+    <Compile Include="Controllers\GCompaniesController.cs" />
+    <Compile Include="Controllers\GCopaDimensionsController.cs" />
+    <Compile Include="Controllers\GDashBoardToDoController.cs" />
+    <Compile Include="Controllers\GenericGridController.cs" />
+    <Compile Include="Controllers\GErrorLogsController.cs" />
+    <Compile Include="Controllers\GGlobalPOBController.cs" />
+    <Compile Include="Controllers\GKeyValuesController.cs" />
+    <Compile Include="Controllers\GMenusController.cs" />
+    <Compile Include="Controllers\GSecurityQuestionsController.cs" />
+    <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\LAccountingScenariosController.cs" />
+    <Compile Include="Controllers\LASLifeCycleEventsController.cs" />
+    <Compile Include="Controllers\LAuditController.cs" />
+    <Compile Include="Controllers\LCompanySpecificColumnsController.cs" />
+    <Compile Include="Controllers\LDropDownsController.cs" />
+    <Compile Include="Controllers\LDropDownValuesController.cs" />
+    <Compile Include="Controllers\LEmailBucketController.cs" />
+    <Compile Include="Controllers\LEmailTemplatesController.cs" />
+    <Compile Include="Controllers\LFinancialSurveysController.cs" />
+    <Compile Include="Controllers\LFSAccountingMemoGeneratorController.cs" />
+    <Compile Include="Controllers\LFSAnswerBankController.cs" />
+    <Compile Include="Controllers\LFSCaptureUserResponsesController.cs" />
+    <Compile Include="Controllers\LFSChaptersController.cs" />
+    <Compile Include="Controllers\LFSItemTemplatesController.cs" />
+    <Compile Include="Controllers\LFSItemTypesController.cs" />
+    <Compile Include="Controllers\LFSManualAccScenariosController.cs" />
+    <Compile Include="Controllers\LFSNextStepActionsController.cs" />
+    <Compile Include="Controllers\LFSNextStepsController.cs" />
+    <Compile Include="Controllers\LFSQuestionBankController.cs" />
+    <Compile Include="Controllers\LFSResponsesController.cs" />
+    <Compile Include="Controllers\LFSSectionItemsController.cs" />
+    <Compile Include="Controllers\LFSSectionsController.cs" />
+    <Compile Include="Controllers\LFSSurveyLevelsController.cs" />
+    <Compile Include="Controllers\LFSTableConfigController.cs" />
+    <Compile Include="Controllers\LFSTablesController.cs" />
+    <Compile Include="Controllers\LNotificationController.cs" />
+    <Compile Include="Controllers\LPasswordPoliciesController.cs" />
+    <Compile Include="Controllers\LProductPobsController.cs" />
+    <Compile Include="Controllers\LReconBucketController.cs" />
+    <Compile Include="Controllers\LReconColumnMappingController.cs" />
+    <Compile Include="Controllers\LReconFileFormatsController.cs" />
+    <Compile Include="Controllers\LReferenceDataController.cs" />
+    <Compile Include="Controllers\LReferencesController.cs" />
+    <Compile Include="Controllers\LReferenceTypesController.cs" />
+    <Compile Include="Controllers\LRequestsController.cs" />
+    <Compile Include="Controllers\LScenarioDemandController.cs" />
+    <Compile Include="Controllers\LSupportingDocumentsController.cs" />
+    <Compile Include="Controllers\MAuthorizableObjectsRolesController.cs" />
+    <Compile Include="Controllers\LProductsController.cs" />
+    <Compile Include="Controllers\LLocalPOBController.cs" />
+    <Compile Include="Controllers\LRolesController.cs" />
+    <Compile Include="Controllers\LUserActivityLogController.cs" />
+    <Compile Include="Controllers\LUserController.cs" />
+    <Compile Include="Controllers\MMenuRolesController.cs" />
+    <Compile Include="Controllers\ProductHistoryGridController.cs" />
+    <Compile Include="Controllers\RelyDataDownloadController.cs" />
+    <Compile Include="Controllers\ReportsController.cs" />
+    <Compile Include="Controllers\RProductCategoriesController.cs" />
+    <Compile Include="Controllers\RProductSystemsController.cs" />
+    <Compile Include="Controllers\RRequestSystemsController.cs" />
+    <Compile Include="Controllers\RSysCatController.cs" />
+    <Compile Include="Controllers\RWorkFlowsController.cs" />
+    <Compile Include="Controllers\S15ExtractsController.cs" />
+    <Compile Include="Controllers\SSPDimensionsController.cs" />
+    <Compile Include="Controllers\UseCaseIndicatorController.cs" />
+    <Compile Include="Controllers\ValuesController.cs" />
+    <Compile Include="Controllers\WStepGridColumnsController.cs" />
+    <Compile Include="Controllers\WStepParticipantActionsController.cs" />
+    <Compile Include="Controllers\WStepParticipantsController.cs" />
+    <Compile Include="Controllers\WStepsController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Models\AccountViewModel.cs" />
+    <Compile Include="Models\ADModel.cs" />
+    <Compile Include="Models\CompanySpecificColumnViewModel.cs" />
+    <Compile Include="Models\CreateCompanyViewModel.cs" />
+    <Compile Include="Models\Debug.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DropDownViewModel.cs" />
+    <Compile Include="Models\ErrorLogViewModel.cs" />
+    <Compile Include="Models\FlexTable.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\FnGetWFColumnValues_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GAuthorizableObject.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GCompany.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GCopaDimension.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GEmailConfiguration.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GenericGridColumnsViewModel.cs" />
+    <Compile Include="Models\GenericNameAndIdViewModel.cs" />
+    <Compile Include="Models\GErrorLog.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GetAccountingScenarioMatrixViewModel.cs" />
+    <Compile Include="Models\GGlobalPob.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GKeyValue.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GMenu.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\GSecurityQuestion.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\InformationSchemaViewModel.cs" />
+    <Compile Include="Models\LAccountingScenario.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LASLifecycleEvent.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LAudit.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LAuditEntry.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LAuditViewModel.cs" />
+    <Compile Include="Models\LBatchViewModelGrid.cs" />
+    <Compile Include="Models\LCompanySpecificColumn.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LDropDown.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LDropDownValue.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LEmailBucket.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LEmailBucketViewModel.cs" />
+    <Compile Include="Models\LEmailTemplate.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LEmailTemplateViewModel.cs" />
+    <Compile Include="Models\LFinancialSurvey.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSAccountingMemo.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSAccountingScenarioMatrix.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSAnswerBank.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSChapter.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSItemType.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSManualAccScenario.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSNextStep.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSNextStepAction.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSQuestionBank.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSRequestLevelAccountingMemo.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSRespons.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSSection.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSSectionItem.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSSectionItemsViewModel.cs" />
+    <Compile Include="Models\LFSSurveyLevel.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSTable.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSTableConfig.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LFSTableConfigViewModel.cs" />
+    <Compile Include="Models\LLocalPob.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LNotification.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LocalPobForProductViewModel.cs" />
+    <Compile Include="Models\LOutputFormat.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LPasswordHistory.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LPasswordPolicy.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LPortfolio.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LProduct.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LProductPob.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LProductRequestHistoryViewModel.cs" />
+    <Compile Include="Models\LReconBatch.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReconBucket.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReconColumnMapping.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReconFileFormat.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReference.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReferenceData.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LReferenceType.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LRequest.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LRequestsViewModel.cs" />
+    <Compile Include="Models\LRole.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LScenarioDemand.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LSMSBucket.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LSupportingDocument.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LUser.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\LUserActivityLog.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MEntityPortfolio.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MLFSQuestionBankLFSSurveyLevel.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MLocalGlobalUsecaseMapping.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MLUsersGSecurityQuestion.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MMenuRole.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MMenusAuthorizableObject.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MPobCopaMapping.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MStepParticipantActionValidation.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\MUserRole.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PageAccessRoleViewModel.cs" />
+    <Compile Include="Models\PostLReconColumnMappingViewModel.cs" />
+    <Compile Include="Models\ProductObligationsViewModel.cs" />
+    <Compile Include="Models\LProductViewModel.cs" />
+    <Compile Include="Models\MLUsersGSecurityQuestionViewModel.cs" />
+    <Compile Include="Models\PasswordPolicyViewModel.cs" />
+    <Compile Include="Models\PostLCompanySpecificFormViewModel.cs" />
+    <Compile Include="Models\QuestionDeatilsForDemandViewModel.cs" />
+    <Compile Include="Models\RELY.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RELY.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RELY.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RELY.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RELY.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RequestSimulation.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RLocalPobType.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RProductCategory.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RProductSystem.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RRequestSystem.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RSysCat.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RUseCaseIndicator.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RWorkFlow.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\RWorkFlowViewModel.cs" />
+    <Compile Include="Models\S15ExtractsViewModel.cs" />
+    <Compile Include="Models\SpDownloadAccountingMemo_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpDownloadAccountingScenarioMatrix_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpDownloadRelyData_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpGenerateSectionData_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpGenerateSurveySummary_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\spGetEmailBucketDetailCounts_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\spGetErrorLogCount_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\spGetExceptionChartData_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\spGetExceptionSummaryCounts_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SPGetLNotification_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpGetSSPDetails_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\spGetUserActivityLogCounts_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SplitString_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpOneTimeDataMigration_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpRPTAccountingScenarioList_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpRPTAccountingScenarios_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpRPTLifeCycleEvent_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SPRPTRequestDetails_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SPRPTRequestPerStatus_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SPRPTRequestsInProgress_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SPRPTRequestsPerDateInterval_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpRPTScenarioDemand_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpS15Extracts_Copy_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SpS15Extracts_Result.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\SSPDimension.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\StepParticipantActionViewModel.cs" />
+    <Compile Include="Models\SupportingDocumentViewModel.cs" />
+    <Compile Include="Models\TReconDataValidation.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\TRefDataValidation.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\UpdateMappingAuthorizableObjectRoleViewModel.cs" />
+    <Compile Include="Models\UploadReferenceViewModel.cs" />
+    <Compile Include="Models\UseCaseIndicator.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WAction.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WActionValidation.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WFColumnsViewModel.cs" />
+    <Compile Include="Models\WStep.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WStepGridColumn.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WStepParticipant.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WStepParticipantAction.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\XBatch.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\XBatchFile.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\XRequestUpload.cs">
+      <DependentUpon>RELY.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Controllers\RLocalPobTypesController.cs" />
+    <Compile Include="Utilities\Globals.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Areas\HelpPage\HelpPage.css" />
+    <Content Include="Content\bootstrap.css" />
+    <Content Include="Content\bootstrap.min.css" />
+    <Content Include="favicon.ico" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="Global.asax" />
+    <Content Include="Models\RELY.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>RELY.edmx</DependentUpon>
+      <LastGenOutput>RELY.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Models\RELY.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>RELY.edmx</DependentUpon>
+      <LastGenOutput>RELY.cs</LastGenOutput>
+    </Content>
+    <Content Include="Scripts\bootstrap.js" />
+    <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Areas\HelpPage\Views\Web.config" />
+    <Content Include="Areas\HelpPage\Views\Shared\_Layout.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\ResourceModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Index.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\TextSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\SimpleTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Samples.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\Parameters.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ModelDescriptionLink.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\KeyValuePairModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\InvalidSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ImageSample.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\HelpPageApiModel.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\EnumTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\DictionaryModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ComplexTypeModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\CollectionModelDescription.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\DisplayTemplates\ApiGroup.cshtml" />
+    <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
+    <Content Include="ApplicationInsights.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EntityDeploy Include="Models\RELY.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>RELY.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <Content Include="Models\RELY.edmx.diagram">
+      <DependentUpon>RELY.edmx</DependentUpon>
+    </Content>
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
+    <None Include="Properties\PublishProfiles\FolderProfile1.pubxml" />
+    <Content Include="RELY_API.ruleset" />
+    <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\jquery-1.10.2.js" />
+    <Content Include="Scripts\jquery-1.10.2.min.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.2.js" />
+    <Content Include="Scripts\jquery.signalR-2.2.2.min.js" />
+    <Content Include="Scripts\modernizr-2.6.2.js" />
+    <Content Include="Scripts\respond.js" />
+    <Content Include="Scripts\respond.min.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </Content>
+    <Content Include="Areas\HelpPage\Views\_ViewStart.cshtml" />
+    <Content Include="Content\Site.css" />
+    <Content Include="Views\Web.config" />
+    <Content Include="Views\_ViewStart.cshtml" />
+    <Content Include="Views\Home\Index.cshtml" />
+    <Content Include="Views\Shared\Error.cshtml" />
+    <Content Include="Views\Shared\_Layout.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="App_Data\" />
+    <Folder Include="Views\AuthorizableObjectGrid\" />
+    <Folder Include="Views\GAuthorizableObjects\" />
+    <Folder Include="Views\GCompanies\" />
+    <Folder Include="Views\GCopaDimensions\" />
+    <Folder Include="Views\GDashBoardToDo\" />
+    <Folder Include="Views\GErrorLogs\" />
+    <Folder Include="Views\GKeyValues\" />
+    <Folder Include="Views\GMenus\" />
+    <Folder Include="Views\LEmailBucket\" />
+    <Folder Include="Views\LEmailTemplates\" />
+    <Folder Include="Views\LLocalPobSSP\" />
+    <Folder Include="Views\LRoles\" />
+    <Folder Include="Views\LUserActivityLog\" />
+    <Folder Include="Views\LUser\" />
+    <Folder Include="Views\ProductHistoryGrid\" />
+    <Folder Include="Views\RCategories\" />
+    <Folder Include="Views\RProductCategories\" />
+    <Folder Include="Views\RSystems\" />
+    <Folder Include="Views\SSPDimensions\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.woff" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="fonts\glyphicons-halflings-regular.eot" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="packages.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Scripts\jquery-1.10.2.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\AWSSDK.S3.3.3.110.54\analyzers\dotnet\cs\AWSSDK.S3.CodeAnalysis.dll" />
+    <Analyzer Include="..\packages\AWSSDK.SimpleNotificationService.3.3.3.14\analyzers\dotnet\cs\AWSSDK.SimpleNotificationService.CodeAnalysis.dll" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
+    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
+  </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <SaveServerSettingsInUserFile>True</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Net.Compilers.1.3.2\build\Microsoft.Net.Compilers.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.1.0.3\build\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target> -->
+</Project>

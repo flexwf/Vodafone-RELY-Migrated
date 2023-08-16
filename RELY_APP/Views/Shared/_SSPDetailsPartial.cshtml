@@ -1,0 +1,34 @@
+﻿    var EntityType = '@ViewBag.EntityType';
+    function fnGetSSPDetails(){
+    var datafieldsSSP = new Array();
+    var columnsSSP = new Array();
+    datafieldsSSP.push({ name: 'Id', type: 'int' });
+    datafieldsSSP.push({ name: 'SspId', type: 'int' });
+    datafieldsSSP.push({ name: 'SspAmount', type: 'string' });
+    datafieldsSSP.push({ name: 'EffectiveStartDate', type: 'date' });
+    datafieldsSSP.push({ name: 'EffectiveEndDate', type: 'date' });
+    columnsSSP.push({ text: 'SSP ID', datafield: 'SspId' });
+    columnsSSP.push({ text: 'SSP Amount', datafield: 'SspAmount' });
+    columnsSSP.push({ text: 'Start Date', datafield: 'EffectiveStartDate' ,cellsformat: 'dd/MM/yyyy'});
+    columnsSSP.push({ text: 'End Date', datafield: 'EffectiveEndDate',cellsformat: 'dd/MM/yyyy' });
+    var ReconData = {
+    dataType: "json",
+    cache: false,
+    dataFields: datafieldsSSP,
+    data: { EntityType: EntityType, EntityId: '@Model.Id' },
+    url: "/SSPDimensions/GetDataForGrid"
+    };
+
+    var dataAdapterReconData=new $.jqx.dataAdapter(ReconData);
+    $("#jqxGridSSP").jqxGrid({
+    source: dataAdapterReconData,
+    width: '100%',
+    autoheight: true,
+    theme: 'bootstrap',
+    columnsresize: true,
+    columnsreorder: true,
+    showstatusbar: false,
+    ready: function () { },
+    columns: columnsSSP
+    });
+    }

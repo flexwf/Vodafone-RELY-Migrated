@@ -1,0 +1,285 @@
+﻿@model RELY_APP.ViewModel.LDropDownViewModel
+<div id="ErrorMessage"></div>
+<a style="cursor:pointer" onclick="fnShowPopUp();">Create</a>
+<div id="jqxgrid">
+</div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- POP up window code-->
+    <div id="lDropDownPopup" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="popupHeaderEdit">
+                        Update Dropdown
+                    </h4>
+                    <h4 class="modal-title" id="popupHeaderAdd">
+                        Create Dropdown
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px">
+                                @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control focus" } })                               
+                                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px;margin-top:10px">
+                                @Html.LabelFor(model => model.Description)
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10" style="margin-top:10px">
+                                @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Description)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @*button on Edit pop up*@
+                    <button id="btnedit" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Save</button>
+
+                    @*button on create pop up*@
+                    <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript">
+        $('#lDropDownPopup').on('shown.bs.modal', function () {
+        $('.focus').focus(); /*to show cursor on first textbox when modal opens*/
+    })
+
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            cache:false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+            }
+        });
+        $("#btncreate").hide();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").hide();
+        $("input.form-control").val('');  //to referesh modal pop up
+        fnGetDropDown();
+    });
+
+    function fnGetDropDown() {
+        var source = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            id: "Id",
+            url: "/LDropDowns/GetLDropDowns"
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            if (Number(rowdata.Id) != 0 && rowdata.CompanyCode) {
+                //return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>&emsp;<a href="#" onclick="Edit(' + rowdata.Id + ')"><i class="fa fa-pencil-square-o" style="color:red;font-size:15px !important;" aria-hidden="true"  title="Edit"></i>&emsp;<button onclick="return FnValues(' + rowdata.Id + ',\'' + rowdata.Name + '\')" class="GridButton">Values</button>';
+                return '<button type="button" onclick="FnDelete(' + rowdata.Id + ')" class="GridButton">Delete</button>&nbsp;&nbsp;<button type="button" onclick="Edit(' + rowdata.Id + ')" class="GridButton">Edit</button>&nbsp;&nbsp;<button onclick="return FnValues(' + rowdata.Id + ',\'' + rowdata.Name + '\')" class="GridButton">Values</button>';
+            }
+        };
+        $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            filterable: true,
+            altrows: true,
+            selectionmode: 'multiplecellsadvanced',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+            columns: [
+                {
+                    text: 'Name', datafield: 'Name'//, validateEverPresentRowWidgetValue: validateFunc, cellclassname: cellclass
+                },
+                {
+                    text: 'Description', datafield: 'Description'//, filtertype: 'input', cellclassname: cellclass
+                },
+                {
+                    text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '20%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+        });
+    }
+
+    //this method is use to open modal pop up
+    function fnShowPopUp() {
+        $("#btncreate").show();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").show();
+        $("#popupHeaderEdit").hide();
+        //$("input.form-control").val('');
+        $('#lDropDownPopup').modal(); //modal pop up opens
+    }
+
+    //This method is called when User clicks on delete glymph in grid
+    function FnDelete(Id) {
+        var r = confirm("Are you sure to delete the selected LDropdown?");
+        if (r == false) {
+            return;
+        }
+        else {
+             $.ajax({
+                data: { Id: Id },
+                url: "/LDropDowns/Delete",
+                cache:false,
+                traditional: true,
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        }
+                        else {
+                            alert(data.PopupMessage);
+                        }
+                        fnGetDropDown();
+                    }
+                    else {
+                        //Any unhanded error has been caught
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");  //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+    //function to add new data
+        $("#btncreate").click(function (event) {
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            $("#btncreate").show();
+            $("#popupHeaderAdd").show();
+            $("#popupHeaderEdit").hide();
+            $("#btnedit").hide();
+            $.ajax({
+                type: "POST",
+                data: $("#frm").serialize(),
+                cache:false,
+                url: "/LDropDowns/Create",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetDropDown();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#lDropDownPopup").modal({ "backdrop": "static" });
+                    }
+
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+        else {
+            event.stopPropagation();
+        }
+    });
+
+
+     //this function is called on edit link click to edit the existing data
+    function Edit(id) {
+        $("#btncreate").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").show();
+        $("#btnedit").show();
+        $.ajax({
+            type: "Get",
+            cache: false,
+            url: '@Url.Action("Edit", "LDropDowns")',
+            dataType: "html",
+            data: { id: id },
+            success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('Name').value = obj.Name;
+                document.getElementById('Description').value = obj.Description;
+                document.getElementById('Id').value = obj.Id;
+                $("#lDropDownPopup").modal("show");
+                $("#lDropDownPopup .modal-content").html(data.html);
+            }
+        });
+        fnGetDropDown();
+    }
+
+     //function to update the particular record
+     $("#btnedit").click(function (event) {
+         $("#frm").validate();
+         if ($('#frm').valid()) {
+              var id =  document.getElementById('Id').value;
+                $.ajax({
+                    type: "POST",
+                    data: $("#frm").serialize() + "&id=" + id,
+                    cache: false,
+                    url: '@Url.Action("Update", "LDropDowns")',
+                    success: function (data) {
+                        if (data.PopupMessage) {
+                            if (data.PopupMessage != "") {
+                                alert(data.PopupMessage);
+                                $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                                fnGetDropDown();
+                            }
+                        }
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                            $("#lDropDownPopup").modal({ "backdrop": "static" });
+                        }
+                    },
+                    error: function (reponse) {
+                        console.log(reponse);
+                        alert("error");
+                    }
+                });
+         }
+         else {
+             event.stopPropagation();
+         }
+     });
+
+    //This function will be called when user clicks on the values link in the grid
+    function FnValues(Id,Name)
+    {
+        window.location.href = '/LDropDownValues/Index?Id=' + Id + '&DropDownName=' + Name;
+    }
+
+    
+    </script>

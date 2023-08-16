@@ -1,0 +1,225 @@
+﻿<script>
+    var CurrentStepId = 0;
+    //funtion to get the step details for the Selected workflow
+    function FnGetParticipantsInformation(StepId) {
+        var sourceParticipants = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'WStepId', type: 'int' },
+                { name: 'ParticipantId', type: 'int' },
+                { name: 'ParticipantName', type: 'string' },
+                { name: 'Type', type: 'string' },
+                { name: 'IsDefault', type: 'bool' },
+                { name: 'Description', type: 'string' },
+            ],
+            id: "Id",
+            data: { StepId: StepId },
+            url: "/WStepParticipants/GetByStepId",
+            root: 'Rows',
+        };
+        var validateFuncParticipants = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        CurrentStepId = StepId;
+        var dataAdapterParticipants = new $.jqx.dataAdapter(sourceParticipants)
+        var cellsrendererParticipants = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgridParticipants').jqxGrid('getrowdata', row);
+            
+                isParticipantChanged = true;
+                return '&emsp;<a href="#" onclick="FnDeleteStepParticipant(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+
+        };
+        var validateFuncParticipants = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        $('#jqxgridParticipants').jqxGrid({
+            source: dataAdapterParticipants,
+            width: "100%",
+            autoheight : true,
+            columnsresize: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'singlerow',
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+            columns: [
+                //{
+                //    text: 'Type', datafield: 'Type',
+                //    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                //        var inputTag = $("<div id='Typediv' style='border: none;'>Role</div>").appendTo(htmlElement);
+                //        return inputTag;
+                //    },
+                //    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                //       var value =  htmlElement.prevObject[0].outerText;//it will get "Role" so as show in Grid
+                //        return value;
+                //    },
+                //},
+                //{ text: 'Participant', datafield: 'ParticipantId' },
+                {
+                    text: 'Participant', datafield: 'ParticipantName',// validateEverPresentRowWidgetValue: validateFunc, cellclassname: cellclass,
+                     validateEverPresentRowWidgetValue: validateFuncParticipants,
+                    columntype: 'dropdownlist',
+                    createeditor: function (row, cellvalue, editor) {
+                        // console.log(clientSourceDA);
+                        editor.jqxDropDownList({ displayMember: 'RoleName', valueMember: 'Id', source: dataAdapterParticipantDropDown });
+                    },
+
+                    createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                        var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                        inputTag.jqxDropDownList({ source: dataAdapterParticipantDropDown, displayMember: 'RoleName', valueMember: 'Id', width: '100%' });
+                        $(document).on('keydown.Id', function (event) {
+                            if (event.keyCode == 13) {
+                                if (event.target === inputTag[0]) {
+                                    addCallback();
+                                }
+                                else if ($(event.target).ischildof(inputTag)) {
+                                    addCallback();
+                                }
+                            }
+                        });
+                        return inputTag;
+                    },
+                    getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                        var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                        if (!selectedItem)
+                            return "";
+                        var value = selectedItem.label;
+                        return value;
+                    },
+                    resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                        htmlElement.jqxDropDownList('clearSelection');
+                    }
+
+                },
+                { text: 'IsDefault', datafield: 'IsDefault', columntype: 'checkbox'},
+                { text: 'Description', datafield: 'Description' },
+                { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrendererParticipants, width: '10%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+        });
+        $("#jqxgridParticipants").on('cellvaluechanged', function (event) {
+            var row = event.args.rowindex;
+            var rowdata = $("#jqxgridParticipants").jqxGrid('getrowdata', row);
+            editedRows.push({ index: row, data: rowdata });
+            isParticipantChanged = true;
+        });
+    }
+    function FnSaveParticipantsData() {
+        var arr = [];
+        var rows = $('#jqxgridParticipants').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            if (rows[i].ParticipantName) {
+                for (var j = 0; j < dataAdapterParticipantDropDown.records.length; j++) {
+                    if (dataAdapterParticipantDropDown.records[j].RoleName == rows[i].ParticipantName) {
+                        arr[i][1] = dataAdapterParticipantDropDown.records[j].Id;
+                        break;
+                    }
+                }
+            }
+            //arr[i][1] = (rows[i].ParticipantId == null) ? 0 : rows[i].ParticipantId;
+            //arr[i][2] = (rows[i].Type == null) ? '' : rows[i].Type;
+            arr[i][2] = "Role"; //hardcoding Participanttype
+            arr[i][3] = (rows[i].IsDefault == null) ? false : rows[i].IsDefault;
+            arr[i][4] = (rows[i].Description == null) ? '' : rows[i].Description;
+        }
+        $.ajax({
+            data: { GridData: arr, StepId: CurrentStepId },
+            url: "/WStepParticipants/SaveData",
+            cache: false,
+            type: "POST",
+            success: function (data) {
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    alert("Data Updated successfully");
+                    FnGetParticipantsInformation(CurrentStepId);
+                }
+            },
+            error: function (reponse) {
+
+            }
+        });
+    }
+
+    //This method is called when User clicks on delete glymph in grid
+    function FnDeleteStepParticipant(Id) {
+
+        var r = confirm('All actions and other configurations will be deleted. \n Do you want to continue?');
+        if (r == false)
+            return;
+        else {
+            $('#jqxTabs').hide();
+            $('#loadertext').show();
+            $('#btnPrevious').hide();
+            $('#btnNext').hide();
+            $.ajax({
+                data: { Id: Id, StepId: CurrentStepId },
+                url: "/WStepParticipants/DeleteById",
+                cache: false,
+                //  type: "POST",
+                traditional: true,
+                beforeSend: function () {
+                    $('#jqxTabs').hide();
+                    $('#btnPrevious').hide();
+                    $('#btnNext').hide();
+                    $('#loadertext').show();
+                },
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        } else {
+                            $('#loadertext').hide();
+                            alert("Data Updated successfully");
+                            FnGetParticipantsInformation(CurrentStepId);
+                        }
+                    }
+                    else {
+                        window.location.href = "/Home/Error";
+                    }
+                    $('#jqxTabs').show();
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    $('#loadertext').hide();
+                },
+                complete: function () {
+                    $('#jqxTabs').show();
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    $('#loadertext').hide();
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+</script>

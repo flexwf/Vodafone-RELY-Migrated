@@ -1,0 +1,224 @@
+﻿
+@{
+    var ColumnsAORole = (List<RELY_APP.ViewModel.LRoleViewModel>)@ViewBag.AuthorizableObjectColumn;
+}
+
+<script>
+    var Args = [];
+    $(document).ready(function () {
+
+
+        fnAuthorizableObjectRole();
+        var count = 0;
+
+
+        $("#jqxAuthorizableObjectRoleGrid").on('cellendedit', function (event) {
+            var args = event.args;
+            var columnDataField = args.datafield;
+            //var rowIndex = args.rowindex;
+            var cellValue = args.value;
+            var oldValue = args.oldvalue;
+            var rowData = args.row;
+            var AuthorizableId = rowData.AuthorizableId;
+           // var AuthorizableId = $('#jqxAuthorizableObjectRoleGrid').jqxGrid('getCell', rowIndex, 'AuthorizableId');
+
+            Args[count] = [];
+            Args[count][0] = AuthorizableId;
+            Args[count][1] = columnDataField;
+            //Args[count][1] = rowIndex;
+            Args[count][2] = cellValue;
+            Args[count][3] = oldValue;
+
+             count++;
+            //Args[rowIndex][ColIndex] = cellValue;
+
+
+            /// fnSaveAORoleData(Args);
+        });
+
+
+
+    }); //End of Document Ready
+
+
+
+
+    function fnAuthorizableObjectRole() {
+
+
+        var tooltiprenderer = function (element) {
+            $(element).jqxTooltip({ position: 'mouse', content: $(element).text() });
+        }
+
+        var datafieldsAuthorizableObjectRole = new Array();
+        var columnsAuthorizableObjectRole = new Array();
+        datafieldsAuthorizableObjectRole.push({ name: 'AuthorizableObject', type: 'string' });
+        datafieldsAuthorizableObjectRole.push({ name: 'AuthorizableId', type: 'int' });
+        columnsAuthorizableObjectRole.push({ text: 'AuthorizableObject', datafield: 'AuthorizableObject', width: '20%', rendered: tooltiprenderer });
+
+
+
+        var data = @Html.Raw(Json.Encode(ColumnsAORole));
+        for (var i = 0; i < data.length; ++i) {
+            //var tooltiprenderer = function (element) {
+            //    $(element).jqxTooltip({ position: 'mouse', content: $(element).text() });
+            //}
+            datafieldsAuthorizableObjectRole.push({ name: data[i].RoleName, type: 'string' });
+            columnsAuthorizableObjectRole.push({ text: data[i].RoleName, datafield: data[i].RoleName, columntype: 'checkbox', rendered: tooltiprenderer });
+        }
+
+        var source = {
+            dataType: "json",
+            dataFields: datafieldsAuthorizableObjectRole,
+            cache: false,
+            url: "/MAuthorizableObjectRole/GetDataForAuthorizableObjectRole"
+        };
+
+        var dataAdapterAORole = new $.jqx.dataAdapter(source);
+
+        $("#jqxAuthorizableObjectRoleGrid").jqxGrid({
+            source: dataAdapterAORole,
+            width: '98%',
+            height: '8%',
+            theme: 'bootstrap',
+            sortable: true,
+            columnsautoresize: true,
+            enabletooltips: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 200,
+            editable: true,
+            editmode: 'click',
+            pagesizeoptions: ['100', '200', '500'],
+            keyboardnavigation: true,
+            // virtualmode: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            // selectionmode: 'checkbox',
+            //enablebrowserselection: true,
+            showstatusbar: false,
+            ready: function () {
+            },
+            columns: columnsAuthorizableObjectRole
+
+
+
+        });
+    }
+
+    function FnSaveData()
+        {
+        if (Args.length > 0) {
+            $.ajax({
+                //data: "Args=" + Args ,
+                data: { Args: Args },
+                cache: false,
+                url: "/MAuthorizableObjectRole/SaveDataForAuthorizableObjectRole",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage)
+                        window.location.href = "/MAuthorizableObjectRole/Index";
+                    } else {
+
+                        alert('Data Saved Successfully.');
+                        window.location.href = "/MAuthorizableObjectRole/Index";
+                    }
+                },
+
+
+
+
+            });
+        }
+        else
+        {
+            alert('Please make some changes before clicking on Save button.');
+        }
+    }
+
+    function FnbackButton()
+    {
+
+            //DialogResult dr = MessageBox.Show("Are you want to quit without saving the data?","Authorized Object", MessageBoxButtons.YesNo);
+            //switch (dr) {
+            //    case DialogResult.Yes:
+            //        window.location.href = "/MAuthorizableObjectRole/Index";
+            //        break;
+            //    case DialogResult.No:
+            //        // this.close();
+            //        dr.close();
+            //         }
+
+        if (Args.length > 0) {
+            if (confirm("You are leaving the page without saving the data"))
+            {
+                window.location.href = "/MAuthorizableObjectRole/Index";
+            }
+
+            else
+            {
+                window.location.href = "/MAuthorizableObjectRole/Index";
+            }
+        }
+        else
+
+        {
+            window.location.href = "/MAuthorizableObjectRole/Index";
+            
+           // window.location.href = "/Home/DecideDashboard";
+        }
+
+
+    }
+
+
+
+    //function FnMultiThreading() {
+      
+    //        $.ajax({
+               
+    //            url: "/MAuthorizableObjectRole/TestMultiThreading",
+    //            dataType: "json",
+    //            type: "POST",
+    //            success: function (data) {
+    //                if (data.ErrorMessage) {
+    //                    alert(data.ErrorMessage)
+    //                    window.location.href = "/MAuthorizableObjectRole/Index";
+    //                } else {
+
+    //                   alert('Data Saved Successfully.');
+    //                    window.location.href = "/MAuthorizableObjectRole/Index";
+    //                }
+    //            },
+
+
+
+
+    //        });
+        
+       
+    //}
+
+
+
+
+
+
+
+
+</script>
+
+<div id="jqxAuthorizableObjectRoleGrid"></div>
+
+<div class="col-md-12 col-lg-12" style="padding:0px;">
+    @*@*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" width="10" id="BackButton" name="BackButton" onclick="FnbackButton();">Back</button>*@
+    @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" width="10" id="save" name="save" onclick=" FnSaveData();">Save</button>*@
+    <br>&ensp;<br>
+    <button type="button" class="btn btn-red btn-cons" id="bck" onclick="FnbackButton();">Back &nbsp;</button>
+    <button type="button" class="btn btn-red btn-cons" id="btnSubmit" name="save" onclick="FnSaveData();"><b>Save&nbsp;</b></button>
+    @*<button type="button" class="btn btn-red btn-cons" id="btnMultiThreading" name="save" onclick="FnMultiThreading();"><b>CheckMultiThreading&nbsp;</b></button>*@
+</div>
+                                                                                              

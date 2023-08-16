@@ -1,0 +1,58 @@
+﻿@{
+    var ColumnsForReconGrid = (List<string>)@ViewBag.LReconColumns;
+}
+
+
+    function fnReconGridDetail(){
+        var datafieldsProductHistory = new Array();
+        var columnsProductHistory = new Array();
+        var data = @Html.Raw(Json.Encode(ColumnsForReconGrid));
+        for (var i = 0; i < data.length; ++i) {
+        datafieldsProductHistory.push({ name: data[i], type: data[i].DataType });
+        columnsProductHistory.push({ text:data[i], datafield: data[i]});
+        }
+        @*datafieldsProductHistory.push({ name: 'Label', type: 'string' });
+            columnsProductHistory.push({ text: 'Label', datafield: 'string'});*@
+
+        var ReconData = {
+        dataType: "json",
+        cache: false,
+        dataFields: datafieldsProductHistory,
+        data:{Productcode: '@Model.ProductCode', SysCatId: '@Model.SysCatId', CompanyCode: '@Model.CompanyCode'},
+        url: "/LProducts/GetDataForRecon"
+        };
+
+        var dataAdapterReconData=new $.jqx.dataAdapter(ReconData);
+        $("#jqxreconGrid").jqxGrid({
+        source: dataAdapterReconData,
+        width: '100%',
+        height: '8%',
+        theme: 'bootstrap',
+        sortable: true,
+        columnsresize: true,
+        columnsreorder: true,
+        altrows: true,
+        pageable: true,
+        pagesize: 200,
+        pagesizeoptions: ['100', '200', '500'],
+        filterable: true,
+        autoshowcolumnsmenubutton:false,//down arrow always visible for filter and sorting,
+        showstatusbar: false,
+        ready: function () { },
+        columns: columnsProductHistory
+        });
+        }
+
+
+        @*datafieldsRecon.push({ name: 'AttributeName', type: 'string' });
+            datafieldsRecon.push({ name: 'AttributeName', type: 'string' });
+            datafieldsRecon.push({ name: 'AttributeName', type: 'string' });
+            datafieldsRecon.push({ name: 'AttributeName', type: 'string' });
+            datafieldsRecon.push({ name: 'AttributeName', type: 'string' });*@
+
+        @*@foreach (var item in ReconGridData)
+            {
+                datafieldsRecon.push({ name: 'AttributeName', type: 'string' });
+
+
+            }*@

@@ -1,0 +1,82 @@
+﻿
+
+
+<script>
+
+    $(document).ready(function () {
+
+        GetNextStepActionsGrid();
+
+    });
+
+    function FnEditNSAction() {
+        var selectedrowindex = $('#jqxgridNSActions').jqxGrid('selectedrowindex');
+        var xx = $('#jqxgridNSActions').jqxGrid("getrowid", selectedrowindex);
+         var EntityId = '@ViewBag.EntityId';
+        if (xx) {
+            //url is not hitting
+            window.location.href = '/LFSNextStepActions/Edit?TransactionId=' + xx +'&EntityId='+ EntityId;
+            //alert("Oops!!! Due to some technical issue, having trouble loading this Page.... ");
+            return;
+        }
+
+    }
+
+
+    function GetNextStepActionsGrid() {
+        var EntityId = '@ViewBag.EntityId';
+        var EntityType = '@ViewBag.EntityType';
+       var sourceNSActions = {
+           dataType: "json",
+           cache: false,
+            dataFields: [
+                { name: 'QuestionCode', type: 'string' },
+                { name: 'Response', type: 'string' },
+                { name: 'Id', type: 'int' },
+                { name: 'NextStepText', type: 'int' },
+                { name: 'IsDone', type: 'bool' },
+                { name: 'ActionTaken', type: 'string' },
+                {name: 'CreatedDateTime', type: 'date' }
+            ],
+            id: "Id",
+            data: { EntityId: EntityId, EntityType: EntityType},
+            url: "/LFSNextStepActions/GetGridData"
+            };
+            var cellsrendererSurvey = function (row, columnfield, value, defaulthtml, columnproperties) {
+                return '&emsp;<button type="button" id="NSActionEditbtn" name="NSActionEditbtn" onclick="FnEditNSAction();" class="GridButton">Edit</button>';
+            };
+            var dataAdapter = new $.jqx.dataAdapter(sourceNSActions);
+            $('#jqxgridNSActions').jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            autoheight:true,
+            sortable: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            editable: false,
+            pagesize: 200,
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            showstatusbar: false,
+            ready: function () {
+            },
+            columns: [
+            { text: 'QuestionCode', datafield: 'QuestionCode' },
+            { text: 'Answer', datafield: 'Response' },
+            { text: 'IsDone', datafield: 'IsDone', columntype: 'checkbox' },
+            { text: 'ActionTaken', datafield: 'ActionTaken' },
+            { text: 'NextStepText', datafield: 'NextStepText' },
+            { text: 'Created On', datafield: 'CreatedDateTime', columntype: 'date', cellsformat: 'dd/MM/yyyy' },
+            { text: 'Actions ', datafield: 'Id', cellsrenderer: cellsrendererSurvey ,width: '5%'}
+            ]
+            });
+
+            }
+
+
+</script>
+<div id="jqxgridNSActions"></div>
+

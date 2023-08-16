@@ -1,0 +1,493 @@
+﻿@model RELY_APP.ViewModel.CaptureUserResponseViewModel
+@{
+    var TableData = (RELY_APP.ViewModel.LFSTableViewModel)@ViewBag.TableData;
+}
+@{
+    var OtherSectionItems = (List<RELY_APP.ViewModel.LFSSectionItemViewModel>)@ViewBag.OtherSectionItems;
+}
+@{
+    var ConfigData = (List<RELY_APP.ViewModel.LFSTableConfigViewModel>)@ViewBag.ConfigData;
+}
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxdatetimeinput.js"></script>
+<script>
+    var datafields = new Array();
+    var columns = new Array();
+    var Col = '';
+    var Row = '';
+    var TableCode = ''; var QuestionCode = '';
+    var CurrentItemType = '';
+    $(document).ready(function () {
+
+        if ('@TempData["Error"]')
+        {
+            alert('@TempData["Error"]')
+            window.close();
+        }
+
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache: false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        var TableDetails = @Html.Raw(Json.Encode(TableData));
+         TableCode = TableDetails.TableCode;
+       // datafields.push({ name: 'Actions', type: 'string' });
+       // columns.push({text: " ", datafield: 'Actions',width: '10%' });
+        //$.ajax({
+        //    data: { Axis: 'col', TableCode: TableCode},
+        //    url: "/LFSUserResponse/GetConfigByAxis",
+        //    dataType: "json",
+        //    type: "POST",
+        //    success: function (data) {
+        //        for (var i = 0; i < data.length; ++i) {
+        //            if (data[i].ItemName == 'CHOOSE_QUESTION' || data[i].ItemName == 'AS_QUESTION') {
+        //                datafields.push({ name: data[i].Label, type: 'string', editable: true});
+        //                columns.push({ text: data[i].Label, datafield: data[i].Label });
+        //            }
+        //            else if (data[i].ItemName == 'YN_QUESTION') {
+        //                datafields.push({ name: data[i].Label, type: 'string', editable: true });
+        //                columns.push({ text: data[i].Label, datafield: data[i].Label });
+        //            }
+        //            else if (data[i].ItemName == 'ENTER_QUESTION') {
+        //                datafields.push({ name: data[i].Label, type: 'string', editable: true });
+        //                columns.push({ text: data[i].Label, datafield: data[i].Label });
+        //            }
+        //            else if (data[i].ItemName == 'DATE_QUESTION') {
+        //                datafields.push({ name: data[i].Label, type: 'string', editable: true });
+        //                columns.push({ text: data[i].Label, datafield: data[i].Label });
+        //            }
+        //            else if (data[i].ItemName == 'NUMBER_QUESTION') {
+        //                datafields.push({ name: data[i].Label, type: 'string', editable: true });
+        //                columns.push({ text: data[i].Label, datafield: data[i].Label });
+        //            }
+        //        }
+        //    },
+        //    error: function (reponse) {
+        //        //  alert("error : " + reponse);
+        //    }
+        //});
+
+        //var sourceTbl = {
+        //    dataType: "json",
+        //    dataFields: datafields,
+        //    id: "Id",
+        //    data: { Axis: 'row', TableCode: TableCode},
+        //    url: "/LFSUserResponse/GetConfigByAxis",
+        //};
+        //var dataAdapterTable = new $.jqx.dataAdapter(sourceTbl)
+        //$('#TableDetails').jqxGrid({
+        //    source: dataAdapterTable,
+        //    width: "100%",
+        //    columnsresize: true,
+        //    pageable: true,
+        //    pagesize: 200,
+        //    filterable: true,
+        //    sortable: true,
+        //    selectionmode: 'singlecell',
+        //    keyboardnavigation: false,
+        //    enablebrowserselection: true,
+        //    pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+        //    columns: columns
+        //});
+         var datafields = Array();
+         var columns = Array();
+         var ColumnsCount = '@ViewBag.ColumnsCount';
+         for (i = 1; i <= ColumnsCount; i++) {
+
+             datafields.push({ name: 'COL'+i , type: 'string' });
+             columns.push({ text: 'COL'+i, datafield: 'COL'+i, editable: false });
+         }
+         var sourceTableGrid = {
+             dataType: "json",
+             cache: false,
+            //dataFields: [
+            //    { name: 'Action', type: 'string' },
+            //{ name: 'ActionLabel', type: 'string' },
+            //    { name: 'ActionType', type: 'string' },
+            //    { name: 'ActionDateTime', type: 'date' },
+            //    { name: 'EntityName', type: 'string' },
+            //    { name: 'UserName', type: 'string' },
+            //    { name: 'UserRole', type: 'string' },
+            //    { name: 'Comments', type: 'string' }
+            //],
+            dataFields: datafields,
+            id: "Id",
+            data: { TableCode: TableCode, EntityId: '@Model.EntityId', EntityType: 'LProducts' },
+            url: "/LFSUserResponse/GetTableGridData"
+        };
+         var dataAdapter = new $.jqx.dataAdapter(sourceTableGrid);
+
+                $('#TableDetails').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                   // height:125, //height is fixed for displaying scrollbar and commenting autoheight
+                    theme: 'bootstrap',
+                    //sortable: true,
+                    showheader: false,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: false,
+                    selectionmode: 'singlecell',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: columns
+                });
+
+        $("#TableDetails").on('cellselect', function (event) {
+            var datafield = event.args.datafield;
+            var row = event.args.rowindex;
+            var columnDataField = $("#TableDetails").jqxGrid('getcolumn', event.args.datafield).text;
+            var column = $("#TableDetails").jqxGrid('getcolumn', event.args.datafield);
+            Col = column.visibleindex + 1;
+            Row = row + 1;
+            var ResponseText = $('#TableDetails').jqxGrid('getcelltext', row, columnDataField);
+            //alert(ResponseText);
+            FnGetCellDataByColRow(Col, Row, ResponseText);
+                });
+
+        var OtherSectionItems = @Html.Raw(Json.Encode(OtherSectionItems));
+        if (OtherSectionItems == null || OtherSectionItems.length == 0) {
+            document.getElementById('TextDetailsDiv').style.display = 'none';
+        } else {
+            document.getElementById('TextDetailsDiv').style.display = 'block';
+        }
+        for (var index = 0; index < OtherSectionItems.length;index++ ) {
+
+            document.getElementById('TextDetailsDiv').innerHTML = document.getElementById('TextDetailsDiv').innerHTML + '<br/>'+ OtherSectionItems[index].ItemText;
+        }
+
+    });//document.ready
+
+    //This function get the information about the selected cell and renders the related item
+    function FnGetCellDataByColRow(Col, Row, ResponseText) {
+        $.ajax({
+            data: { Col: Col, Row: Row, TableCode: TableCode },
+            cache: false,
+            url: "/LFSUserResponse/GetConfigByColRow",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+                if (data.ItemTypeName == 'TEXT') {//do nothing
+                    document.getElementById('SaveTableButton').style.display = 'none';
+                    document.getElementById('SaveTableButton').style.backgroundColor = '#ada7a7';
+                    //document.getElementById('divQuestionText').innerHTML = '';
+                    document.getElementById('divQuestionText').innerHTML =  data.QuestionText;
+                    document.getElementById('divAnswer').innerHTML = '';
+                    return;
+                }
+                if (data.ItemTypeName == null && data.ShowResponseFromQuestionCode != null) {//it is ShowResponseFromQuestionCode item
+                    document.getElementById('SaveTableButton').style.display = 'none';
+                    document.getElementById('SaveTableButton').style.backgroundColor = '#ada7a7';
+                    document.getElementById('divQuestionText').innerHTML = ResponseText;
+                    document.getElementById('divAnswer').innerHTML = '';
+                    return;
+                }
+                QuestionCode = data.QuestionCode;
+                FnRenderNewQuestion(data, ResponseText);
+            },
+            error: function (reponse) {
+            }
+        });
+    }
+
+    function FnRenderNewQuestion(CurrentItem, ResponseText) {
+        var QName = CurrentItem.QuestionName;
+        CurrentItemType = CurrentItem.ItemTypeName;
+        if (CurrentItem.QuestionName == null) {
+            QName = '';
+        }
+        var QText = CurrentItem.QuestionText;
+        if (CurrentItem.QuestionText == null) {
+            QText = '';
+        }
+
+        document.getElementById('divQuestionText').innerHTML = QName + " " + QText.replace('CHAR(10)+CHAR(13)', '<br>');
+        document.getElementById('SaveTableButton').style.display = 'block';
+        document.getElementById('SaveTableButton').style.backgroundColor = 'buttonface';
+        if (CurrentItem.ItemTypeName == "CHOOSE_QUESTION" || (CurrentItem.ItemTypeName == "YN_QUESTION") || CurrentItem.ItemTypeName == "AS_QUESTION" || CurrentItem.ItemTypeName == "COMP_QUESTION") {
+            $.ajax({
+                data: { QuestionCode: CurrentItem.QuestionCode, ItemTypeName: CurrentItem.ItemTypeName },
+                cache: false,
+                url: "/LFSAnswerBank/GetByQuestionCode",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data.answerData) {
+                        document.getElementById('divAnswer').innerHTML = data.answerData;
+                        if (ResponseText) {
+                            $("#" + CurrentItem.QuestionCode).val(ResponseText);
+                        }
+                        GetAccountingScenarioGrid(CurrentItem.QuestionCode);
+                    }
+                    if (CurrentItem.ItemTypeName == "COMP_QUESTION") {
+                        document.getElementById(CurrentItem.QuestionCode).style.background = 'lightgray';
+                        document.getElementById(CurrentItem.QuestionCode).style.pointerEvents = 'none';
+                        document.getElementById("SaveTableButton").style.pointerEvents = 'none';
+                        document.getElementById('SaveTableButton').style.backgroundColor = '#ada7a7';
+                    }
+                },
+                error: function (reponse) {
+                }
+            });//ajax call
+            if (CurrentItem.ItemTypeName == "AS_QUESTION") {
+                //document.getElementById('ASHelperbtn').style.display = 'block';
+                document.getElementById('ASHelperDiv').style.display = 'block';
+                //return;
+            }
+            
+        }
+        else if (CurrentItem.ItemTypeName == "ENTER_QUESTION") {
+            var htmlTobeRendered = "<textarea class='form-control' cols='20' id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "' rows=2 style='min-height:100px;min-width:400px;'></textarea>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+            if (ResponseText) {
+                $("#" + CurrentItem.QuestionCode).val(ResponseText);
+            }
+        }
+        else if (CurrentItem.ItemTypeName == "NUMBER_QUESTION") {
+            var htmlTobeRendered = "<input onkeypress='validate(event);' type='number' id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "'>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+            if (ResponseText) {
+                $("#" + CurrentItem.QuestionCode).val(ResponseText);
+            }
+
+        }
+        else if (CurrentItem.ItemTypeName == "DATE_QUESTION") {
+            var htmlTobeRendered = "<div id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "'></div>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+            $("#" + CurrentItem.QuestionCode).jqxDateTimeInput({ width: '125px', height: '22px', placeHolder: "DD/MM/YYYY", value: null });
+            if (ResponseText) {
+                var parts = ResponseText.split('/');//splitting date into parts and then rearrange
+                var Connection = new Date(parts[2], parts[1] - 1, parts[0]); //Date considers YYYY, MM,DD format
+                $("#" + CurrentItem.QuestionCode).jqxDateTimeInput('setDate', Connection);
+            }
+        }
+        else if (CurrentItem.ItemTypeName == "SECTION_BREAK") {
+            var htmlTobeRendered = "<div id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "'></div>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+        }
+        else if (CurrentItem.ItemTypeName == "EXPLANATION" || CurrentItem.ItemTypeName == "L1_TITLE" || CurrentItem.ItemTypeName == "L2_TITLE" || CurrentItem.ItemTypeName == "TEXT_HEADING" || CurrentItem.ItemTypeName == "TEXT") {
+            var htmlTobeRendered = "<div id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "'></div>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+        }
+        else if (CurrentItem.ItemTypeName == "CONCLUSION") {
+            var htmlTobeRendered = "<textarea readonly class='form-control' cols='20' id='" + CurrentItem.QuestionCode + "' name='" + CurrentItem.QuestionCode + "' style='min-height:150px;min-width:400px;'></textarea>";
+            document.getElementById('divAnswer').innerHTML = htmlTobeRendered;
+            if (ResponseText) {
+                $("#" + CurrentItem.QuestionCode).val(ResponseText);
+                document.getElementById(CurrentItem.QuestionCode).style.background = 'lightgray';
+                document.getElementById("SaveTableButton").style.pointerEvents = 'none';
+                document.getElementById('SaveTableButton').style.backgroundColor = '#ada7a7';
+            }
+            //not required anymore, as Conclusion is bebing retrieved with complete data in Response column itself
+            @*$.ajax({
+                data: { EntityId:'@Model.EntityId',EntityType:'@Model.EntityType', QuestionCode: CurrentItem.QuestionCode},
+                url: "/LFSAnswerBank/GetConclusionText",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data.Conclusion) {
+                        $("#" + CurrentItem.QuestionCode).val(data.Conclusion);
+                    }
+                    document.getElementById(CurrentItem.QuestionCode).style.background = 'lightgray';
+                    document.getElementById("SaveTableButton").style.pointerEvents = 'none';
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });//ajax call*@
+        }
+        if (CurrentItem.ItemTypeName != "CONCLUSION") {
+            document.getElementById("SaveTableButton").style.pointerEvents = 'auto';
+            document.getElementById('SaveTableButton').style.backgroundColor = 'buttonface';
+        }
+        document.getElementById('ToolTipDetails').innerHTML = '';
+       // document.getElementById('ASHelperbtn').style.display = 'none';
+        if (CurrentItem.ToolTip != null && CurrentItem.ToolTip != '') {
+            document.getElementById('ToolTipButton').style.display = 'block';
+        } else {
+            document.getElementById('ToolTipButton').style.display = 'none';
+        }
+        if (CurrentItem.ItemTypeName == "AS_QUESTION") {
+            //document.getElementById('ASHelperbtn').style.display = 'block';
+            document.getElementById('ASHelperDiv').style.display = 'block';
+        } else {
+           // document.getElementById('ASHelperbtn').style.display = 'none';
+            document.getElementById('ASHelperDiv').style.display = 'none';
+        }
+        if (CurrentItem.IsReponseAutoGenerated) { //when response is autogenerated, User is not allowed to enter the response
+            document.getElementById('msgDiv').innerHTML = 'This question is not user enterable, as response is calculated.';
+            document.getElementById('autogenResponse').style.display = 'block';
+            document.getElementById('autogenResponse').innerHTML = CurrentItem.Response;
+            document.getElementById('divAnswer').style.display = 'none';
+        } else {
+            document.getElementById('msgDiv').innerHTML = '';
+            document.getElementById('divAnswer').style.display = 'block';
+            document.getElementById('autogenResponse').innerHTML = '';
+            document.getElementById('autogenResponse').style.display = 'none';
+        }
+        
+    }
+    function validate(evt) {
+        var theEvent = evt || window.event;
+        var key = theEvent.keyCode || theEvent.which;
+        key = String.fromCharCode(key);
+        var regex = /[0-9]|\./;
+        //var regex = /([0-9]+(\.[0-9]+)?)/;
+        if (!regex.test(key)) {
+            theEvent.returnValue = false;
+            if (theEvent.preventDefault) theEvent.preventDefault();
+        }
+    }
+
+    function FnSave_ShowBackQuestion() {
+
+    }
+    function FnSave_ShowNextQuestion() {
+
+    }
+    function FnShowASHelper() {
+       // GetAccountingScenarioGrid();
+        $("#AsHelperModal").modal()
+    }
+    function FnSaveTableResponse() {
+        var EntityId = '@Model.EntityId';
+        var AnswerValue = document.getElementById(QuestionCode).value;
+        if (AnswerValue == null || AnswerValue == 'undefined' || AnswerValue == '' || AnswerValue == '-- Select Here --' ) {
+            // do nothing, when no answer is provided
+        }
+        else {
+            //restricting multiple dots in numeric field
+            if (CurrentItemType == "NUMBER_QUESTION") {//check for number field
+                var countDot = (AnswerValue.match(/\./g) || []).length;
+                if (countDot > 1) {
+                    alert("incorrect input, cannot save");
+                    document.getElementById(QuestionCode).value = '';
+                    return;
+                }
+            }
+            //save response to database
+            $.ajax({
+                type: "POST",
+                cache: false,
+               // data: { TableCode: TableCode, Response: AnswerValue, EntityId: EntityId, EntityType: 'LProducts',Col:Col,Row: Row },
+                data: { QuestionCode: QuestionCode, Response: AnswerValue, EntityId: EntityId, EntityType: 'LProducts' },
+                url: "/LFSUserResponse/SaveData",
+                //url: "/LFSUserResponse/SaveTableResponse",
+                success: function (data) {
+                    if (data.success) {
+                       // alert("Data updated successfully.");
+                        $('#TableDetails').jqxGrid('updatebounddata');
+
+                    }
+                },
+                error: function (response) {
+                }
+            });
+
+        }
+    }
+    function FnShowToolTip() {
+        $("#myModal").modal()
+        // $('#dialogToolTip').dialog('open');
+        if (SectionItemsData[CurrentQuestionIndex].ToolTip)
+            document.getElementById('ToolTipDetails').innerHTML = SectionItemsData[CurrentQuestionIndex].ToolTip.replace('CHAR(10)+CHAR(13)', '<br>');
+    }
+
+
+
+</script>
+<div class="col-md-12">
+    <div class="col-md-8 col-lg-8">
+        <div id="TableDetails"></div>
+    </div>
+    <div class="col-md-4 col-lg-4 boxes" id="divQuestion" name="divQuestion" style="width:33% !important;">
+        <div class="section">
+            <br />
+            <div id='divQuestionText' style="font-family: Verdana,Arial,sans-serif;font-style: normal;font-size: 13px; text-align: left;">
+
+            </div><br />
+            <div id="msgDiv" name="msgDiv" style="color:red; text-align:left;font-size:smaller;"></div>
+            <div id="autogenResponse" name="autogenResponse" readonly style="background:lightgray;"></div>
+
+            <div id="divAnswer" style="text-align: left;"></div><br />
+            <div id="buttonsDiv" style="text-align: left;">
+                <button id="BackQuestionButton" name="BackQuestionButton" style="pointer-events:none; display:none;" onclick="FnSave_ShowBackQuestion();">Back</button>&ensp;
+                <button id="SaveTableButton" name="SaveTableButton" style="display:none;" onclick="FnSaveTableResponse();">Save</button>&ensp;
+                <button style="display:none;" id="NextQuestionButton" name="NextQuestionButton" onclick="FnSave_ShowNextQuestion();">Next</button>&ensp;
+                @*<button type="button" class="btn btn-default btn-sm" onclick="FnShowLeftQuestion();"><span class="glyphicon glyphicon-arrow-left"></span></button>
+                    <button type="button" class="btn btn-default btn-sm" onclick="FnShowUpQuestion();"><span class="glyphicon glyphicon-arrow-up"></span></button>
+                    <button type="button" class="btn btn-default btn-sm" onclick="FnShowDownQuestion();"><span class="glyphicon glyphicon-arrow-down"></span></button>
+                    <button type="button" class="btn btn-default btn-sm" onclick="FnShowRightQuestion();"><span class="glyphicon glyphicon-arrow-right"></span></button>*@
+                <button id="ToolTipButton" name="ToolTipButton" style="display:none;" onclick="FnShowToolTip();">Tool Tip</button>
+                <button id="ASHelperbtn" name="ASHelperbtn" onclick="FnShowASHelper();" style="display:none;">Help on Acc Scn</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="col-md-12 col-lg-12 boxes" style="text-align: left;" id="TextDetailsDiv" name="TextDetailsDiv"> </div>
+
+<div class="col-md-12 col-lg-12" id="ASHelperDiv" name="ASHelperDiv" style="display:none;margin-top: 10px;">
+    <h3>Accounting Scenario Helper</h3>
+    @Html.Partial("_ASHelperPartial")
+
+</div>
+<!-- Modal -->
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:90%;">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Tooltip</h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_ToolTipPartial")
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="AsHelperModal" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="width:90%;">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Accounting Scenario Helper</h4>
+            </div>
+            <div class="modal-body">
+                @Html.Partial("_ASHelperPartial")
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

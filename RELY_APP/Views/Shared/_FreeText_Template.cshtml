@@ -1,0 +1,16 @@
+﻿@model RELY_APP.ViewModel.SectionItemsParametersViewModel
+<script>
+    @*$('#freetext').style.width = '@Model.Width';
+    $('#freetext').style.height = '@Model.Height';
+    $('#freetext').style.disabled = '@Model.Disabled';*@
+
+</script>
+
+<div>
+    <p> Question Text Here :</p>
+    @Html.TextArea("Answer", new { @class = "form-control", @style = "min-height:100px;min-width:444px;" })
+    <textarea id="freetext" name="freetext" placeholder="Enter Answer Text Here"  style="width:100% !important;max-width:100% !important;" class="form-control"></textarea>
+ 
+</div>
+
+

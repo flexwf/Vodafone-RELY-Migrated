@@ -1,0 +1,31 @@
+﻿@Scripts.Render("~/bundles/jQuery-File-Upload")
+@Styles.Render("~/Content/jQuery-File-Upload")
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+<script>
+
+    $(function () {
+        $("#dialogToolTip").dialog({
+            modal: true,
+            autoOpen: false,
+            title: "Tool Tip",
+            width: 1000,
+            height: 200,
+            dialogClass: "custom-dialog"
+        });
+       
+
+        //$("#ToolTipButton").click(function () {
+        //     SectionItemsData[CurrentQuestionIndex].ToolTip
+        //    //GetSurveyGrid();
+        //    $('#dialogToolTip').dialog('open');
+        //});
+
+
+    });
+
+</script>
+@Scripts.Render("~/bundles/jQuery-File-Upload")
+<div  style="z-index:500;text-align: justify;
+    text-justify: inter-word;" align="center" >
+    <div id="ToolTipDetails" name="ToolTipDetails" style="background-color: lightgoldenrodyellow;border-radius: 5px; border: 1px solid lightgrey;"></div>
+</div>

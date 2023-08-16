@@ -1,0 +1,1142 @@
+﻿
+@model RELY_APP.ViewModel.LLocalPOBViewModel
+@{
+    /**/
+
+    var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+}
+@*<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+    <script src="~/Scripts/jqxloader.js"></script>
+    <script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>*@@*//this script will contain methods common in different views*@
+    <link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+    <script src="~/Scripts/jqxloader.js"></script>
+    @*<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>*@
+
+    <script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+    @*@Scripts.Render("~/bundles/jQuery-File-Upload")*@
+    <script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+    @*<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>*@@*SS added this line to remove error due to version difference in jquery which is not compatible with today's browsers*@
+    <link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+    <script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+        var ValidationErrorMessage = "";
+        var ShowDeleteMappingLink = true;
+    //This variable is defined to store value if form has any changes since it has loaded
+     var isChanged = false;
+     var LocalPobId = 0;
+     var SspId = '@Model.SspId';
+    var CheckBoxAttributeValues = 'AttributeB01:@Model.AttributeB01|AttributeB02:@Model.AttributeB02|AttributeB03:@Model.AttributeB03|AttributeB04:@Model.AttributeB04|AttributeB05:@Model.AttributeB05|AttributeB06:@Model.AttributeB06|AttributeB07:@Model.AttributeB07|AttributeB08:@Model.AttributeB08|AttributeB09:@Model.AttributeB09|AttributeB10:@Model.AttributeB10';
+    var TypeId = 0;
+        var CatalogueId = '@Model.PobCatalogueId';
+        var CopaClass = 2;//setting default value
+        var GpobType = 'ACQUISIT';//setting default value
+    $(document).ready(function () {
+
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        $('input[type="radio"][name=rbGrpOne]').change(function () {
+            if ($(this).val() === '1') {
+                CopaClass = 2;
+            }
+            if ($(this).val() === '2') {
+                CopaClass = 5;
+            }
+            FnGetLatestMappedCopaStartDate();
+            fnGetCopaDetails(CopaClass);
+        });
+        $('input[type="radio"][name=rbGrpGpob]').change(function () {
+            if ($(this).val() === '1') {
+                GpobType = 'ACQUISIT';
+            }
+            if ($(this).val() === '2') {
+                GpobType = 'RETENTION';
+            }
+            if ($(this).val() === '0') {
+                GpobType = 'OTHERS';
+            }
+            FnGetLatestMappedGpobStartDate();
+            fnGetGpobDetails(GpobType);
+        });
+         $('input:checkbox').click(function() {
+		if ($(this).is(':checked')) {
+
+        $(this).prop('checked', true);
+		}
+	});
+        $("#GpobMappingStartDate").jqxDateTimeInput({
+            width: '250px',
+            height: '30px',
+            openDelay: 2000,
+        });
+        $('#GpobMappingStartDate').jqxDateTimeInput('setDate', new Date(2010, 0, 1));
+//        $('#GpobMappingStartDate ').jqxDateTimeInput('setMinDate', new Date());//set min date as today's date
+        $("#CopaMappingStartDate").jqxDateTimeInput({
+            width: '250px',
+            height: '30px',
+            openDelay: 2000,
+        });
+        $('#CopaMappingStartDate').jqxDateTimeInput('setDate', new Date(2010, 0, 1));
+        //$('#CopaMappingStartDate ').jqxDateTimeInput('setMinDate', new Date());//set min date as today's date
+        FnGetLatestMappedCopaStartDate();
+        FnGetLatestMappedGpobStartDate();
+        $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+        //The below code checks for changes in form controls and pdates the flag
+        $('input,select,textarea').change(function () {
+            isChanged = true;
+        })
+     @*var previousComments = '@Model.WFComments';*@
+        // $('#History').val(previousComments);
+        // Method to load jqxtabs in view.
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+        $('#jqxTabs').jqxTabs({ disabled:false });
+
+        var FormType = '@ViewBag.FormType';
+        if (FormType == 'Create') {
+            LocalPobId = LocalPobId;
+        }
+        else if (FormType == 'Review') {
+             LocalPobId = '@Model.Id';
+             var CompanySpecificArray =@Html.Raw(Json.Encode(CompanySpecificData.OrderBy(p => p.OrdinalPosition)));
+            //GenerateCompanySpecificForm(CompanySpecificArray, 'LocalPobs', LocalPobId);
+             $('.jqx-tabs-content-element').removeAttr('disabled');
+             $('.col-md-7').removeAttr('disabled');
+             $('.form-horizontal').removeAttr('disabled');
+             $('#jqxTabs').removeAttr('disabled');
+             $('#HistoryDownload').removeAttr('disabled');
+        }
+         else if (FormType == 'Edit') {
+            LocalPobId = '@Model.Id';
+             var CompanySpecificArray =@Html.Raw(Json.Encode(CompanySpecificData.OrderBy(p => p.OrdinalPosition)));
+        }
+    //source for LocalPOB Type dropdown
+         var sourceLPobTypeDropdownlist = {
+             dataType: "json",
+             cache: false,
+             dataFields: [
+                 { name: 'Id', type: 'string' },
+                 { name: 'Name', type: 'string' },
+             ],
+             id: "Id",
+             data: {selected: '@Model.LocalPobTypeId'},
+             url: "/LLocalPOB/GetLPobType"
+         };
+         var dataAdapterLPob = new $.jqx.dataAdapter(sourceLPobTypeDropdownlist, { autoBind: true, async: false })
+
+         $("#LPobdropdownlist").jqxDropDownList({
+             filterable: true,
+             source: dataAdapterLPob,
+             searchMode: 'containsignorecase',
+             width: '277px',
+             height: '25px',
+
+             displayMember: "Name",
+             valueMember: "Id",
+
+        });
+    var TransactionId='@Model.Id';
+        FnPopultaeDropDown();
+        GenerateCompanySpecificForm(CompanySpecificArray, 'LocalPobs', LocalPobId);
+        FnPopulateAttributes();//use in tab index
+
+        $('#jqxTabs').on('tabclick', function (event) {
+            var pageIndex = event.args.item + 1;
+            switch (pageIndex) {
+                case 1://attributes
+                    FnPopulateAttributes();
+                    break;
+                case 2://Attached files
+                    fnGetSSPDetails();
+                    break;
+                case 3:
+                    fnGetGpobDetails(GpobType);
+                    break;
+                case 4:
+                    fnGetCopaDetails(CopaClass);
+                    break;
+                case 5://comments
+                    break;
+                case 6://history
+                    fnAuditDetails();
+                    break;
+                case 7://Attached files
+                    FnGetSupportingDocumentList();
+                    break;
+
+                default:
+
+            }
+
+        });
+        document.getElementById('TypeDiv').style.display = 'none';
+        var Source = '@Model.Source';
+        if(Source == 'Product'){
+            document.getElementById('SaveClose').style.display = 'block';
+            document.getElementById('BackButton').style.display = 'none';
+        }else {
+            document.getElementById('SaveClose').style.display = 'none';
+            document.getElementById('BackButton').style.display = 'block';
+        }
+
+        //Effective Start Date Manupulation
+        debugger;
+        var SDate = '@ViewBag.PreviousVersionStartDate';
+        var StartDate = new Date(SDate);
+        //Start date manipulation and Setting Mininum date for startdate of new version.
+        var year = StartDate.getFullYear();
+        var Month = StartDate.getMonth();
+        var day = StartDate.getDate();
+        if (@Model.Version == 1) {
+            $('#EffectiveStartDate').jqxDateTimeInput({ min: new Date(2010, 00, 1) });
+        }
+        else
+        {
+            $('#EffectiveStartDate').jqxDateTimeInput({ min: new Date(year, Month, day + 1) });
+        }
+
+
+         @if (Model.EffectiveStartDate != null){
+             @: var Connection = new Date('@Model.EffectiveStartDate.Year', '@Model.EffectiveStartDate.Month'-1, '@Model.EffectiveStartDate.Day')
+            @: $('#EffectiveStartDate').jqxDateTimeInput('setDate', Connection);
+        }
+         @*@if (Model.EffectiveEndDate != null){
+             @: var Connection = new Date('@Model.EffectiveEndDate.Year', '@Model.EffectiveEndDate.Month'-1, '@Model.EffectiveEndDate.Day')
+            @: $('#EffectiveEndDate').jqxDateTimeInput('setDate', Connection);
+        }*@
+
+
+    });//end of document.ready
+
+        //This function Downloads the History report to Excel
+        //function FnExportGrid() {
+        //    var rows = $("#jqxgridHistory").jqxGrid('getRows');
+        //    if (rows == null || rows == 'undefined' || rows.length == 0) {
+        //        alert("Nothing to download");
+        //        return;
+        //    }
+        //    $("#jqxgridHistory").jqxGrid('exportdata', 'xls', 'jqxgridHistory');
+        //}
+        function FnGetLatestMappedGpobStartDate() {
+            $.ajax({
+                data: { PobCatalogueId: '@Model.PobCatalogueId', GpobType: GpobType },
+            url: "/LLocalPOB/GetLatestMappedGpobStartDate",
+            cache: false,
+            dataType: "json",
+            type: "GET",
+                success: function (data) {
+                if (data == null || data == '' || data == 'undefined') {
+                    $('#GpobMappingStartDate').jqxDateTimeInput({ value: new Date(2010, 0, 1) });
+                    $('#GpobMappingStartDate').jqxDateTimeInput('setMinDate', new Date(2010, 0, 1));
+                }
+                else {
+                    var javaScriptDate = new Date(parseInt(data.substr(6)));
+                    $('#GpobMappingStartDate').jqxDateTimeInput({ value: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+                    $('#GpobMappingStartDate').jqxDateTimeInput({ min: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+                }
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        }
+        function FnGetLatestMappedCopaStartDate() {
+            $.ajax({
+            data: { PobCatalogueId: '@Model.PobCatalogueId', CopaClass: CopaClass },
+            url: "/LLocalPOB/GetLatestMappedCopaStartDate",
+            cache: false,
+            dataType: "json",
+            type: "GET",
+                success: function (data) {
+
+                    if (data == null || data == '' || data == 'undefined') {
+                        //$('#CopaMappingStartDate').jqxDateTimeInput('setDate', new Date(2010, 0, 1));
+                        $('#CopaMappingStartDate').jqxDateTimeInput({ value: new Date(2010, 0, 1)});
+                        $('#CopaMappingStartDate').jqxDateTimeInput('setMinDate', new Date(2010, 0, 1));
+                    //$('#CopaMappingStartDate ').jqxDateTimeInput('setMinDate', new Date());//set min date as today's date
+                }
+                    else {
+                        var javaScriptDate = new Date(parseInt(data.substr(6)));
+                        $('#CopaMappingStartDate').jqxDateTimeInput({ value: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+
+                    $('#CopaMappingStartDate').jqxDateTimeInput({ min: new Date(javaScriptDate.getFullYear(), javaScriptDate.getMonth(), javaScriptDate.getDate() + 1) });
+
+                }
+
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        }
+    function FnPopultaeDropDown(){
+
+        $("#LPobdropdownlist").jqxDropDownList('selectItem','@Model.LocalPobTypeId');
+        $("#LPobdropdownlist").jqxDropDownList('disabled',true);
+    }
+
+    function FnPopulateAttributes(){
+
+        //These lines add the value to connection date and order date if present in model
+
+            //These lines add the value to attributes columns textbox if present in Model
+        @if (! (Model.AttributeC01=="" || Model.AttributeC01 == null)) {
+            @: $('#AttributeC01').val('@Model.AttributeC01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC02=="" || Model.AttributeC02 == null)) {
+            @: $('#AttributeC02').val('@Model.AttributeC02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC03=="" || Model.AttributeC03 == null)) {
+            @: $('#AttributeC03').val('@Model.AttributeC03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC04=="" || Model.AttributeC04 == null)) {
+            @: $('#AttributeC04').val('@Model.AttributeC04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC05=="" || Model.AttributeC05 == null)) {
+            @: $('#AttributeC05').val('@Model.AttributeC05');
+        }
+/**/
+/**/
+         @if (! (Model.AttributeI01 == null)) {
+            @: $('#AttributeI01').val('@Model.AttributeI01');
+        }
+        @if (! (Model.AttributeI02 == null)) {
+            @: $('#AttributeI02').val('@Model.AttributeI02');
+        }
+        @if (! (Model.AttributeI03 == null)) {
+            @: $('#AttributeI03').val('@Model.AttributeI03');
+        }
+        @if (! ( Model.AttributeI04 == null)) {
+            @: $('#AttributeI04').val('@Model.AttributeI04');
+        }
+        @if (! (Model.AttributeI05 == null)) {
+            @: $('#AttributeI05').val('@Model.AttributeI05');
+        }
+        @if (! (Model.AttributeI06 == null)) {
+            @: $('#AttributeI06').val('@Model.AttributeI06');
+        }
+        @if (! (Model.AttributeI07 == null)) {
+            @: $('#AttributeI07').val('@Model.AttributeI07');
+        }
+        @if (! (Model.AttributeI08 == null)) {
+            @: $('#AttributeI08').val('@Model.AttributeI08');
+        }
+        @if (! (Model.AttributeI09 == null)) {
+            @: $('#AttributeI09').val('@Model.AttributeI09');
+        }
+        @if (! (Model.AttributeI10 == null)) {
+            @: $('#AttributeI10').val('@Model.AttributeI10');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN01 == null)) {
+            @*@: $('#AttributeN01').val('@Model.AttributeN01');*@
+            @: $('#AttributeN01').val(parseFloat('@Model.AttributeN01').toFixed(2));
+        }
+        @if (! (Model.AttributeN02 == null)) {
+            @: $('#AttributeN02').val(parseFloat('@Model.AttributeN02').toFixed(2));
+        }
+        @if (! (Model.AttributeN03 == null)) {
+            @: $('#AttributeN03').val(parseFloat('@Model.AttributeN03').toFixed(2));
+        }
+        @if (! (Model.AttributeN04 == null)) {
+            @: $('#AttributeN04').val(parseFloat('@Model.AttributeN04').toFixed(2));
+        }
+        @if (! (Model.AttributeN05 == null)) {
+            @: $('#AttributeN05').val(parseFloat('@Model.AttributeN05').toFixed(2));
+        }
+        @if (! (Model.AttributeN06 == null)) {
+            @: $('#AttributeN06').val(parseFloat('@Model.AttributeN06').toFixed(2));
+        }
+        @if (! (Model.AttributeN07 == null)) {
+            @: $('#AttributeN07').val(parseFloat('@Model.AttributeN07').toFixed(2));
+        }
+        @if (! (Model.AttributeN08 == null)) {
+            @: $('#AttributeN08').val(parseFloat('@Model.AttributeN08').toFixed(2));
+        }
+        @if (! (Model.AttributeN09 == null)) {
+            @: $('#AttributeN09').val(parseFloat('@Model.AttributeN09').toFixed(2));
+        }
+        @if (! (Model.AttributeN10 == null)) {
+            @: $('#AttributeN10').val(parseFloat('@Model.AttributeN10').toFixed(2));
+        }
+        @if ( Model.AttributeB01 == true) {
+            @: $('#AttributeB01').prop('checked', true);
+        }
+        /**/
+
+         @if ( Model.AttributeB02 == true) {
+            @: $('#AttributeB02').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB03 == true) {
+            @: $('#AttributeB03').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB04 == true) {
+            @: $('#AttributeB04').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB05 == true) {
+            @: $('#AttributeB05').prop('checked', true);
+        }
+
+    @if (Model.AttributeD01.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD01.Value.Year', '@Model.AttributeD01.Value.Month'-1, '@Model.AttributeD01.Value.Day')
+            @: $('#AttributeD01').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD02.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD02.Value.Year', '@Model.AttributeD02.Value.Month'-1, '@Model.AttributeD02.Value.Day')
+            @: $('#AttributeD02').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD03.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD03.Value.Year', '@Model.AttributeD03.Value.Month'-1, '@Model.AttributeD03.Value.Day')
+            @: $('#AttributeD03').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD04.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD04.Value.Year', '@Model.AttributeD04.Value.Month'-1, '@Model.AttributeD04.Value.Day')
+            @: $('#AttributeD04').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD05.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD05.Value.Year', '@Model.AttributeD05.Value.Month'-1, '@Model.AttributeD05.Value.Day')
+            @: $('#AttributeD05').jqxDateTimeInput('setDate', Connection);
+        }
+
+    }
+
+        function FnClickBottomButtons(ActionName, StepParticipantActionId,ActionUrl)
+    {
+    isChanged = false;
+    var WorkflowId = @ViewBag.WorkflowId;
+    var StepId = '@ViewBag.StepId';
+    var Source = '@Model.Source';
+        var TransactionId = @Model.Id;
+        var GlobalComment = document.getElementById("WFComments").value;
+
+       FnClickSecondaryButtons(ActionName, WorkflowId, StepId, Source, TransactionId, GlobalComment, StepParticipantActionId,ActionUrl);
+
+        }
+
+
+         //Calling Partial View for History Grid and Attachment File Grid
+        @{
+            Html.RenderPartial("_HistoryGridPartial");
+            Html.RenderPartial("_AttachmentGridPartial");
+            Html.RenderPartial("_SSPDetailsPartial");
+      }
+
+     function FnGetVersionsGrid(){
+        var TypeId='@Model.LocalPobTypeId';
+        var Name = '@Model.Name';
+        var sourceVersions = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Name', type: 'string' },
+                { name: 'Version', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            id: "Id",
+            data: {Name : Name,TypeId : TypeId},
+            url: "/LLocalPOB/GetVersions"
+        };
+     var dataAdapterVersions = new $.jqx.dataAdapter(sourceVersions);
+
+                $('#jqxgridVersions').jqxGrid({
+                    source: dataAdapterVersions,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: [
+                        { text: 'POB Name', datafield: 'Name' },
+                        { text: 'Version', datafield: 'Version' },
+                        { text: 'Description', datafield: 'Description' }
+                    ]
+                });
+    }
+
+     function FnSubmit(IsClose)
+     {
+         debugger;
+         if ($("#AttributeB01").length > 0) {
+            if(document.getElementById("AttributeB01").checked)
+                   document.getElementById('AttributeB01').value =  true;
+        }
+        if ($("#AttributeB02").length > 0){
+            if(document.getElementById('AttributeB02').checked)
+                   document.getElementById('AttributeB02').value =  true;
+        }
+         if ($("#AttributeB03").length > 0){
+             if(document.getElementById('AttributeB03').checked)
+                   document.getElementById('AttributeB03').value =  true;
+        }
+         if ($("#AttributeB04").length > 0){
+            if(document.getElementById('AttributeB04').checked)
+                   document.getElementById('AttributeB04').value =  true;
+        }
+        if ($("#AttributeB05").length > 0){
+            if(document.getElementById('AttributeB05').checked)
+                   document.getElementById('AttributeB05').value =  true;
+         }
+
+         var StartDate;
+         if ($("#EffectiveStartDate").length > 0) {
+
+             StartDate = $('#EffectiveStartDate').jqxDateTimeInput('getText');
+         }
+         if (StartDate == null || StartDate == '') {
+             alert("Start Date is mandatory");
+             return;
+         }
+         //if ($("#SSPDate2").length > 0) {
+         //    CheckSSPFields = true;
+         //    SSPDate2 = $('#SSPDate2').jqxDateTimeInput('getText');
+         //}
+         document.getElementById("EffectiveStartDate").value = StartDate;
+
+    //var StartDate = null;
+    //var EndDate = null;
+    //   document.getElementById("EffectiveStartDate").value = StartDate;
+    //     document.getElementById("EffectiveEndDate").value = EndDate;
+
+      var PreviousVersionStartDate = '@ViewBag.PreviousVersionStartDate';
+
+    $("#frm").validate();
+         if ($('#frm').valid()) {
+             isChanged = false;
+             //debugger;
+             var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 cache: false,
+                 data: Form.serialize() + "&CheckBoxAttributeValues=" + CheckBoxAttributeValues + "&StartDate=" + StartDate,
+                 url: "/LLocalPOB/Create",
+                 //dataType: "json",
+                 success: function (data) {
+                     document.getElementById("Id").value = data.Id;
+                     if (data.ErrorMessage) {
+                         document.getElementById("ErrorMessageDetails").value = data.ErrorMessage;
+                         alert(data.ErrorMessage);//In case of ErrorMessage, POp up is displayed. It will be updated in future, instead we will display as error just like other pages
+                     }
+                     else {
+                          alert('LocalPob saved sucessfully');
+                          if('@Model.Source' == 'Product' && IsClose)   {
+                             window.close();
+                          }
+                         if (IsClose) {
+                             window.location.href = "/GenericGrid/Index";
+                         } else {
+                             window.location.reload();
+                         }
+
+                     }//end of else
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+             });
+
+         }
+     }
+
+     //This function is used to store comments typed on any of the text area
+     var GlobalComment = '';
+     function FnAttachComments(Comments) {
+         GlobalComment = Comments;
+         document.getElementById('Comments').value = Comments;
+     }
+     function getGlymph() {
+         return ("<i class=\"fa fa-plus\" aria-hidden=\"true\" style=\"color:#e60000;font-size:20px !important;\" title=\"Add SSP\"></i>");
+     }
+
+
+     function FnAttach() {
+         alert("Functionality not yet implemented.");
+     }
+
+     //This method is called when we leave this page to check if there are any changes in form
+     window.onbeforeunload = function () {
+         //if (isChanged) {
+         //    return "Are you sure you want to leave this page ? There are unsaved changes that will be lost";
+         //}
+         //SS commented this because it is making issues on downloading file fom AttachedFiles$('#jqxLoader').jqxLoader('open');
+     }
+    //getting Company specific attributes after LocalPobType selection
+     function FnGetAttributes(LocalPobTypeId){
+    //alert("LocalPobType" + LocalPobTypeId);
+        //  debugger;
+         $.ajax({
+                 type: "GET",
+                 data: { LocalPobTypeId: LocalPobTypeId },
+                 cache: false,
+                 url: "/LLocalPOB/GetAttributes",
+                 success: function (data) {
+                    GenerateCompanySpecificForm(data, 'LocalPobs', LocalPobId);//call this method placed in ProjectScript file to repaint the form with new labels order and validations
+   // document.getElementById('LocalPobTypeId').style.pointerEvents = 'none';
+                    document.getElementById('LPobdropdownlist').style.backgroundColor = 'lightgray';
+    $("#LPobdropdownlist").jqxDropDownList('disabled',true);
+   // theme: 'lightgrey',
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+             });
+        }
+     function FnDetachSSP()
+    {
+
+         if (SspId == null || SspId =='') {
+            alert("There is no SSP attached.")
+            return;
+        }
+        var r = confirm("Are you sure to delete SSP?");
+        if (r == false) {
+            return;
+        }
+        else {
+                $.ajax({
+                    type: "GET",
+                    cache: false,
+                    data: { EntityId: '@Model.Id', EntityType: 'LLocalPob'},
+                    url: "/SSPDimensions/DetachSSP",
+                    success: function (data) {
+                        alert("SSP removed successfully.");
+                        SSP = null;
+                        $('#jqxGridSSP').jqxGrid('clear');
+                        window.location.reload();
+                    },
+                    error: function (reponse) {
+                        Console.log(reponse);
+                    }
+                });
+        }
+    }
+    function FnAttachSelectedSSP()
+    {
+        //open popup for available SSPs
+        //select SSP and attach it to Product
+        var item = $('#jqxGridSspPopUp').jqxGrid('getselectedrowindex');
+        var data = $('#jqxGridSspPopUp').jqxGrid('getrowdata', item);
+        var SelectedSspId = data.SspId;
+        $.ajax({
+            type: "GET",
+            cache: false,
+            data: { EntityId: '@Model.Id', EntityType: 'LLocalPob', SspId: SelectedSspId },
+            url: "/SSPDimensions/AttachSSP",
+            success: function (data) {
+
+        document.getElementById("SspId").value = SelectedSspId;
+                alert("SSP attached successfully.");
+                $('#jqxGridSSP').jqxGrid('updatebounddata');
+                SspId = SelectedSspId;
+                //window.location.reload();
+            },
+            error: function (reponse) {
+                Console.log(reponse);
+            }
+        });
+    }
+    function FnCreateAndAttachSSP()
+    {
+        var url = '@Url.Action("Create", "SSPDimensions")?Source=LocalPob&EntityId=' + '@Model.Id';
+        var returnValue = window.open(url, '_blank');
+        if (typeof returnValue.attachEvent != "undefined") {
+            returnValue.attachEvent("onunload", CreateSSPChildTabClosed);
+        } else if (typeof returnValue.addEventListener != "undefined") {
+            returnValue.addEventListener("unload", CreateSSPChildTabClosed, false);
+        }
+    }
+    function CreateSSPChildTabClosed() {
+        window.location.reload();
+    }
+    //Load SSPGrid Popup
+    function FnLoadGrid() {
+        $.ajax({
+            cache: false,
+            url: "/SSPDimensions/GetExistingSspsCount",
+            dataType: "json",
+            type: "GET",
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'int' },
+                        { name: 'SspId', type: 'int' },
+                        { name: 'SspAmount', type: 'string' },
+                        { name: 'EffectiveStartDate', type: 'date' },
+                        { name: 'EffectiveEndDate', type: 'date' },
+                        { name: 'IsSelectable', type: 'string' },
+                    ],
+                    id: "Id",
+                    url: "/SSPDimensions/GetExistingSsps",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGridSspPopUp').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxGridSspPopUp').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGridSspPopUp').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxGridSspPopUp').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    },
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxGridSspPopUp").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxGridSspPopUp").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxGridSspPopUp').jqxGrid({
+                        source: ParentdataAdapter,
+                        width: '100%',
+                        height: '50%',
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: true,
+                        altrows: true,
+                        pageable: true,
+                        pagesize: 200,
+                        pagesizeoptions: ['50', '100', '200', '500', '1000'],
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        showstatusbar: false,
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return ParentdataAdapter.records;
+                        },
+                        columns: [
+                            { text: 'Ssp Id', datafield: 'SspId' },
+                            { text: 'Amount', datafield: 'SspAmount' },
+                            { text: 'Start Date', datafield: 'EffectiveStartDate', cellsformat: 'dd/MM/yyyy' },
+                            { text: 'End Date', datafield: 'EffectiveEndDate', cellsformat: 'dd/MM/yyyy' },
+                        ]
+                    });
+                }
+            }
+        });
+        $('#SSPModal').modal();
+    }
+
+    </script>
+
+    <div id="jqxLoader">
+    </div>
+
+    @using (Html.BeginForm("Create", "LLocalPOB", FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+    @Html.HiddenFor(m => m.LocalPobTypeId)
+    @*@Html.HiddenFor(m => m.CopaId1)
+        @Html.HiddenFor(m => m.CopaId2)
+        @Html.HiddenFor(m => m.CopaId3)
+        @Html.HiddenFor(m => m.CopaId4)
+        @Html.HiddenFor(m => m.GlobalPobId1)
+        @Html.HiddenFor(m => m.GlobalPobId2)*@
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.HiddenFor(m => m.PobCatalogueId)
+    @Html.Hidden("Comments")
+    @Html.Hidden("FormType")
+    @*@Html.Hidden("EffectiveStartDate")
+        @Html.Hidden("EffectiveEndDate")*@
+   
+    @Html.Hidden("WorkFlowId")
+    @Html.Hidden("ProductId")
+    @Html.Hidden("StepId")
+    @Html.HiddenFor(m => m.SspId)
+    @Html.HiddenFor(m => m.SourceLocalPobId)
+    @Html.HiddenFor(m => m.UpdatedById)
+    @Html.HiddenFor(m => m.CreatedById)
+    @Html.HiddenFor(m => m.CreatedDateTime)
+    @Html.HiddenFor(m => m.UpdatedDateTime)
+    @Html.HiddenFor(m => m.Status)
+    @Html.HiddenFor(m => m.Version)
+    @Html.HiddenFor(m => m.AttributeD10)
+    @*@Html.HiddenFor(m => m.WFComments)*@
+    @Html.HiddenFor(m => m.WFOrdinal)
+    @Html.HiddenFor(m => m.WFStatus)
+    @Html.HiddenFor(m => m.WFType)
+    @Html.HiddenFor(m => m.WFRequesterId)
+    @Html.HiddenFor(m => m.WFRequesterRoleId)
+    @Html.HiddenFor(m => m.WFAnalystId)
+    @Html.HiddenFor(m => m.WFManagerId)
+    @Html.HiddenFor(m => m.WFCurrentOwnerId)
+    @Html.HiddenFor(m => m.Source)
+    <div id="ErrorMessageDetails"></div>
+    <div class="col-md-11 col-lg-11">
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels ", @style = "text-align: right;" })
+            <div class="col-md-12 col-lg-12">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+
+
+        <div id="TypeDiv" name="TypeDiv" class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.LocalPobTypeId, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right; " })
+            @*<div class="col-md-6 col-lg-6">
+                    @Html.DropDownListFor(model => model.LocalPobTypeId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;", @onchange = "FnGetAttributes(this.value);" })
+                    @Html.ValidationMessageFor(model => model.LocalPobTypeId, "", new { @class = "text-danger" })
+                </div>*@
+            <div class="col-md-11 col-lg-11">
+                <div id="LPobdropdownlist" style="background:white !important;"></div>
+            </div>
+        </div>
+
+
+        <div class="col-md-10 col-lg-10 col-sm-10" style="min-height:80px;">
+            <div class="col-md-6 col-lg-6">
+                @Html.LabelFor(model => model.EffectiveStartDate, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-7 col-lg-7">
+                    <div id="EffectiveStartDate"></div>
+                    @Html.ValidationMessageFor(model => model.EffectiveStartDate, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-6">
+                @Html.LabelFor(model => model.EffectiveEndDate, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-7 col-lg-7">
+                    <input type="text" name="EffectiveEndDate" id="EffectiveEndDate" value="31/12/2099" readonly
+                           class="form-control input-sm"
+                           style="min-height:30px; text-align: left;background-color: lightgrey ;">
+
+                    @*@Html.ValidationMessageFor(model => model.EffectiveEndDate, "", new { @class = "text-danger" })*@
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div class="col-md-10 col-lg-10 col-sm-10" style="min-height:80px;">
+            @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels ", @style = "text-align: left;" })
+            <div class="col-md-12 col-lg-12">
+                @Html.TextAreaFor(model => model.Description, new { @class = "form-control ", @style = "min-height:70px;min-width:706px;" })
+                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <div id="ButtonsDiv" name="ButtonsDiv">
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back&nbsp;</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick="FnSubmit(false);">Save</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="SaveClose" name="SaveClose" onclick="FnSubmit(true);">Save & Close</button>
+
+            <label for="FileUpload" class="btn btn-borderRed-SideLayout btn-conss" style="font-weight:normal; padding:4px;">Attach</label>
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+        </div>
+        <div name="SecondaryFormButtons" id="SecondaryFormButtons">
+            @Html.Raw(ViewBag.BottomButtons)
+        </div>
+    </div>
+
+    <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+        <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+            <ul class="nav nav-tabs tabs tabs-container-border ">
+                <li style="margin-left: 30px;">Attributes</li>
+                <li>SSP</li>
+                <li>Global Pob</li>
+                <li>Copa Dimesion</li>
+                <li>Comments </li>
+                <li>History</li>
+                <li>Attached Files</li>
+
+            </ul>
+            <div class="tab-content" style="padding:10px;">
+                <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+
+                </div>
+            </div>
+            <div class="tab-content" style="padding:3px;">
+                &ensp;
+                <button type="button" class="GridButton col-lg-1" id="RemoveSSPlnk" name="RemoveSSPlnk" onclick=" FnDetachSSP();">
+                    Remove SSP
+                </button>
+                <button type="button" class="GridButton col-lg-1" id="AttachSSPlnk" name="AttachSSPlnk" onclick=" FnLoadGrid();">
+                    Attach SSP
+                </button>
+                <button type="button" class="GridButton col-lg-2" id="CreateAttachSSPLink" name="CreateAttachSSPLink" onclick=" FnCreateAndAttachSSP();">
+                    Create New SSP and Attach
+                </button>
+                @*<a href="#" id="RemoveSSPlnk" name="RemoveSSPlnk" style="padding-left:10px;vertical-align:top;" onclick="FnDetachSSP();">
+                        <span>Remove SSP</span>
+                    </a>&nbsp;&nbsp;
+                    <a href="#" id="AttachSSPlnk" name="AttachSSPlnk" style="padding-left:10px;vertical-align:top;" onclick="FnLoadGrid();">
+                        <span>Attach SSP</span>
+                    </a>&nbsp;
+                    <a href="#" id="CreateAttachSSPLink" name="CreateAttachSSPLink" style="padding-left:10px;vertical-align:top;" onclick="FnCreateAndAttachSSP();">
+                        <span>Create New SSP and Attach</span>
+                    </a>&nbsp;*@
+                <div id="jqxGridSSP"></div>
+            </div>
+            @*<div class="tab-content" style="padding:10px;">
+                    <textarea id="SpanVersions" name="SpanVersions" placeholder="No Versions so far" style="min-height:120px;background-color: lightgray; display:none;" readonly="readonly" class=" textarea1"></textarea>
+                    <div id="jqxgridVersions"></div>
+                </div>*@
+            <div class="tab-content" style="padding:10px;">
+                <div id="GPobTypeOptions" class="col-md-12 col-lg-12">
+                    @Html.RadioButton("rbGrpGpob", "1", isChecked: true)@Html.Label("ACQUISIT")
+                    @Html.RadioButton("rbGrpGpob", "2", isChecked: false) @Html.Label("RETENTION")
+                    @Html.RadioButton("rbGrpGpob", "0", isChecked: false) @Html.Label("OTHERS")
+                    <button type="button" class="GridButton col-lg-1" id="Gpoblnk" name="Gpoblnk" onclick="fnLoadGpobPopup(GpobType);">
+                        Attach
+                    </button>
+                </div>
+
+                @*<a id="Gpoblnk" href="#" onclick="fnLoadGpobPopup(GpobType);"><span>Attach Global POB</span></a>*@
+                <br />
+                <div id="jqxgridGpobMapping"></div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+
+                <div id="CopaClassOptions" class="col-md-12 col-lg-12">
+                    @Html.RadioButton("rbGrpOne", "1", isChecked: true)@Html.Label("Call Origin/Destination")
+                    @Html.RadioButton("rbGrpOne", "2", isChecked: false) @Html.Label("Bearer Technology")
+                    <button type="button" class="GridButton col-lg-1" id="Copalnk" name="Copalnk" onclick="fnLoadCopaPopup(CopaClass);">
+                        Attach
+                    </button>
+                </div>
+
+                @*<a id="Copalnk" href="#" onclick="fnLoadCopaPopup(CopaClass);"><span>Attach COPA</span></a>*@
+                <br />
+                <div id="jqxgridCopaMapping"></div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                @*<textarea id="Comments" name="Comments" style="min-height:120px;" class=" textarea1" onchange="FnAttachComments(this.value)"></textarea>*@
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                @*<i class="fa fa-download" aria-hidden="true" title="Download" id="HistoryDownload" onclick="FnExportGrid()" style="cursor:pointer;font-size:15px !important;color:red"></i>*@
+                <div id="jqxgridHistory"></div>
+                <div class="col-lg-1 col-md-1" style="margin-top:10px;padding-left:0px;">
+                    <button type="button" class="btn btn-red-SideLayout btn-cons" id="HistoryDownload" name="HistoryDownload" onclick=" FnExportGrid();">Download</button>
+                </div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div id="jqxgrid"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    @*<div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+            <br /><br />
+
+        </div>*@
+
+</div>
+
+
+    }
+    @*<br>
+        <div class="col-md-8" id="FileDiv">
+        </div>
+        @*This div will display uploaded file*@
+    @*<div class="col-md-12" id="AttachedFiles"></div>
+        <br>
+
+        <style>
+            input[type="file"] {
+                display: none;
+            }
+        </style>*@
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }
+
+
+    @*div for Upload Utility*@
+    <div id="dialog" style="display: none;width:100%" align="center">
+        @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+    </div>
+    @*Section to display list of files which are currently uploaded in system for Upload Utility*@
+    <div class="col-md-8" id="FileDiv">
+    </div>
+    @Html.Partial("_GpobPartial")
+    @Html.Partial("_CopaPartial")
+    <script>
+var FormType = '@ViewBag.FormType';
+//    if(FormType == 'Review'){
+//      //  $("#LPOBdropdownlist").jqxDropDownList('disabled',true);
+//    //document.getElementById('LPobdropdownlist').style.backgroundColor = 'lightgray';
+
+//           // $("#GPOBdropdownlist").jqxDropDownList('disabled',true);
+//    document.getElementById('GPOBdropdownlist').style.pointerEvents = 'none';
+//    document.getElementById('GPOBdropdownlist').style.backgroundColor = 'lightgray';
+
+//            //$("#GPOBRetentiondropdownlist").jqxDropDownList('disabled',true);
+//    document.getElementById('GPOBRetentiondropdownlist').style.pointerEvents = 'none';
+//    document.getElementById('GPOBRetentiondropdownlist').style.backgroundColor = 'lightgray';
+
+//            //$("#Copa2dropdownlist").jqxDropDownList('disabled',true);
+//    document.getElementById('Copa2dropdownlist').style.pointerEvents = 'none';
+//    document.getElementById('Copa2dropdownlist').style.backgroundColor = 'lightgray';
+
+//            //$("#Copa5dropdownlist").jqxDropDownList('disabled',true);
+//    document.getElementById('Copa5dropdownlist').style.pointerEvents = 'none';
+//    document.getElementById('Copa5dropdownlist').style.backgroundColor = 'lightgray';
+
+//            //$("#Copa2Retentiondropdownlist").jqxDropDownList('disabled',true);
+//    //document.getElementById('Copa2Retentiondropdownlist').style.pointerEvents = 'none';
+//    //document.getElementById('Copa2Retentiondropdownlist').style.backgroundColor = 'lightgray';
+
+//            //$("#Copa5Retentiondropdownlist").jqxDropDownList('disabled',true);
+//    //document.getElementById('Copa5Retentiondropdownlist').style.pointerEvents = 'none';
+//    //document.getElementById('Copa5Retentiondropdownlist').style.backgroundColor = 'lightgray';
+
+//        $('*', 'form').prop('disabled', true);
+//            $('#BackButton').removeAttr('disabled',false);
+//            $('#jqxTabs').jqxTabs({ disabled:false });
+//            $('#SecondaryFormButtons :button').prop('disabled', false);
+//            $('#WFComments').removeAttr('disabled',false);
+//            document.getElementById('Comments').style.pointerEvents = 'none';
+//            if ($("#AttributeD01").length > 0){
+//                $("#AttributeD01").jqxDateTimeInput({ disabled: true })
+//             }
+//            if ($("#AttributeD02").length > 0){
+//              $("#AttributeD02").jqxDateTimeInput({ disabled: true })
+//            }
+//}
+
+        function FnDeleteGpob() {
+             var selectedrowindex = $('#jqxgridGpobMapping').jqxGrid('selectedrowindex');
+             var rowdata = $('#jqxgridGpobMapping').jqxGrid('getrowdata', selectedrowindex);
+             var RowId = rowdata.Id;
+            var r = confirm("Are you sure to delete?");
+            if (r == false) {
+                return;
+            }
+            else {
+                    $.ajax({
+                        type: "GET",
+                        cache: false,
+                        data: { RowId: RowId,Type: 'Gpob'},
+                        url: "/LLocalPOB/DeleteMappingRow",
+                        success: function (data) {
+                            alert("Mapping removed successfully.");
+                            //$('#jqxgridGpobMapping').jqxGrid('updatebounddata');
+                            window.location.reload();
+                        },
+                        error: function (reponse) {
+                            Console.log(reponse);
+                        }
+                    });
+            }
+        }
+        function FnDeleteCopa() {
+             var selectedrowindex = $('#jqxgridCopaMapping').jqxGrid('selectedrowindex');
+             var rowdata = $('#jqxgridCopaMapping').jqxGrid('getrowdata', selectedrowindex);
+             var RowId = rowdata.Id;
+            var r = confirm("Are you sure to delete?");
+            if (r == false) {
+                return;
+            }
+            else {
+                    $.ajax({
+                        type: "GET",
+                        cache: false,
+                        data: { RowId: RowId,Type: 'Copa'},
+                        url: "/LLocalPOB/DeleteMappingRow",
+                        success: function (data) {
+                            alert("Mapping removed successfully.");
+                           window.location.reload();
+                           // $('#jqxgridCopaMapping').jqxGrid('updatebounddata');
+                        },
+                        error: function (reponse) {
+                            Console.log(reponse);
+                        }
+                    });
+            }
+        }
+    </script>
+
+    <!-- This code displays a popup to get existing SSPs-->
+    <div class="modal fade" id="SSPModal" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h3>Choose from existing SSPs</h3>
+                </div>
+                <div class="modal-body">
+                    <div id="jqxGridSspPopUp"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-red pull-left" onclick="FnAttachSelectedSSP();" data-dismiss="modal">Choose</button>&ensp;
+                    <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </div>

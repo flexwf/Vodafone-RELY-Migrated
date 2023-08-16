@@ -1,0 +1,132 @@
+﻿
+<script>
+    $(document).ready(function () {
+
+        $.ajax({
+            url: "/LProducts/GetAllProductCounts",
+            dataType: "json",
+            cache: false,
+            type: "POST",
+            success: function (counts) {
+                var source = {
+                    dataType: "json",
+                    type: "GET",
+                    dataFields: [
+                        { name: 'lp.Id', type: 'int' },
+                        { name: 'lp.ProductCode', type: 'string' },
+                        { name: 'lp.Name', type: 'string' },
+                        { name: 'sc.SysCat', type: 'string' },
+                        { name: 'lp.WFStatus', type: 'string' },
+                        { name: 'lr.AuthorizationNumber', type: 'string' },
+                        { name: 'lr.RequestName', type: 'string' },
+                        { name: 'lp.Version', type: 'int' },
+                    ],
+                    url: "/LProducts/GetAllProductSDetails",
+                    filter: function () {
+                        $("#jqxGrid").jqxGrid('updatebounddata', 'filter');
+                        $("#jqxGrid").jqxGrid('clearselection');
+
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        $("#jqxGrid").jqxGrid('updatebounddata', 'sort');
+                        $("#jqxGrid").jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        source.totalrecords = counts;
+                    }
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source)
+                var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                    return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnReview(); " class="GridButton">Review</button>';
+                };
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxGrid").jqxGrid('ready');
+                //if grid is already defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxGrid").jqxGrid('updatebounddata');
+                } else {
+                    $("#jqxGrid").jqxGrid({
+                        source: dataAdapter,
+                        width: "100%",
+                        //height: 250,
+                        autoheight: true,
+                        sortable: true,
+                        columnsresize: true,
+                        editable: false,
+                        pageable: true,
+                        pagesize: 10,
+                        pagesizeoptions: ['10', '50', '100', '200', '500'],
+                        enablebrowserselection: true,
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return dataAdapter.records;
+                        },
+
+                        columns: [
+                            {
+                                text: 'Request', datafield: 'lr.RequestName', width: '15%'
+                            },
+                            {
+                                text: 'Name', datafield: 'lp.Name', width: '15%'
+                            },
+                            {
+                                text: 'ProductCode', datafield: 'lp.ProductCode', width: '15%'
+                            },
+                            {
+                                text: 'SysCat', datafield: 'sc.SysCat', width: '15%'
+                            },
+                            {
+                                text: 'AuthorizationNumber', datafield: 'lr.AuthorizationNumber', width: '10%'
+                            },
+                            {
+                                text: 'Version', datafield: 'lp.Version', width: '10%'
+                            },
+                            {
+                                text: 'Status', datafield: 'lp.WFStatus', width: '10%'
+                            },
+                            { text: 'Actions', datafield: 'lp.Id', cellsrenderer: cellsrenderer, width: '10%' },
+                        ],
+                    });
+                }
+            },//end of success
+
+            error: function (reponse) {
+
+            }
+        });//end of ajax calll
+
+    }); //End of Document Ready
+
+    function FnReview(){
+        var selectedrowindex = $('#jqxGrid').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxGrid').jqxGrid('getrowdata', selectedrowindex);
+        var xx = rowdata["lp.Id"];
+        @{
+            System.Web.HttpContext.Current.Session["WorkFlow"] = "Products";
+         }
+
+        sessionStorage.setItem("WorkFlow", "Products");//setting WorkFlow in Session as it will be used in Review Action
+        //var WorkFlowId = document.getElementById('WorkFlowId').value;
+        var  url = '@Url.Action("Review", "LProducts")?Id=' + xx  + '&Source=Request';
+            window.open(url,'_blank');
+
+    }
+
+</script>
+<h4>Product Library </h4>
+<div id="jqxGrid"></div>
+
+<div id="Infodiv" style="color: red;font-size:small;">
+    <br />
+    Note : Status column contains <br />
+    1. Parked - Products that are created 'On-the-Fly' from within a Request and that Request has not yet completed the Workflow.<br />
+    2. Saved - Products that are just been created independently (from within Product workflow).<br />
+    3. InProgress - Products that are been created independently (from within Product workflow) and have progressed within the workflow but not yet completed the workflow.<br />
+    4. Completed - Products that have completed the workflow and are approved/ready.<br />
+</div>
+
+

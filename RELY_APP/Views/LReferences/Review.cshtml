@@ -1,0 +1,781 @@
+﻿@model RELY_APP.ViewModel.LReferencesViewModel
+
+@{
+
+    //TempData["ValidData"] = ValidationOK;
+    //TempData["ErrorData"] = ValidationError;
+    var ValidData = Newtonsoft.Json.JsonConvert.SerializeObject(TempData["ValidData"]);
+   // var RefDataGrid = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.DataTable);
+    var ErrorData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ErrorData);
+}
+
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>
+@Styles.Render("~/Content/jQuery-File-Upload")
+
+
+<script>
+    var CheckBoxAttributeValues = null;
+     var datafields = new Array();
+     var columns = new Array();
+      //var IsHideButton=1;
+ var datafieldsForValid = new Array();
+ var columnsForValid = new Array();
+ var datafieldsforError = new Array();
+ var columnsforError = new Array();
+ var SeletedTypeText='';
+ var ReferenceDataGrid='';
+ var ErrorDataGrid='';
+ var ValidDataGrid='';
+ var data = new Array();
+    var EditedRowsIndexArray=[];
+    var RefTypeId = '';
+    var SelectedTypeText = '';
+    //document Ready  section
+ $(document).ready(function() {
+
+      $('#VallidInvalidGrid').hide();
+       var IsHideButton=@ViewBag.HideButton;
+   //  alert(IsHideButton);
+       $('#jqxTabs').jqxTabs({ position: 'top' });
+       $('#jqxTabs').on('tabclick', function (event) {
+           var pageIndex = event.args.item + 1;
+           switch (pageIndex) {
+               case 1://comments
+
+                   break;
+               case 2://history
+                   fnAuditDetails();
+                   break;
+
+               case 3://Attached files
+                   FnGetSupportingDocumentList();
+
+               default:
+
+           }
+
+       });
+       $("#jqxgridReferenceData").on("bindingcomplete", function (event) {
+
+       });
+      SelectedTypeText = $("#ReferenceTypeId option:selected").text();
+      RefTypeId=$("#ReferenceTypeId option:selected").val();
+      @*ReferenceDataGrid=@Html.Raw(Json.Encode(RefDataGrid));*@
+      ErrorDataGrid=@Html.Raw(Json.Encode(ErrorData));
+      ValidDataGrid=@Html.Raw(Json.Encode(ValidData));
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+    $("#ReferenceTypeId").prop("disabled", true);
+
+    //Hide These on Page Load//
+    $("#btnSaveValidRecords").hide();
+    $("#RefData").hide();
+    $("#ManualEntryOptions").hide();
+     $('input[type="radio"]').change(function() {
+     if ($(this).val() === '2') {
+        $("#jqxgridReferenceData").show();
+        $("#RefData").hide();
+       $("#RefData").hide();
+      $('#VallidInvalidGrid').hide();
+       $("#ManualEntryOptions").hide();
+      $("#btnSubmit").prop("disabled", false);
+
+    }
+
+    if ($(this).val() === '1') {
+        //FnGetValidRecordGrid();
+      // FnGetInvalidRecordsGrid();
+        $("#ManualEntryOptions").show();
+         $("#jqxgridReferenceData").hide();
+         $('#InValidDatadiv').show();
+        $("#RefData").show();
+     $("#jqxgridValidRecords").show();
+      $("#btnSubmit").prop("disabled", true);
+
+
+    }
+
+
+});
+
+
+    //Show Reference Data Grid On Page Load
+     ShowRefDataGrid();
+     //cannot change ref type once page is loaded
+
+//    //Get Reference Data Grid On Change of Reference Type Dropdown
+//     $("#ReferenceTypeId").on("change", function() {
+//     SelectedTypeText = $("#ReferenceTypeId option:selected").text();
+//     $("#ReferenceTypeId").prop("disabled", true);
+//     ShowRefDataGrid();
+//});
+     //GetFileList();
+            var TransactionId='@Model.Id';
+            //if(TransactionId)
+            //{
+            //FnGetSupportingDocumentList();
+            //fnAuditDetails();
+            //}
+    var FormType = '@ViewBag.FormType';
+    if (FormType == 'Review') {
+        $('*', 'form').prop('disabled', true);
+        $('#SecondaryFormButtons :button').prop('disabled', false);
+       $('#BackButton').removeAttr('disabled',false);
+     $('#jqxTabs').jqxTabs({ disabled: false });
+     $('#downloadBtn').removeAttr('disabled',false);
+    }
+
+
+    });//document.ready ends
+
+    function FnClickBottomButtons(ActionName, StepParticipantActionId, ActionUrl)
+    {
+       var WorkflowId = '@ViewBag.WorkflowId';
+        var StepId = '@ViewBag.StepId';
+
+        var TransactionId = '@Model.Id';
+        var GlobalComment = document.getElementById("WFComments").value;
+        FnClickSecondaryButtons(ActionName, WorkflowId, StepId, null, TransactionId, GlobalComment, StepParticipantActionId, ActionUrl);
+
+    }
+
+
+      // To Download Template
+    function DownloadTemplate()
+    {
+
+      window.location.href='/LReferences/DownloadTemplate?RefType='+SelectedTypeText;
+
+    }
+
+    function ShowRefDataGrid()
+    {
+         $.ajax({
+                 type: "GET",
+                 data: { LRefType: SelectedTypeText },
+                 cache: false,
+                 url: "/LReferences/GetAttributesForRefData",
+                 success: function (data) {
+                     if (data.length > 0) {
+                         for (var i = 0; i < data.length; ++i) {
+                             if (data[i].DataType.toLowerCase() == "bit") {
+                                 datafields.push({ name: data[i].ColumnName, type: 'bool' });
+                                 columns.push({ text: data[i].Label, datafield: data[i].ColumnName, columntype: 'checkbox' });
+                             }
+                        else if (data[i].DataType.toLowerCase() == "datetime") {
+                         datafields.push({ name: data[i].ColumnName, type: 'date' });
+                         columns.push({ text: data[i].Label, datafield: data[i].ColumnName, cellsformat: 'dd-MM-yyyy', columntype: 'date' });
+                     }
+                     else {
+                         datafields.push({ name: data[i].ColumnName, type: data[i].DataType });
+                         columns.push({ text: data[i].Label, datafield: data[i].ColumnName, editable: true });
+                     }
+                    }
+                //var source = {
+                //        dataType: "json",
+                //        dataFields:datafields,
+                //        localdata:ReferenceDataGrid
+                //    };
+                // var dataAdapter = new $.jqx.dataAdapter(source);
+                        $.ajax({
+                            data: { ReferenceId: '@Model.Id' },
+                            cache: false,
+                            url: "/LReferences/GetReferenceDataGridCounts",
+                            dataType: "json",
+                            type: "POST",
+                            success: function (counts) {
+                                //The below code will load a grid of portfolios on this page
+                                var Parentsource = {
+                                    dataType: "json",
+                                    dataFields: datafields,
+                                    id: "Id",
+                                    data: { ReferenceId:'@Model.Id'},
+                                    url: "/LReferences/GenerateReferenceDataGrid",
+                                    // update the grid and send a request to the api
+                                    filter: function () {
+                                        // $("#jqxPopupgrid").jqxGrid('clear');
+                                        $('#jqxgridReferenceData').jqxGrid('updatebounddata', 'filter');
+                                        $('#jqxgridReferenceData').jqxGrid('clearselection');
+                                    },
+                                    // update the grid and send a request to the api
+                                    sort: function () {
+                                        // $("#jqxPopupgrid").jqxGrid('clear');
+                                        $('#jqxgridReferenceData').jqxGrid('updatebounddata', 'sort');
+                                        $('#jqxgridReferenceData').jqxGrid('clearselection');
+                                    },
+                                    root: 'Rows',
+                                    beforeprocessing: function (data) {
+                                        Parentsource.totalrecords = counts;
+                                    }
+                                };
+                                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+                                $('#jqxgridReferenceData').jqxGrid({
+                                    source: ParentdataAdapter,
+                                    width: '100%',
+                                   // height: '50%',
+                                    theme: 'bootstrap',
+                                    sortable: true,
+                                    columnsresize: true,
+                                    columnsreorder: true,
+                                    altrows: true,
+                                    pageable: true,
+                                    pagesize: 200,
+                                    pagesizeoptions: ['50', '100', '200', '500'],
+                                    filterable: true,
+                                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                                    showstatusbar: false,
+                                    virtualmode: true,
+                                    rendergridrows: function () {
+                                        return ParentdataAdapter.records;
+                                    },
+                                    columns: columns
+                                });
+                            }
+                        });
+                 //$('#jqxgridReferenceData').jqxGrid({
+                 //               source: dataAdapter,
+                 //               width: '100%',
+                 //               autoheight: true,
+                 //               theme: 'bootstrap',
+                 //               sortable: true,
+                 //               columnsresize: true,
+                 //               columnsreorder: true,
+                 //               pageable: true,
+                 //               editable:true,
+                 //               filterable: true,
+                 //               enablebrowserselection: true,
+                 //               showeverpresentrow: true,
+                 //               keyboardnavigation: true,
+                 //               showstatusbar: false,
+                 //               ready: function () {
+                 //               },
+                 //               columns: columns
+                 //});
+
+                     }
+                     else
+                     {
+                         alert('No configuration defined for ' + SelectedTypeText + '. Please contact admin');
+                         $("#jqxgridReferenceData").hide();
+                     }
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+
+}
+
+    function FnExportDataGrid() {
+      var OutputFilename= '@Model.ExtractFileName';
+      var ReferenceId = @Model.Id;
+      var  LRefType = $("#ReferenceTypeId option:selected").text();
+      window.location.href = '/LReferences/DownloadReferenceDataGrid?ReferenceId=' + ReferenceId + '&LRefType=' + LRefType + '&OutputFilename=' + OutputFilename;
+
+          @*var FileName = '@Model.ExtractFileName';
+          if (FileName == null || FileName == 'undefined' || FileName == '') {
+              FileName = "RefereneceData_" + SelectedTypeText;
+          }
+            var rows = $("#jqxgridReferenceData").jqxGrid('getRows');
+            if (rows == null || rows == 'undefined' || rows.length == 0 ) {
+                alert("Nothing to download");
+                return;
+            }
+            $("#jqxgridReferenceData").jqxGrid('exportdata', 'xls', FileName);*@
+    }
+
+    //Partial View for calling History Grid and Download Grid
+    @{
+             Html.RenderPartial("_HistoryGridPartial");
+             Html.RenderPartial("_AttachmentGridPartial");
+      }
+
+        //===============================================Code For Valid and Invalid Grid==================================
+    function FnGetValidRecordGrid()
+    {
+                $.ajax({
+                 type: "GET",
+                 cache: false,
+                 data: { LRefType: SelectedTypeText },
+                 url: "/LReferences/GetAttributesForRefData",
+                 success: function (data) {
+                  if(data.length>0){
+
+                      //Loop though list of columns and populate arrays of datafiels of grid
+                    for (var i = 0; i < data.length; ++i) {
+                            datafieldsForValid.push({ name: data[i].ColumnName, type: data[i].DataType });
+                        if(data[i].DataType=="bit")
+                        columnsForValid.push({ text:data[i].Label, datafield: data[i].ColumnName, columntype:'checkbox'});
+                        else
+                        columnsForValid.push({ text:data[i].Label, datafield: data[i].ColumnName,editable:true});
+                    }
+    }
+
+    var source = {
+            dataType: "json",
+            dataFields:datafieldsForValid,
+            localdata:ValidDataGrid
+        };
+    console.log(datafieldsForValid)
+    console.log(ValidDataGrid)
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridValidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: columnsForValid
+                });
+    },
+     error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+    }
+
+    function FnGetInvalidRecordsGrid()
+    {
+        $.ajax({
+                 type: "GET",
+                 data: { LRefType: SelectedTypeText },
+                 cache: false,
+                 url: "/LReferences/GetAttributesForRefData",
+                 success: function (data) {
+                     if (data.length > 0) {
+                         datafieldsforError.push({ name: 'SrNo', type: 'int' });
+                         datafieldsforError.push({ name: 'ValidationMessage', type: 'string' });
+
+                         columnsforError.push({ text: 'Row No.', datafield: 'SrNo' })
+                         columnsforError.push({ text: 'Validation Message', datafield: 'ValidationMessage' })
+
+                      //Loop though list of columns and populate arrays of datafiels of grid
+                         for (var i = 0; i < data.length; ++i) {
+
+                                    datafieldsforError.push({ name: data[i].ColumnName, type: data[i].DataType });
+                        if(data[i].DataType=="bit")
+                        columnsforError.push({ text:data[i].Label, datafield: data[i].ColumnName, columntype:'checkbox'});
+                        else
+                        columnsforError.push({ text:data[i].Label, datafield: data[i].ColumnName,editable:true});
+
+                      }
+
+    }
+
+    var source = {
+            dataType: "json",
+            dataFields:datafieldsforError,
+            localdata:ErrorDataGrid
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridInvalidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: columnsforError
+                });
+    },
+     error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+    }
+
+    //Save Data
+
+   function SaveAndRedirect()
+    {
+    var URLValue=1;
+    var GridArray = [];
+    var GridRows = $('#jqxgridReferenceData').jqxGrid('getrows');
+    var TotalRows=GridRows.length;
+    var collength=columns.length;
+   var counts=0;
+    if (GridRows.length > 0) {
+        for (var i = 0; i < GridRows.length; i++) {              //For Row
+                  // GridArray[i]='{';
+            GridArray[counts] = [];
+            var id = GridRows[i].Id;
+            if (EditedRowsIndexArray.indexOf(i) != -1 || id == 'undefined' || id == '' || id === undefined)
+            {
+               for (var j = 0; j < columns.length; j++) {     //For Columns
+                         var datafieldname=columns[j].datafield;
+                         var IdVal = 0;
+                        if(datafieldname=='Id')
+                        {
+                            if(GridRows[i][datafieldname])
+                            {
+                                 IdVal=GridRows[i][datafieldname];
+                            }
+                            GridArray[counts][j]=String(datafieldname).trim()+':'+String(IdVal).trim();//removing extra white space
+                        }
+                        else if(datafieldname=='EffectiveStartDate')
+                                    {
+                                        var StartDate ="";
+                                        if(GridRows[i][datafieldname])
+                                        {
+                                            var parts = GridRows[i][datafieldname].split('/');
+                                            StartDate= (parts[1] + "/" + parts[0] + "/" + parts[2]);
+                                        }
+                                        else{
+                                            alert("StartDate should not be null");
+                                            return;
+                                        }
+                                        GridArray[counts][j]=String(datafieldname).trim()+':'+ StartDate;//removing extra white space
+                                    }
+                        else if(datafieldname=='EffectiveEndDate')
+                                    {
+                                        var EndDate = "";
+                                        if(GridRows[i][datafieldname])
+                                        {
+                                            var parts = GridRows[i][datafieldname].split('/');
+                                            EndDate = (parts[1] + "/" + parts[0] + "/" + parts[2]);
+                                        }
+                                        else{
+                                            var dt = "31/12/2099";
+                                            dt = dt.split('/');
+                                           // EndDate = new Date(dt[0] +"/" + dt[1] + "/" + dt[2]);
+                                            EndDate = dt;
+                                        }
+                                        GridArray[counts][j]=String(datafieldname).trim()+':'+ EndDate;//removing extra white space
+                                    }
+                        else
+                        {
+                           // if (datafieldname.indexOf("AttributeD")> -1  && String(GridRows[i][datafieldname]).indexOf("T") > -1)
+                            if (datafieldname.indexOf("AttributeD") > -1) {
+                                if (String(GridRows[i][datafieldname]) != "null") {
+                                    var newdate = new Date(String(GridRows[i][datafieldname]));
+                                    var year = newdate.getFullYear(); var month = newdate.getMonth(); var dt = newdate.getDate();
+                                    var datestring = (month + 1) + "/" + dt + "/" + year;
+                                    GridArray[i][j] = String(datafieldname).trim() + ':' + datestring;
+                                }
+                                else {
+                                    GridArray[i][j] = String(datafieldname).trim() + ':' + String(GridRows[i][datafieldname]);
+                                }
+                            }
+                            else if (datafieldname.indexOf("AttributeB") > -1){
+                                var value = String(GridRows[i][datafieldname]).trim();
+                                value = (value == null || value == '') ? null : String(GridRows[i][datafieldname]).trim();
+                                if (value == "0")
+                                    value = "false" ;
+                                if (value == "1")
+                                    value = "true";
+                                GridArray[counts][j] = String(datafieldname).trim() + ':' + value;
+                            }
+
+                            else {
+                                var value = String(GridRows[i][datafieldname]).trim();
+                                   value = (value == null|| value == '') ? null : String(GridRows[i][datafieldname]).trim();
+                                   GridArray[counts][j] = String(datafieldname).trim() + ':' + value;
+                            }
+                         }
+
+               }
+               counts=counts+1;
+              }
+        }
+    }//End IF
+      var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 cache: false,
+                 data: Form.serialize() + "&GridArray=" + GridArray + "&collength=" + collength + "&RefTypeId=" + RefTypeId + "&LRefType=" + SelectedTypeText,
+                 url: "/LReferences/SaveData",
+                 success: function (data) {
+                     if (data.ErrorMessage) {
+                         alert(data.ErrorMessage)
+                         // return;
+                     } else {
+                         alert('Data Saved Successfully.');
+                         window.location.href = "/GenericGrid/Index?WorkFlow=References";
+                     }
+                    },
+                    error: function (reponse) {
+                     Console.log(reponse);
+                     //alert("error");
+                    }
+              })
+
+    }
+
+    //Save Valid Records
+    //function FnSaveValidRecords()
+    //{
+    //    var GridArray = [];
+    //    var GridRows = $('#jqxgridValidRecords').jqxGrid('getrows')
+    //    var collength=columnsForValid.length;
+    //    if (GridRows.length > 0) {
+    //             for (var i = 0; i < GridRows.length; i++) {              //For Row
+    //                 GridArray[i] = [];
+    //                     for (var j = 0; j < columnsForValid.length; j++) {     //For Columns
+    //                     var datafieldname=columnsForValid[j].datafield;
+    //                      var IdVal=0;
+    //                      if (datafieldname == 'Id') {
+    //                          if (GridRows[i][datafieldname]) {
+    //                              IdVal = GridRows[i][datafieldname];
+    //                          }
+    //                          GridArray[i][j] = String(datafieldname).trim() + ':' + String(IdVal).trim();//removing extra white space
+    //                      }
+    //                      else if (datafieldname == 'EffectiveStartDate') {
+    //                          var StartDate = "";
+    //                          if (GridRows[i][datafieldname]) {
+    //                              var parts = GridRows[i][datafieldname].split('/');
+    //                              StartDate = (parts[1] + "/" + parts[0] + "/" + parts[2]);
+    //                          }
+    //                          else {
+    //                              alert("StartDate should not be null");
+    //                              return;
+    //                          }
+    //                          GridArray[i][j] = String(datafieldname).trim() + ':' + StartDate;//removing extra white space
+    //                      }
+    //                      else if (datafieldname == 'EffectiveEndDate') {
+    //                          var EndDate = "";
+    //                          if (GridRows[i][datafieldname]) {
+    //                              var parts = GridRows[i][datafieldname].split('/');
+    //                              EndDate = (parts[1] + "/" + parts[0] + "/" + parts[2]);
+    //                          }
+    //                          else {
+    //                              var dt = "31/12/2099";
+    //                              dt = dt.split('/');
+    //                              // EndDate = new Date(dt[0] +"/" + dt[1] + "/" + dt[2]);
+    //                              EndDate = dt;
+    //                          }
+    //                          GridArray[i][j] = String(datafieldname).trim() + ':' + EndDate;//removing extra white space
+    //                      }
+
+    //                      else {
+    //                          if (datafieldname.indexOf("AttributeD") > -1) {
+    //                              var newdate = new Date(String(GridRows[i][datafieldname]));
+    //                              var year = newdate.getFullYear(); var month = newdate.getMonth(); var dt = newdate.getDate();
+    //                              var datestring = (month + 1) + "/" + dt + "/" + year;
+    //                              GridArray[i][j] = String(datafieldname).trim() + ':' + datestring;
+    //                              //GridArray[counts][j] = String(datafieldname).trim() + ':' + String(GridRows[i][datafieldname]).trim().substr(0, String(GridRows[i][datafieldname]).indexOf("T"));//removing extra white space and substring for date
+    //                          } else if (datafieldname.indexOf("AttributeB") > -1) {
+    //                              var value = String(GridRows[i][datafieldname]).trim();
+    //                              value = (value == null || value == '') ? null : String(GridRows[i][datafieldname]).trim();
+    //                              value = value == "true" ? 1 : 0;
+    //                              GridArray[counts][j] = String(datafieldname).trim() + ':' + value;
+    //                          }
+
+    //                          else {
+    //                              var value = String(GridRows[i][datafieldname]).trim();
+    //                              value = (value == null || value == '') ? null : String(GridRows[i][datafieldname]).trim();
+    //                              GridArray[i][j] = String(datafieldname).trim() + ':' + value;
+    //                          }
+    //                      }
+    //                  }
+    //    //Remove Last , from GridArray[i] string
+    //       //   GridArray[i]+='|';
+    //             }
+    //         }//End IF
+
+
+
+    //  var Form = $("#frm");
+    //         $.ajax({
+    //             type: "POST",
+    //             data: Form.serialize() + "&GridArray=" + GridArray + "&collength=" + collength + "&RefTypeId=" + RefTypeId + "&LRefType=" + SelectedTypeText,
+    //            // data: Form.serialize()+ "&GridArray=" + GridArray +"&collength=" + collength,
+    //             url: "/LReferences/SaveData",
+    //            success: function (data) {
+    //                if (data.ErrorMessage) {
+    //                    alert(data.ErrorMessage)
+    //                    // return;
+    //                } else {
+    //                    alert('Data Saved Successfully.');
+    //                    window.location.href = "/GenericGrid/Index?WorkFlow=References";
+    //                }
+    //                },
+    //          error: function (reponse) {
+    //                 Console.log(reponse);
+    //                 alert("error");
+    //             }
+    //          })
+
+    //}
+
+</script>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.UpdatedById)
+    @Html.HiddenFor(m => m.CreatedById)
+    @Html.HiddenFor(m => m.CreatedDateTime)
+    @Html.HiddenFor(m => m.UpdatedDateTime)
+    @Html.HiddenFor(m => m.WFOrdinal)
+    @Html.HiddenFor(m => m.WFStatus)
+    @Html.HiddenFor(m => m.WFType)
+    @Html.HiddenFor(m => m.WFRequesterId)
+    @Html.HiddenFor(m => m.WFRequesterRoleId)
+    @Html.HiddenFor(m => m.WFAnalystId)
+    @Html.HiddenFor(m => m.WFManagerId)
+    @Html.HiddenFor(m => m.WFCurrentOwnerId)
+    @Html.Hidden("FormType")
+    @Html.Hidden("Comments")
+    <div class="col-md-11 col-lg-11">
+        <div class="col-md-5 col-lg-5">
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.Label("Reference Type", htmlAttributes: new { @class = "required col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                <div class="col-md-8 col-lg-8">
+                    @Html.DropDownListFor(model => model.ReferenceTypeId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;" })
+                    @Html.ValidationMessageFor(model => model.ReferenceTypeId, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required col-md-4 col-lg-4 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-8 col-lg-8">
+                    @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "required form-control", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12" style="min-height:40px;">
+                @Html.LabelFor(model => model.ExtractFileName, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-8 col-lg-8">
+                    @Html.EditorFor(model => model.ExtractFileName, new { htmlAttributes = new { @class = " form-control", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.ExtractFileName, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-12 col-lg-12" style="min-height:60px;">
+                @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "col-md-4 col-lg-4 rely-labels", @style = "text-align: right;" })
+                <div class="col-md-8 col-lg-8">
+                    @Html.TextAreaFor(model => model.Description, new { @class = "form-control"  ,@style="min-height:100px;"})
+                    @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-7 col-lg-7" style="border-radius: 5px; border: 1px solid lightgrey;height: 222px;width:56%">
+            <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+                <ul class="nav nav-tabs tabs tabs-container-border ">
+                    <li style="margin-left: 30px;">Comments </li>
+                    <li>History</li>
+                    <li>Attached Files</li>
+                </ul>
+                <div class="tab-content" style="padding:10px;">
+                    @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="jqxgridHistory"></div>
+                    <div class="col-lg-1 col-md-1" style="margin-top:10px;padding-left:0px;">
+                        <button type="button" class="btn btn-red-SideLayout btn-cons" id="HistoryDownload" name="HistoryDownload" onclick=" FnExportGrid();">Download</button>
+                    </div>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="AttachedFiles">
+                        <div id="jqxgrid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ErrorMessageDiv" style="color:red;"></div>
+        
+        
+
+
+        <div class="col-md-12 col-lg-12"><button type="button" onclick="FnExportDataGrid();" class="GridButton" id="downloadBtn">
+    Download Filled Template
+</button></div>
+        <div id="jqxgridReferenceData"></div>
+        <div id="dialogProducts" style="display: none;width:100%;z-index:1000 !important;" align="center">
+
+            <div id="ProductsDiv" class="col-md-12 col-lg-12">
+                <div id="jqxgrid">
+                </div>
+                @*<button type="button" class="btn btn-borderRed btn-cons" onclick="FnClose();">Close&nbsp;</button>*@
+            </div>
+        </div>
+
+
+        <div id="VallidInvalidGrid" class="col-md-12 col-lg-12">
+
+            <div id="InValidDatadiv" class="tab-content" style="padding:10px;">
+                <h2 id="HeadingInValid">Invalid Records</h2>
+                <span id="warningMsgDiv" style="color:red;display:none;font-family:initial">Save button will get enabled  only when there are no invalid records.</span>
+                <div id="jqxgridInvalidRecords"></div>
+            </div>
+
+            <div id="ValidDataDiv" class="tab-content" style="padding:10px;">
+                <h2 id="HeadingValid">Valid Records</h2>
+                <div id="jqxgridValidRecords"></div>
+            </div>
+
+        </div>
+        <span id="warningMsg" class="col-lg-12 col-md-12" style="color:red;font-size:smaller;">
+            Only those reference types are available in the drop down for which Reference Data has not been created so far. For already created ones, please edit the existing one
+        </span>
+    </div>
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="btnSubmit" name="btnSubmit" onclick="SaveAndRedirect();">Save&nbsp;</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="btnSaveValidRecords" name="btnSaveValidRecords" onclick="SaveAndRedirect();"><b>Save Valid Records&nbsp;</b></button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="Attach" name="Attach">Attach</button>
+        @*<label for="FileUpload" class="CustomFileUpload-SideLayout" style="font-weight:normal; padding:4px;">Attach</label>*@
+        <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+        <div name="SecondaryFormButtons" id="SecondaryFormButtons">
+            @Html.Raw(ViewBag.BottomButtons)
+        </div>
+    </div>
+
+
+}
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system
+    <div class="col-md-8" id="FileDiv">
+    </div>*@
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@Scripts.Render("~/bundles/jQuery-File-Upload")
+

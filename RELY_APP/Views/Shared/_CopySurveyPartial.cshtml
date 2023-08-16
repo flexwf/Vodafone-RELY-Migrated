@@ -1,0 +1,66 @@
+﻿@Scripts.Render("~/bundles/jQuery-File-Upload")
+@Styles.Render("~/Content/jQuery-File-Upload")
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+<script>
+
+    $(function () {
+       
+        GetProductDropDown();
+        UpdatedSurveyId;
+    });
+
+    function GetProductDropDown() {
+        var sourceProductDropDown = {
+            dataType: "json",
+            cache:false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'ProductCode', type: 'string' },
+                { name: 'Product', type: 'string' }
+            ],
+            id: "Id",
+            data: {CurrentProductId : '@Model.Id'},
+            url: "/LProducts/GetByCompanyCodeForChangeSurvey"
+        };
+        var dataAdapterProductDropDown = new $.jqx.dataAdapter(sourceProductDropDown)
+        $("#Productdropdownlist").jqxDropDownList({
+            filterable: true,
+            source: dataAdapterProductDropDown,
+            searchMode: 'containsignorecase',
+            width: '500px',
+            height: '25px',
+            displayMember: "Product",
+            valueMember: "Id",
+        });
+        $('#Productdropdownlist').on('change', function (event) {
+            var args = event.args;
+            if (args) {
+                // index represents the item's index.
+                var index = args.index;
+                var item = args.item;
+                // get item's label and value.
+                var label = item.label;
+                var value = item.value;
+
+                //value is LocalPobId of the selected item
+                SelectedProductId = value;
+                SelectedProduct = label;
+                UpdatedSurveyId = SelectedProductId;
+            }
+        });
+    }
+
+
+
+</script>
+
+<div class="col-md-12 col-lg-12" style="z-index:500;" align="center">
+
+    <h4>
+        Select a row from below dropdown and click on Import button to import the selected survey (along with it's data) to the target product
+    </h4>
+    <div id="Productdropdownlist" name="Productdropdownlist"></div>
+</div>
+
+

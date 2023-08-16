@@ -1,0 +1,133 @@
+﻿@Scripts.Render("~/bundles/jQuery-File-Upload")
+@Styles.Render("~/Content/jQuery-File-Upload")
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+
+<script>
+
+     $(function () {
+            $("#dialogSurvey").dialog({
+                modal: true,
+                autoOpen: false,
+                title: "Survey Summary",
+                width: 1000,
+                height: 500,
+                dialogClass: "custom-dialog"
+            });
+
+
+            $("#SurveySummary").click(function () {
+                 if('@Model.SurveyId' == null || '@Model.SurveyId' == 'undefined' || '@Model.SurveyId' == '' ||'@Model.SurveyId' == 0){
+                     alert("No survey configured");
+                        return;
+                }
+                GetSurveyGrid();
+                $('#dialogSurvey').dialog('open');
+            });
+
+
+     });
+    function FnSectionDetails(){
+
+            var selectedrowindex = $('#jqxgridSurvey').jqxGrid('selectedrowindex');
+             var GridRows = $('#jqxgridSurvey').jqxGrid('getrows');
+            var ChapterCode = GridRows[selectedrowindex].ChapterCode;
+            var SectionCode = GridRows[selectedrowindex].SectionCode;
+            var SectionId = GridRows[selectedrowindex].SectionId;
+            var SectionName = GridRows[selectedrowindex].SectionName;
+            var ChapterName = GridRows[selectedrowindex].ChapterName;
+            $('#sectionHeading').innerHTML = SectionName;
+            var SurveyId = '@Model.SurveyId';
+            var TransactionId = '@Model.Id';
+            url = '@Url.Action("CaptureUserResponse", "LFSUserResponse")?SurveyId=' + SurveyId + '&ChapterCode=' + ChapterCode + '&SectionCode=' + SectionCode + '&EntityId=' + TransactionId + '&EntityType=LProducts&SectionName=' + SectionName + '&ChapterName=' + ChapterName;
+            try {
+                var returnValue = window.open(url, '_blank');
+                if (typeof returnValue.attachEvent != "undefined") {
+                    returnValue.attachEvent("onunload", responseTabClosed);
+                } else if (typeof returnValue.addEventListener != "undefined") {
+                    returnValue.addEventListener("unload", responseTabClosed, false);
+                }
+            }
+            catch (err) {
+                alert(err);
+            }
+    }
+    function responseTabClosed() {
+        //$("#POBdropdownlist") update the dropdownlist
+        $('#jqxgridSurvey').jqxGrid('updatebounddata');
+    }
+
+    //this method get the survey details
+    function GetSurveyGrid(){
+       var sourceSurvey = {
+           dataType: "json",
+           cache: false,
+            dataFields: [
+                { name: 'ChapterName', type: 'string' },
+                { name: 'SectionName', type: 'string' },
+                { name: 'ChapterId', type: 'int' },
+                { name: 'ChapterOrdinal', type: 'int' },
+                { name: 'SectionId', type: 'int' },
+                { name: 'SectionCode', type: 'string' },
+                {name: 'ChapterCode', type: 'string' },
+                { name: 'SectionOrdinal', type: 'int' },
+                { name: 'DefaultCount', type: 'int' },
+                { name: 'MissingCount', type: 'int' },
+    { name: 'SectionNumber', type: 'string' },
+    { name: 'SectionName', type: 'string' }
+            ],
+            id: "Id",
+            data: {EntityType:'LProducts',SurveyId:'@Model.SurveyId' ,RequestId: '@Model.Id' },
+            url: "/LRequests/GetSurveyDetails"
+        };
+    var cellsrendererSurvey = function (row, columnfield, value, defaulthtml, columnproperties) {
+                         return '&emsp;<button type="button" id="SectionZoom" name="SectionZoom"  onclick="FnSectionDetails()" class="GridButton">Zoom</button>';
+        };
+    /*onclick="FnSectionDetails()"*/
+     var dataAdapter = new $.jqx.dataAdapter(sourceSurvey);
+                $('#jqxgridSurvey').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight:true,
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    editable: false,
+                    pagesize: 200,
+                    pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting,
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: [
+                        { text: 'Group', datafield: 'ChapterName' },
+                        { text: 'SectionName', datafield: 'SectionName' },
+                        { text: 'Answered', datafield: 'DefaultCount' },
+                        { text: 'Missing', datafield: 'MissingCount' },
+                         { text: ' ', datafield: 'Id', cellsrenderer: cellsrendererSurvey ,width: '10%'}
+                    ]
+                });
+
+        }
+
+
+</script>
+
+
+<div id="jqxgridSurvey" style="z-index:500;"></div>
+
+
+@*div for Survey Summary*@
+<div id="dialogSectionDetails" style="display: none;width:100%;z-index:500;" align="center">
+    @*@Html.Partial("_SectionZoom")*@
+    @*<div id="sectionItems" name="sectionItems" , style="width: 1000px;height: 500px;">*@
+        @*@if (ItemTypeName == "YN_QUESTION")
+        {
+            @Html.Partial("_YN_Question_Template")
+        }*@
+
+    @*</div>*@
+
+</div>

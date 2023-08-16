@@ -1,0 +1,193 @@
+﻿
+@{
+
+    ViewBag.Title = "ReadAndValidateExcel";
+    var ValidData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ValidData);
+
+    var ErrorData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.ErrorData);
+
+}
+
+<script>
+     var IsHideButton=@ViewBag.HideButton;
+     var datafieldsForValid = new Array();
+    var columnsForValid = new Array();
+     var datafieldsforError = new Array();
+    var columnsforError = new Array();
+
+ $(document).ready(function() {
+     var ValidDataGrid=@Html.Raw(Json.Encode(ValidData));
+    var ErrorDataGrid=@Html.Raw(Json.Encode(ErrorData));
+
+    if(IsHideButton==1)
+    {
+     $("#btnSaveValidRecords").show();
+    // $('#btnSubmit').prop('disabled',true);
+    }
+    else
+    {
+      $("#btnSaveValidRecords").hide();
+    }
+ $.ajax({
+                 type: "GET",
+                 cache: false,
+                // data: { LRefType :'' },
+                 url: "/LReferences/GetAttributesForValidGrid",
+                 success: function (data) {
+                  if(data.length>0){
+
+                      //Loop though list of columns and populate arrays of datafiels of grid
+                    for (var i = 0; i < data.length; ++i) {
+                            datafieldsForValid.push({ name: data[i].ColumnName, type: data[i].DataType });
+                        if(data[i].DataType=="bit")
+                        columnsForValid.push({ text:data[i].Label, datafield: data[i].ColumnName, columntype:'checkbox',width:'10%'});
+                        else
+                        columnsForValid.push({ text:data[i].Label, datafield: data[i].ColumnName,editable:true,width:'10%'});
+                    }
+    }
+
+    var source = {
+            dataType: "json",
+            dataFields:datafieldsForValid,
+            localdata:ValidDataGrid
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridValidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: columnsForValid
+                });
+    },
+     error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+
+    //Error
+
+    $.ajax({
+        type: "GET",
+        cache: false,
+                // data: { LRefType :'' },
+                 url: "/LReferences/GetAttributesForValidGrid",
+                 success: function (data) {
+                  if(data.length>0){
+
+                      //Loop though list of columns and populate arrays of datafiels of grid
+                    for (var i = 0; i < data.length; ++i) {
+                            datafieldsforError.push({ name: data[i].ColumnName, type: data[i].DataType });
+                        if(data[i].DataType=="bit")
+                        columnsforError.push({ text:data[i].Label, datafield: data[i].ColumnName, columntype:'checkbox',width:'10%'});
+                        else
+                        columnsforError.push({ text:data[i].Label, datafield: data[i].ColumnName,editable:true,width:'10%'});
+                    }
+    }
+
+    var source = {
+            dataType: "json",
+            dataFields:datafieldsforError,
+            localdata:ErrorDataGrid
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+                $('#jqxgridInvalidRecords').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: columnsforError
+                });
+    },
+     error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+
+
+    //End Error
+    });
+
+
+
+
+    //To Save Data
+    function FnSaveData()
+    {
+
+  //  alert(1);
+    var GridArray = [];
+    var GridRows = $('#jqxgridValidRecords').jqxGrid('getrows')
+   // var collength= $("#jqxgridValidRecords").jqxGrid('columns').records.length;
+    var collength=columnsForValid.length;
+   // alert(collength);
+    if (GridRows.length > 0) {
+                   for (var i = 0; i < GridRows.length; i++) {              //For Row
+                  // GridArray[i]='{';
+                     GridArray[i] = [];
+                         for (var j = 0; j < columnsForValid.length; j++) {     //For Columns
+                         var datafieldname=columnsForValid[j].datafield;
+                         GridArray[i][j]=datafieldname+':'+GridRows[i][datafieldname];//+',';
+                      }
+        //Remove Last , from GridArray[i] string
+           //   GridArray[i]+='|';
+                 }
+             }//End IF
+   // alert(GridArray);
+      var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize() + "&GridArray=" + GridArray + "&collength=" + collength,
+                 cache: false,
+                 url: "/LReferences/SaveValidRecords",
+                success: function (data) {
+                alert('Data Saved Successfully.');
+                    },
+              error: function (reponse) {
+                     Console.log(reponse);
+                     alert("error");
+                 }
+              })
+
+    }
+
+
+</script>
+
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    <h2>Invalid Records</h2>
+    <div class="tab-content" style="padding:10px;">
+        <div id="jqxgridInvalidRecords"></div>
+    </div>
+    <h2>Valid Records</h2>
+    <div class="tab-content" style="padding:10px;">
+        <div id="jqxgridValidRecords"></div>
+    </div>
+    <button type="button" class="btn btn-red btn-cons" id="btnSaveValidRecords" name="save" onclick="FnSaveData();"><b>Accept&nbsp;</b></button>
+}

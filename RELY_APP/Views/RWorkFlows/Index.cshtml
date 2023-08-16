@@ -1,0 +1,506 @@
+﻿<style type="text/css">
+    .text {
+        display: block;
+        font-family: sans-serif;
+        vertical-align: middle;
+        line-height: 300px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: bold;
+    }
+</style>
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+<script src="~/Scripts/jquery.steps.min.js" type="text/javascript"></script>
+<script>
+    var editedRows = new Array();
+    var isChanged = false;
+    var isStepChanged = false;
+    var isParticipantChanged = false;
+    var SelectedWorkFlow = null;
+    var SelectedStepName = "Steps";
+    var SelectedWorkFlowName = "WorkFlows";
+    var SelectedColumnName = "Columns";
+    var SelectedParticipantName = "Participants";
+    var selectedTab = 0;
+    var dataAdapterParticipantDropDown = undefined;
+    var dataAdapterActionsDropDown = undefined;
+    var ActiveStepId = 0;
+    var dataAdapterSendToStepDropDown = undefined;
+    //window.onbeforeunload = function () {
+
+    //    if (isChanged) {
+    //        return "Are you sure you want to leave this page ? There are unsaved changes that will be lost";
+    //    }
+    //}
+
+    $(document).ready(function () {
+        $('#btnPrevious').hide();
+        $("#txtmsg").hide();
+        $('#loadertext').hide();
+        $("input.form-control").val(''); 
+        /* -- Information for Participants Dropdown - */
+        var ParticipantDropDownSource = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'RoleName', type: 'string' },
+            ],
+            id: 'Id',
+            url: "/LRoles/GetRoles"
+
+        };
+        dataAdapterParticipantDropDown = new $.jqx.dataAdapter(ParticipantDropDownSource, { async: false, autoBind: true })
+        /* -- information for Actions Dropdown---*/
+        var ActionsDropDownSource = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+            ],
+            id: 'Id',
+            url: "/WStepParticipantActions/GetActions"
+
+        };
+        dataAdapterActionsDropDown = new $.jqx.dataAdapter(ActionsDropDownSource, { async: false, autoBind: true })
+
+        
+
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache: false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        //====================================================
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'UILabel', type: 'string' },
+                { name: 'BaseTableName', type: 'string' },
+                { name: 'CRAllowed', type: 'bool' },
+                { name: 'CRWFName', type: 'string' },
+                { name: 'WFType', type: 'string' }
+
+            ],
+            id: 'Id',
+            url: "/RWorkFlows/GetWorkFlows"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            //if (Number(rowdata.Id) != 0) {
+
+            isChanged = true;
+            return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+
+        };
+        // validation function
+        var validateFunc = function (datafield, value) {
+            if (value.length == 0 || value == null || value == '') {
+                return { message: "Field is required", result: false };
+            }
+            return true;
+        }
+        var cellclass = function (row, datafield, value, rowdata) {
+            for (var i = 0; i < editedRows.length; i++) {
+                if (editedRows[i].index == row) {
+                    return "ChangeFontColor";
+                }
+            }
+        }
+
+        $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            autoheight: true,
+            columnsresize: true,
+            //pageable: true,
+            //pagesize: 200,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            selectionmode: 'singlerow',
+            keyboardnavigation: true,
+            enablebrowserselection: true,
+            showeverpresentrow: true,
+            everpresentrowposition: "top",
+            editable: true,
+            localization: {
+                addrowstring: "Add",
+                udpaterowstring: "Update",
+                deleterowstring: "Delete",
+                resetrowstring: "Clear",
+                everpresentrowplaceholder: "Type: "
+            },
+            //selectionmode: 'multiplecellsadvanced',
+            // pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Name', datafield: 'Name', filtertype: 'input', //cellclassname: cellclass,
+                    validateEverPresentRowWidgetValue: validateFunc
+                },
+                {
+                    text: 'Label', datafield: 'UILabel', filtertype: 'input',// cellclassname: cellclass
+                    validateEverPresentRowWidgetValue: validateFunc
+                },
+                {
+                    text: 'Base Table', datafield: 'BaseTableName', filtertype: 'input', //cellclassname: cellclass
+                    validateEverPresentRowWidgetValue: validateFunc
+                },
+                
+                //{
+                //    text: 'CRAllowed', datafield: 'CRAllowed', filtertype: 'input', columntype: 'checkbox', //cellclassname: cellclass,
+                //},
+                //{
+                //    text: 'CRWFName', datafield: 'CRWFName', filtertype: 'input', //cellclassname: cellclass
+                //},
+                {
+                    text: 'WFType', datafield: 'WFType', filtertype: 'input', editable: false
+                },
+                {
+                    text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%', editable: false,
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+
+        });
+        $("#jqxgrid").on('cellvaluechanged', function (event) {
+            var row = event.args.rowindex;
+            var rowdata = $("#jqxgrid").jqxGrid('getrowdata', row);
+            editedRows.push({ index: row, data: rowdata });
+            isChanged = true;
+        });
+
+        // Method to load jqxtabs in view.
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+        //$('#jqxTabs').on('unselected', function (event) {
+        //   // var selectedTabIndex = event.args.item;
+        //    if (isChanged || isStepChanged || isParticipantChanged) {
+        //        alert(confirm("Are you sure you want to leave this page ? There are unsaved changes that will be lost"))
+        //     //       $('#jqxTabs').jqxTabs('select', selectedTabIndex);
+        //       // else
+        //         //   $('#jqxTabs').jqxTabs('select', 0);
+        //    }
+        //});
+        $('#jqxTabs').on('selected', function (event) {
+            selectedTab = event.args.item;
+            //alert('The selected tab is ' + selectedTab);
+
+            if (selectedTab == 0) {
+                document.getElementById("UrlPath").innerHTML = "WorkFlows";
+                window.location.reload();
+                $('#btnPrevious').hide();
+                $('#btnNext').show();
+            }
+            else if (selectedTab == 1) { //check for whether previous tab was WorkFlow, current tab is Steps
+                var rowindex = $('#jqxgrid').jqxGrid('getselectedrowindex');
+                SelectedWorkFlow = rowindex;
+                $('#btnPrevious').show();
+                $('#btnNext').show();
+                $("#txtmsg").show();
+                if (SelectedWorkFlow == -1) { //that means no Workflow is selected currently, do not move on Steps tab
+                    alert("Please Select workflow");
+                    $('#jqxTabs').jqxTabs('select', 0);
+                    $('#btnNext').show();
+                    $("#txtmsg").show();
+                    $('#btnPrevious').hide();
+                } else {
+                    var rowdata = $('#jqxgrid').jqxGrid('getrowdata', SelectedWorkFlow);
+                    var WorkFlowId = rowdata.Id;
+                    SelectedWorkFlowName = rowdata.Name;
+
+                    FnGetStepsInformation(WorkFlowId);
+                    document.getElementById("UrlPath").innerHTML = "Workflows( " + SelectedWorkFlowName + " ) >> Steps( " + SelectedStepName + " ) ";
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                }
+            }
+            else if (selectedTab == 2) {//Current Tab is Columns
+
+                var Steprowindex = $('#jqxgridSteps').jqxGrid('getselectedrowindex');
+                if (Steprowindex == -1) { //that means no Step is selected currently, do not move on Next tab
+                    alert("no Step selected");
+                    $("#txtmsg").hide();
+                    $('#jqxTabs').jqxTabs('select', 1);
+                } else {
+                    var rowdata = $('#jqxgridSteps').jqxGrid('getrowdata', Steprowindex);
+                    var StepId = rowdata.Id;
+                    ActiveStepId = StepId;
+                    SelectedStepName = rowdata.Name;
+                    $("#txtmsg").hide();
+                    //get columns details
+                    FnGetColumnsInformation(StepId);
+                    document.getElementById("UrlPath").innerHTML = "Workflows( " + SelectedWorkFlowName + " ) >> Steps(" + SelectedStepName + " )" + " >> Columns( " + SelectedColumnName + " ) ";
+                }
+                $('#btnPrevious').show();
+                $('#btnNext').show();
+            }
+            else if (selectedTab == 3) {//Current Tab is Participants
+                var Steprowindex = $('#jqxgridSteps').jqxGrid('getselectedrowindex');
+                //alert("Selected Row Index: " + rowindex);
+                if (Steprowindex == -1) { //that means no step is selected currently, do not move on next tab
+                    alert("no Step selected");
+                    $('#jqxTabs').jqxTabs('select', 1);
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    $("#txtmsg").hide();
+                } else {
+                    var rowdata = $('#jqxgridSteps').jqxGrid('getrowdata', Steprowindex);
+                    var StepId = rowdata.Id;
+                    ActiveStepId = StepId;
+                    var Columnrowindex = $('#jqxgridColumns').jqxGrid('getselectedrowindex');//check for selected column
+                    if (Columnrowindex == -1) {
+                        SelectedColumnName = "Columns";
+                    } else {
+                        var rowdataColumns = $('#jqxgridColumns').jqxGrid('getrowdata', Columnrowindex);
+                        SelectedColumnName = rowdataColumns.ColumnName;
+                    }
+                    //get participant details
+                    FnGetParticipantsInformation(StepId);
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    $("#txtmsg").hide();
+                    document.getElementById("UrlPath").innerHTML = "Workflows( " + SelectedWorkFlowName + " ) >> Steps(" + SelectedStepName + " )" + " >> Columns( " + SelectedColumnName + " )" + " >> Participants ( " + SelectedParticipantName + " ) ";
+
+                }
+                $('#btnPrevious').show();
+                $('#btnNext').show();
+                $("#txtmsg").hide();
+            }
+            else if (selectedTab == 4) {//Current Tab is Participant Actions
+                var Participantrowindex = $('#jqxgridParticipants').jqxGrid('getselectedrowindex');
+                //alert("Selected Row Index: " + rowindex);
+                if (Participantrowindex == -1) { //that means no participant is selected currently, do not move on next tab
+                    alert("no participant selected");
+                    $('#jqxTabs').jqxTabs('select', 3);
+                    $('#btnPrevious').show();
+                    $('#btnNext').show();
+                    $("#txtmsg").hide();
+                } else {
+                    var rowdata = $('#jqxgridParticipants').jqxGrid('getrowdata', Participantrowindex);
+                    var ParticipantId = rowdata.ParticipantId;
+                    var PName = rowdata.ParticipantName;
+                    SelectedParticipantName = PName;
+                    //get participant Action details
+                    FnGetParticipantActionsInformation(ParticipantId, ActiveStepId);
+                    document.getElementById("UrlPath").innerHTML = "Workflows( " + SelectedWorkFlowName + " ) >> Steps(" + SelectedStepName + " )" + " >> Columns( " + SelectedColumnName + " )" + " >> Participants ( " + SelectedParticipantName + " ) " + "  >> ParticipantActions ";
+                    $('#btnPrevious').show();
+                    $('#btnNext').hide();
+                    $("#txtmsg").hide();
+                }
+                $("#txtmsg").hide();
+            }
+
+            //breadcrumbStateSaver(document.title, document.location.href);
+            //showBreadCrumb();
+        });
+
+    });
+
+    /* function bindEventToNavigation() {
+         $.each($("#navigation_links > li > a"), function (index, element) {
+             $(element).click(function (event) {
+                 breadcrumbStateSaver($(this).attr('href'), $(this).text());
+                 showBreadCrumb();
+             });
+         });
+     }
+
+     function breadcrumbStateSaver(text, link) {
+         if (typeof (Storage) != "undefined") {
+             if (sessionStorage.breadcrumb) {
+                 var breadcrumb = sessionStorage.breadcrumb;
+                 sessionStorage.breadcrumb = breadcrumb + " >> <a href='" + link + "'>" + text + "</a>";
+             } else {
+                 sessionStorage.breadcrumb = "<a href='" + link + "'>" + text + "</a>";
+             }
+         }
+     }
+     function showBreadCrumb() {
+         $("#breadcrumb").html(sessionStorage.breadcrumb);
+     }
+     */
+    function FnShowNextTab() {
+
+        $('#jqxTabs').jqxTabs('select', selectedTab + 1);
+    }
+
+    function FnShowPreviousTab() {
+
+        $('#jqxTabs').jqxTabs('select', selectedTab - 1);
+    }
+
+    ////function to delete unsaved grid row from grid
+    function FnDeleteGridRow(Id) {
+        var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    }
+
+    //This method is called when User clicks on delete glymph in grid
+    function FnDelete(Id) {
+        var r = confirm('All actions and other configurations will be deleted. \n Do you want to continue?');
+        if (r == false)
+            return;
+        else {
+            $.ajax({
+                data: { Id: Id },
+                url: "/RWorkFlows/DeleteById",
+                cache:false,
+                traditional: true,
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        } else {
+                            alert("Data Updated successfully");
+                            //FnGetParticipantActionsInformation(CurrentParticipantId, CurrentStepId);
+                            window.location.reload();
+                        }
+                    }
+                    else {
+                        window.location.href = "/Home/Error";
+                    }
+
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+
+    //function to save workflow data
+
+    function FnSaveData() {
+        var arr = [];
+        var rows = $('#jqxgrid').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++) {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            arr[i][1] = (rows[i].Name == null) ? '' : rows[i].Name;
+            arr[i][2] = (rows[i].UILabel == null) ? '' : rows[i].UILabel;
+            arr[i][3] = (rows[i].BaseTableName == null) ? '' : rows[i].BaseTableName;
+            arr[i][4] = (rows[i].CRAllowed == null) ? false : rows[i].CRAllowed;
+            arr[i][5] = (rows[i].CRWFName == null) ? '' : rows[i].CRWFName;
+            arr[i][6] = (rows[i].WFType == null) ? '' : rows[i].WFType;
+        }
+        $.ajax({
+            data: { GridData: arr },
+            cache: false,
+            url: "/RWorkFlows/SaveData",
+            type: "POST",
+            success: function (data) {
+                if (data.ErrorMessage) {
+                    alert(data.ErrorMessage);
+                } else {
+                    alert("Data Updated successfully");
+                }
+                window.location.reload();
+            },
+            error: function (reponse) {
+            }
+        });
+    }
+
+
+</script>
+
+@{
+    Html.RenderPartial("_WStepPartial");
+    Html.RenderPartial("_WStepColumnsPartial");
+    Html.RenderPartial("_WStepParticipantsPartial");
+    Html.RenderPartial("_WStepParticipantActionsPartial");
+}
+
+<div id="UrlPath" name="UrlPath" style="color:blue;font-size:medium;">Workflows</div>
+
+<div id="breadcrumb"></div>
+<p id="txtmsg" style="color:red;font-size:small;">To insert a step between two steps, please choose the same ordinal where you want to insert. Remaining steps will move down automatically</p>
+<div id='jqxTabs'>
+    <ul id="navigation_links" style='margin-left: 20px;'>
+        <li>@*WorkFlows*@</li>
+        <li>@*Steps*@</li>
+        <li>@*Columns*@</li>
+        <li>@*Participants*@</li>
+        <li>@*Participant Actions*@</li>
+    </ul>
+
+    <div>
+        <div id="jqxgrid">
+        </div>
+        <input type="button" class="btn btn-red" value="Save" name="btnSaveWF" id="btnSaveWF" style="margin-top:5px;" onclick="FnSaveData();">
+
+    </div>
+
+    <div>
+        <div id="jqxgridSteps"></div>
+        <br />
+        <div class="col-md-7 col-lg-7">
+            @Html.Label("Please provide steps Ordinal for Interchange:", htmlAttributes: new { @class = "col-md-12 col-lg-12 rely-labels ", @style = "text-align: left;" })
+            <div class="col-md-2 col-lg-2">
+                @Html.TextBox("input1", null, new { @class = "form-control input-sm", @style = "text-align: left;" })
+            </div>
+            <div class="col-md-2 col-lg-2">
+                @Html.TextBox("input2", null, new { @class = "form-control input-sm", @style = "text-align: left;" })
+            </div>
+            <div class="col-md-1 col-lg-1">
+                <input type="button" class="btn btn-red " value="Go" onclick="fnSwapStepOrdinals();" style="height:29px; text-align: center;" />
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-6">
+            <input type="button" class="btn btn-red" value="Save" name="btnSaveSteps" id="btnSaveSteps" style="margin-top:5px;" onclick="FnSaveStepsData();">
+        </div>
+    </div>
+    <div>
+        <div id="jqxgridColumns"></div>
+        <input type="button" class="btn btn-red" value="Save" name="btnSaveColumns" id="btnSaveColumns" style="margin-top:5px;" onclick="FnSaveColumnsData();">
+    </div>
+    <div>
+        <div id="jqxgridParticipants"></div>
+        <input type="button" class="btn btn-red" value="Save" name="btnSaveParticipants" id="btnSaveParticipants" style="margin-top:5px;" onclick="FnSaveParticipantsData();">
+    </div>
+    <div>
+        <div id="jqxgridParticipantActions"></div>
+        <input type="button" class="btn btn-red" value="Save" name="btnSaveParticipantActions" id="btnSaveParticipantActins" style="margin-top:5px;" onclick="FnSaveParticipantActionsData();">
+    </div>
+</div>
+
+@*<div id="jqxtest" class="jqx-grid-load" style="display: block;vertical-align: middle;line-height: 500px;" >
+    </div>*@
+
+@*<div id="loadertext" class="text" style="display: block;
+    font-family: sans-serif;
+    vertical-align: middle;
+    line-height: 300px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: bold;">loading...It may take some time</div>*@
+<div id="loadertext" class="text">loading...It may take some time</div>
+<br/>
+    <input type="button" class="btn btn-red" value="Previous" name="btnPrevious" id="btnPrevious" onclick="FnShowPreviousTab();">
+    <input type="button" class="btn btn-red" value="Next" name="btnNext" id="btnNext" onclick="FnShowNextTab();">
+
+

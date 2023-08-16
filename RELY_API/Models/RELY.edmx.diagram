@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="c30fab91cad942c6bb2207dd4f591ac8" Name="Diagram1">
+        <EntityTypeShape EntityType="RELYDevDbModel.FlexTable" Width="1.5" PointX="3" PointY="86.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GAuthorizableObject" Width="1.5" PointX="0.75" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GCompany" Width="1.5" PointX="2.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GCopaDimension" Width="1.5" PointX="3" PointY="90.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GEmailConfiguration" Width="1.5" PointX="6.75" PointY="82.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GErrorLog" Width="1.5" PointX="5.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GGlobalPob" Width="1.5" PointX="3" PointY="94.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GKeyValue" Width="1.5" PointX="7.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GMenu" Width="1.5" PointX="0.75" PointY="2" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.GSecurityQuestion" Width="1.5" PointX="0.75" PointY="92.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LAccountingScenario" Width="1.5" PointX="6" PointY="99" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LASLifecycleEvent" Width="1.5" PointX="14.25" PointY="108.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LAudit" Width="1.5" PointX="3" PointY="102.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LAuditEntry" Width="1.5" PointX="7.75" PointY="7.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LCompanySpecificColumn" Width="1.5" PointX="5.25" PointY="190" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LDropDown" Width="1.5" PointX="1.5" PointY="118.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LDropDownValue" Width="1.5" PointX="3.75" PointY="118.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LEmailBucket" Width="1.5" PointX="9" PointY="102.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LEmailTemplate" Width="1.5" PointX="12.75" PointY="92.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFinancialSurvey" Width="1.5" PointX="5.25" PointY="128.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSAnswerBank" Width="1.5" PointX="3" PointY="139" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSChapter" Width="1.5" PointX="8.5" PointY="115.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSItemType" Width="1.5" PointX="6.75" PointY="87.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSManualAccScenario" Width="1.5" PointX="2.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSNextStepAction" Width="1.5" PointX="8.25" PointY="129.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSNextStep" Width="1.5" PointX="3" PointY="147.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSQuestionBank" Width="1.5" PointX="9" PointY="97.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSRespons" Width="1.5" PointX="3" PointY="157.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSSectionItem" Width="1.5" PointX="14.5" PointY="113.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSSection" Width="1.5" PointX="11.5" PointY="116.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSSurveyLevel" Width="1.5" PointX="3" PointY="162.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSTableConfig" Width="1.5" PointX="9" PointY="86.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSTable" Width="1.5" PointX="9.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LLocalPob" Width="1.5" PointX="12" PointY="95.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LNotification" Width="1.5" PointX="15" PointY="103.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LOutputFormat" Width="1.5" PointX="4.75" PointY="9.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LPasswordHistory" Width="1.5" PointX="9.75" PointY="7.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LPasswordPolicy" Width="1.5" PointX="6.75" PointY="10.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LPortfolio" Width="1.5" PointX="5.75" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LProductPob" Width="1.5" PointX="19.75" PointY="110.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LProduct" Width="1.5" PointX="17.5" PointY="106.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReconBatch" Width="1.5" PointX="3" PointY="109.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReconBucket" Width="1.5" PointX="3.75" PointY="167" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReconColumnMapping" Width="1.5" PointX="3" PointY="144.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReconFileFormat" Width="1.5" PointX="0.75" PointY="123.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReferenceData" Width="1.5" PointX="8.75" PointY="10.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReference" Width="1.5" PointX="5.25" PointY="141.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LReferenceType" Width="1.5" PointX="3" PointY="191" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LRequest" Width="1.5" PointX="10.5" PointY="122.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LRole" Width="1.5" PointX="0.75" PointY="87.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LScenarioDemand" Width="1.5" PointX="22.75" PointY="113.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LSMSBucket" Width="1.5" PointX="10.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LSupportingDocument" Width="1.5" PointX="9" PointY="109.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LUserActivityLog" Width="1.5" PointX="3" PointY="208.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LUser" Width="1.5" PointX="0.75" PointY="95.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MEntityPortfolio" Width="1.5" PointX="8" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MLFSQuestionBankLFSSurveyLevel" Width="1.5" PointX="5.25" PointY="163.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MLocalGlobalUsecaseMapping" Width="1.5" PointX="5.25" PointY="95.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MLUsersGSecurityQuestion" Width="1.5" PointX="3" PointY="99.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MMenuRole" Width="1.5" PointX="3" PointY="45.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MMenusAuthorizableObject" Width="1.5" PointX="3" PointY="2.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MPobCopaMapping" Width="1.5" PointX="5.25" PointY="91" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MStepParticipantActionValidation" Width="1.5" PointX="11.25" PointY="149" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.MUserRole" Width="1.5" PointX="3" PointY="114.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RLocalPobType" Width="1.5" PointX="9.75" PointY="93.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RProductCategory" Width="1.5" PointX="1.5" PointY="132.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RProductSystem" Width="1.5" PointX="1.5" PointY="134.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RRequestSystem" Width="1.5" PointX="8.25" PointY="134.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RSysCat" Width="1.5" PointX="1.5" PointY="128" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RUseCaseIndicator" Width="1.5" PointX="10.75" PointY="10.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RWorkFlow" Width="1.5" PointX="4.5" PointY="122.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.SSPDimension" Width="1.5" PointX="11.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.TReconDataValidation" Width="1.5" PointX="12.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.TRefDataValidation" Width="1.5" PointX="0.75" PointY="13.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WAction" Width="1.5" PointX="12.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WActionValidation" Width="1.5" PointX="9" PointY="156" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WStepGridColumn" Width="1.5" PointX="9" PointY="143.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WStepParticipantAction" Width="1.5" PointX="9" PointY="148.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WStepParticipant" Width="1.5" PointX="9" PointY="152.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.WStep" Width="1.5" PointX="6.75" PointY="121.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.Debug" Width="1.5" PointX="2.75" PointY="13.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSAccountingMemo" Width="1.5" PointX="14.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSAccountingScenarioMatrix" Width="1.5" PointX="14.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.LFSRequestLevelAccountingMemo" Width="1.5" PointX="14.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.RequestSimulation" Width="1.5" PointX="4.75" PointY="15.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="RELYDevDbModel.UseCaseIndicator" Width="1.5" PointX="16.75" PointY="0.75" IsExpanded="true" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_FlexTables_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GAuthorizableObjects_MMenusAuthorizableObjects_AuthorizableObjectId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GCopaDimensions_MPobCopaMapping_PobCatalogueId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_GcopaDimensions_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_GCopaDimensions_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GEmailConfigurations_LEmailBucket_SenderConfigId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GGlobalPobs_MPobCopaMapping_PobCatalogueId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_GGlobalPobs_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GMenus_GMenus_ParentId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GMenus_MMenuRoles_MenuId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GMenus_MMenusAuthorizableObjects_MenuId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_GSecurityQuestions_MLUsersGSecurityQuestions_QuestionId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LAccountingScenarios_LASLifeCycleEvents_AccountingScenarioId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropDownValues_LAccountingScenarios_BusinessAreaId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LAccountingScenarios_WFRequesterRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenario_WFRequesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenarios_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenarios_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenarios_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenarios_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAccountingScenarios_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropdownValues_LASLifeCycleEvents_EventId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropdownValues_LASLifeCycleEvents_NatureId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LAudit_ActionedByRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LSupportingDocuments_LAudit_SupportingDocumentId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LAudit_ActionedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RWorkFlows_LAudit_WofkFlowid" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_LAudit_StepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropDowns_LCompanySpecificColumns_DropDownid" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LReferenceTypes_LCompanySpecificColumns_ReferenceTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropDowns_LDropDownValues_DropDownId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LDropDownValues_LScenarioDemand_BusinessAreaId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LEmailBucket_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LEmailBucket_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LEmailTemplates_LNotifications_TemplateId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFinancialSurveys_LFSChapters_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFinancialSurveys_LFSSectionItems_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFinancialSurveys_LProducts_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFinancialSurveys_LRequests_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFinancialSuveys_LFSSections_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSSurveyLevels_LFinancialSurvays_SurveyLevelId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFinancialSurvays_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFinancialSurvays_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSAnswerBank_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSAnswerBank_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSChapters_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSChapters_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSItemTypes_LFSQuestionBank_ItemTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSItemTypes_LFSSectionItems_ItemTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSItemTypes_LFSTableConfig_ItemTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSNextSteps_LNextStepActions_NextStepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSResponses_LNextStepActions_ResponseId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LNextStepActions_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LNextStepActions_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSNextSteps_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSNextSteps_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSQuestionBank_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSQuestionBank_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSResponses_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSResponses_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSectionItems_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSectionItems_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSections_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSections_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSSurveyLevels_LRequests_SurveyId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LFSSurveyLevels_MLFSQuestionBankLFSSurveyLevels_SurveyLevelId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSurveyLevels_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LFSSurveyLevels_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LLocalPob_RequesterRoleid" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUseers_LLocalPob_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LLocalPob_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LLocalPob_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LLocalPob_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LLocalPob_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LLocalPob_WFRequesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RLocalPobTypes_LLocalPobs_LocalPobTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_LNotifications_LandingStepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_LNotifications_RecipientRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LPortfolios_MEntityPortfolios_PortfolioId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LProducts_LProductPobs_ProductId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LProducts_LScenarioDemand_ProductId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRequests_LProducts_Requestid" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LProducts_RequesterRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LPproducts_WFRequesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LProducts_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LProducts_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LProducts_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LProducts_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LProducts_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RSysCat_LProducts_SysCatId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LReconFileFormats_LReconBatches_FileFormatId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReconBatches_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReconBatches_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RSysCat_LReconBucket_SysCatId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LReconFileFormats_LReconColumnMapping_FileFormatId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RSysCat_LReconFileFormats_SysCatId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LReferenceTypes_LReferences_ReferencyTypeId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LReferences_WFRequesterRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferences_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferences_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferences_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferences_WFRequesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferenes_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferenes_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferenceTypes_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LReferenceTypes_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRequests_LScenarioDemand_RequestId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LRequests_WFRequesterRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LRequests_WFReauesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RRequestSystems_LRequests_SystemId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LScenarioDemand_WFRequesterRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_LSupportingDocuments_CreatedByRoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_MMenuRoles_RoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LRoles_MUserRoles_RoleId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_WFAnalystId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_WFCurrentOwnerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_WFManagerId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LScenarioDemand_WFRequesterId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LSupportingDocuments_CreatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LSupportingDocuments_UpdatedById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_LSupportingDocuments_StepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LUserActivityLog_ActionById" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_LUserActivityLog_ActionForId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_MLUsersGSecurityQuestions_UserId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_LUsers_MUsersRoles_UserId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WActionValidations_MStepParticipantActionValidations_Id" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WStepParticipantActions_MStepParticipantActionValidations_Id" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RProductCategories_RSysCat_CategoryId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RProductSystems_RSysCat_SystemId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_RWorkFlows_WSteps_WorkFlowId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_WStepGridColumns_WStepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_WStepParticipantActions_ShowInStepId" ManuallyRouted="false" />
+        <AssociationConnector Association="RELYDevDbModel.FK_WSteps_WStepParticipants_WStepId" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="RELYDevDbModel.XBatch" Width="1.5" PointX="17.375" PointY="3.75" />
+        <EntityTypeShape EntityType="RELYDevDbModel.XBatchFile" Width="1.5" PointX="17.375" PointY="8.75" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

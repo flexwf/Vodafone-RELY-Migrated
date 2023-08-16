@@ -1,0 +1,490 @@
+﻿@model RELY_APP.ViewModel.RProductSystemsViewModel
+<div id="ErrorMessage"></div>
+<a style="cursor:pointer" onclick="fnShowPopUp();">Create</a>
+<div id="jqxgrid"></div>
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- POP up window code-->
+    <div id="prodSysPopup" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="popupHeaderEdit">
+                        Update Product System
+                    </h4>
+                    <h4 class="modal-title" id="popupHeaderAdd">
+                        Create  Product System
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px">
+                                @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "required" })
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10">
+                                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control focus" } })
+                                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px;margin-top:10px">
+                                @Html.LabelFor(model => model.Description)
+                            </div>
+                            <div class="col-sm-10 col-md-10 col-lg-10" style="margin-top:10px">
+                                @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @*button on Edit pop up*@
+                    <button id="btnedit" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Save</button>
+
+                    @*button on create pop up*@
+                    <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript">
+    $('#prodSysPopup').on('shown.bs.modal', function () {
+        $('.focus').focus();
+    });
+
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache:false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+        $("#btncreate").hide();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").hide();
+        $("input.form-control").val('');  //to referesh modal pop up
+        fnGetProdSystem();
+    });
+
+    //function that calls the modal popup window
+    function fnShowPopUp() {
+        $("#btncreate").show();
+        $("#btnedit").hide();
+        $("#popupHeaderAdd").show();
+        $("#popupHeaderEdit").hide();
+        //$("input.form-control").val('');
+        //$('.text-danger').text(""); /*to clear validation message*/
+        $('#prodSysPopup').modal(); //modal pop up opens
+    }
+    function fnGetProdSystem() {
+        var source = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            id: "Id",
+            url: "/RProductSystems/GetProductSystems"
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+            if (Number(rowdata.Id) != 0 && rowdata.CompanyCode) {
+                return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>&emsp;<a href="#" onclick="Edit(' + rowdata.Id + ')"><i class="fa fa-pencil-square-o" style="color:red;font-size:15px !important;" aria-hidden="true"  title="Edit"></i>';
+            }
+        };
+        $('#jqxgrid').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            filterable: true,
+            sortable: true,
+            altrows: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            selectionmode: 'multiplecellsadvanced',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Name', datafield: 'Name'/*, validateEverPresentRowWidgetValue: validateFunc, cellclassname: cellclass*/
+
+                },
+                {
+                    text: 'Description', datafield: 'Description'/*, filtertype: 'input', cellclassname: cellclass*/
+
+                },
+                {
+                    text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%',
+                    initEverPresentRowWidget: function (datafield, htmlElement) {
+                        var input = htmlElement.find('input');
+                        input.attr('readonly', true);
+                        input.attr('disabled', true);
+                        htmlElement.addClass('jqx-fill-state-disabled');
+                    }
+                }
+            ]
+
+        });
+    }
+
+        $("#btncreate").click(function (event) {
+        $("#frm").validate();
+        if ($('#frm').valid()) {
+            $("#btncreate").show();
+            $("#popupHeaderAdd").show();
+            $("#popupHeaderEdit").hide();
+            $("#btnedit").hide();
+            $.ajax({
+                type: "POST",
+                data: $("#frm").serialize(),
+                cache:false,
+                url: "/RProductSystems/Create",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetProdSystem();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#prodSysPopup").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+        else {
+            event.stopPropagation();
+        }
+    });
+    //this function is called on edit link click to edit the existing local pob
+    function Edit(id) {
+        $("#btncreate").hide();
+        $("#popupHeaderAdd").hide();
+        $("#popupHeaderEdit").show();
+        $("#btnedit").show();
+        $.ajax({
+            type: "Get",
+            cache: false,
+            url: "/RProductSystems/Edit",
+            dataType: "html",
+            data: { id: id },
+            success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('Name').value = obj.Name;
+                document.getElementById('Description').value = obj.Description;
+                document.getElementById('Id').value = obj.Id;
+                $("#prodSysPopup").modal("show");
+                $("#prodSysPopup .modal-content").html(data.html);
+            },
+            error: function (reponse) {
+                console.log(reponse);
+                alert("error");
+            }
+        });
+    }
+
+    function FnDelete(Id) {
+        var r = confirm("Are you sure to delete the selected RLocalPOB Type?");
+        if (r == false) {
+            return;
+        }
+        else {
+            $.ajax({
+                data: { Id: Id },
+                cache:false,
+                url: '@Url.Action("Delete", "RProductSystems")',
+                traditional: true,
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        }
+                        else {
+                            alert(data.PopupMessage);
+                        }
+                        fnGetProdSystem();
+                    }
+                    else {
+                        //Any unhanded error has been caught
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");  //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+     //This function is use to save the edited data
+     $("#btnedit").click(function (event) {
+         $("#frm").validate();
+         if ($('#frm').valid()) {
+              var id =  document.getElementById('Id').value;
+              $.ajax({
+                type: "POST",
+                data: $("#frm").serialize() + "&id=" + id,
+                cache:false,
+                url: '@Url.Action("Update", "RProductSystems")',
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            fnGetProdSystem();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#prodSysPopup").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+              });
+         }
+         else {
+             event.stopPropagation();
+         }
+     });
+
+
+   /*-------------------------------------------- Below code is commented by Rakhi on 30 july 2018--------------------------------------------------------*/
+
+        @*function Update() {
+            var id = document.getElementById('Id').value;
+            $.ajax({
+                type: "POST",
+                data: $("#frm").serialize() + "&id=" + id,
+                url: '@Url.Action("Update", "RProductSystems")',
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        if (data.ErrorMessage == "Entity of type RProductSystem in state Added has the following validation errors:- Property: Name, Error: The Name field is required.") {
+                            alert("The Name field is required");
+                        }
+                        else {
+                            alert(data.ErrorMessage);
+                        }
+                        $("#prodSysPopup").modal({ "backdrop": "static" });
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+            fnGetProdSystem();
+        } *@
+    @*function Create() {
+         $("#btncreate").show();
+         $("#popupHeaderAdd").show();
+         $("#popupHeaderEdit").hide();
+         $("#btnedit").hide();
+         $.ajax({
+             type: "POST",
+             data: $("#frm").serialize(),
+             url: '@Url.Action("Create", "RProductSystems")',
+             success: function (data) {
+                 //Product System Created Successfully
+                 if (data.PopupMessage) {
+                     if (data.PopupMessage != "") {
+                         alert(data.PopupMessage);
+                         $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                         fnGetProdSystem();
+                     }
+                 }
+                 if (data.ErrorMessage) {
+                     if (data.ErrorMessage == "Entity of type RProductSystem in state Added has the following validation errors:- Property: Name, Error: The Name field is required.") {
+                         alert("The Name field is required");
+                     }
+                     else {
+                         alert(data.ErrorMessage);
+                     }
+                     $("#prodSysPopup").modal({ "backdrop": "static" });
+                 }
+             },
+             error: function (reponse) {
+                 console.log(reponse);
+                 alert("error");
+             }
+         });
+     } *@
+     @*<!-- POP up window code-->
+    <div id="GridModal" class="modal fade" role="dialog">
+        <div class="modal-dialog modal-dialog-style">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="PopupHeaderEDIT">
+                        Update Product System
+                    </h4>
+                    <h4 class="modal-title" id="PopupHeaderADD">
+                        Add Product System
+                    </h4>
+                </div>
+                @Html.HiddenFor(model => model.Id)
+                <div class="modal-body modal-body-style">
+                    <div class="col-md-8 col-lg-8 col-sm-8">
+                        @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "labelstyle col-md-2 col-lg-2 rely-labels" })
+                        <div class="col-md-8 col-lg-8">
+                            @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control " } })
+                            @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="col-md-8 col-lg-8 col-sm-8">
+                        @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "labelstyle col-md-2 col-lg-2 rely-labels" })
+                        <div class="col-md-8 col-lg-8">
+                            @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control fieldmargin" } })
+                        </div>
+                    </div>
+                </div>
+                @*<div class="modal-footer">
+                        <input type="submit" class="btn btn-red pull-left" value="Save" data-dismiss="modal" onclick="FnAddProdSystem();">
+                    </div>
+                <div class="modal-footer">
+                    <button id="btnedit" type="submit" class="btn btn-red pull-left" data-dismiss="modal" onclick="Update();">Update</button>
+
+                    <button id="btncreate" type="submit" class="btn btn-red pull-left" data-dismiss="modal" onclick="Save();">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>*@
+
+
+    // ////function to delete unsaved grid row from grid
+    //function FnDeleteGridRow(Id)
+    //{
+    //var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //}
+
+    //
+      //This method is called when User clicks on delete glymph in grid
+    //function FnDelete(Id)
+    //{
+    //    var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    //   $.ajax({
+    //        data: { Id: Id },
+    //                    url: "/RProductSystems/DeleteProductSystems",
+    //                  //  type: "POST",
+    //                    traditional: true,
+    //                    success: function (data) {
+    //                        if (data.ErrorMessage) {
+    //                            alert(data.ErrorMessage);
+    //                        } else {
+    //                            alert("Data Updated successfully");
+
+    //                        }
+    //                        window.location.reload();
+    //                    },
+    //                    error: function (reponse) {
+    //                        //  alert("error : " + reponse);
+    //                    }
+    //                });
+    //}
+
+    //Add Types Function
+    //function FnAddProdSys()
+    //{
+
+    //    var arr = [];
+    //    var rows = $('#jqxgrid').jqxGrid('getrows');
+    //    for (var i = 0; i < rows.length; i++)
+    //    {
+    //        arr[i] = [];
+    //        arr[i][0] = rows[i].Id;
+    //        arr[i][1] = rows[i].Name;
+    //        var desc = '';
+    //        if(rows[i].Description == null || rows[i].Description == 'undefined')
+    //            desc = '';
+    //        else
+    //        desc = rows[i].Description;
+
+    //         arr[i][2] = desc;
+    //    }
+
+    //    $.ajax({
+    //        data: { GridData: arr },
+    //                    url: "/RProductSystems/EditProductSystems",
+    //                    type: "POST",
+    //                   // traditional: true,
+    //                    success: function (data) {
+    //                            if (data.ErrorMessage) {
+    //                                alert(data.ErrorMessage);
+    //                            } else {
+    //                                alert("Data Updated successfully");
+
+    //                            }
+    //                            window.location.reload();
+    //                    },
+    //                    error: function (reponse) {
+    //                        //  alert("error : " + reponse);
+    //                    }
+    //                });
+
+    //}
+    //function to add new product system into grid and same into db.
+@*
+    //   var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+        //    var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+        //      if (Number(rowdata.Id) != 0&&rowdata.CompanyCode) {
+        //      return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>';
+        //      }
+        // else {
+        //      isChanged=true;
+        //return '&emsp;<a href="#" onclick="FnDeleteGridRow(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+        //}
+        // };
+        //var validateFunc = function (datafield, value) {
+        //    if (value.length == 0 || value == null || value == '') {
+        //        return { message: "Field is required", result: false };
+        //    }
+        //    return true;
+        //}
+
+        //var cellclass = function (row, datafield, value, rowdata) {
+        //    for (var i = 0; i < editedRows.length; i++) {
+        //        if (editedRows[i].index == row) {
+        //            return "ChangeFontColor";
+        //        }
+        //    }
+        //}
+    *@
+    </script>
+

@@ -1,0 +1,477 @@
+﻿@model RELY_APP.ViewModel.LPasswordPolicyViewModel
+
+
+
+
+<h3>Manage Password Policies</h3>
+
+<a style="cursor:pointer" id="lnkCreate" onclick="fnShowPopUp();">Create</a>
+<div id="jqxLPasswordPolicyGrid"></div>
+
+
+
+
+
+
+
+
+<br>&ensp;<br>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    <!-- POP up window code-->
+    <div id="passwordPolicyPopup" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:90%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Manage Password Policy</h4>
+                </div>
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinLength, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinLength, new { htmlAttributes = new { @class = "form-control focus" } })
+                                    @Html.ValidationMessageFor(model => model.MinLength)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                @*<div class="col-sm-5 col-md-5 col-lg-5" style="padding-left:0px">*@
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinUpperCase, htmlAttributes: new { @class = "required" })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinUpperCase, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinUpperCase)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinLowerCase, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinLowerCase, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinLowerCase)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinNumbers, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinNumbers, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinNumbers)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinSpecialChars, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinSpecialChars, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinSpecialChars)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MinAgeDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MinAgeDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MinAgeDays)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <br />
+
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.MaxAgeDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.MaxAgeDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.MaxAgeDays)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.ReminderDays, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.ReminderDays, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.ReminderDays)
+                                </div>
+                            </div>
+
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.PreventReuse, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.PreventReuse, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.PreventReuse)
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                    <br />
+                    <div class="row">
+                        <div class="container col-md-12">
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.LockoutFailedAttempts, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.LockoutFailedAttempts, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.LockoutFailedAttempts)
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-4 col-lg-4">
+                                <div class="col-sm-6 col-md-6 col-lg-6" style="text-align: right">
+                                    @Html.LabelFor(model => model.LockoutMinutes, htmlAttributes: new { @class = "required", @style = "text-align: right; " })
+                                </div>
+                                <div class="col-sm-6 col-md-6 col-lg-6">
+                                    @Html.EditorFor(model => model.LockoutMinutes, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.LockoutMinutes)
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-red pull-left" value="Save" id="Save" data-dismiss="modal">Save</button>
+                    <button type="button" class="btn btn-red pull-left" value="Update" id="Update" data-dismiss="modal">Update</button>
+                  
+                    <button type="button" class="btn btn-red pull-left" value="Back" data-dismiss="modal" onclick="FnbackButton();">Back</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+<script type="text/javascript">
+        $('#passwordPolicyPopup').on('shown.bs.modal', function () {
+            $('.focus').focus();
+        });
+    $(document).ready(function () {
+
+
+
+        //This Grid will load the PasswordPolicies
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'MinLength', type: 'int' },
+                { name: 'MinUpperCase', type: 'int' },
+                { name: 'MinLowerCase', type: 'int' },
+                { name: 'MinNumbers', type: 'int' },
+                { name: 'MinSpecialChars', type: 'int' },
+                { name: 'MinAgeDays', type: 'int' },
+                { name: 'MaxAgeDays', type: 'int' },
+                { name: 'ReminderDays', type: 'int' },
+                { name: 'PreventReuse', type: 'int' },
+                { name: 'LockoutFailedAttempts', type: 'int' },
+                { name: 'LockoutMinutes', type: 'int' },
+
+            ],
+
+
+            url: "/LPasswordPolicies/GetByCompanyCode"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+
+            //This commented line will give Edit and Delete(both link),but as per requirement Delete link should not visible in front end
+            //return '&emsp;<button type="button" id="EditButton" name="EditButton" onclick="FnEdit()" class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete()" class="GridButton">Delete</button>&emsp;';
+            return '&emsp;<button type="button" id="EditButton" name="EditButton" onclick="FnEdit()" class="GridButton">Edit</button>&emsp;';
+
+        };
+
+
+
+
+        $("#jqxLPasswordPolicyGrid").jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            sortable: true,
+            columnsresize: true,
+            editable: false,
+            pageable: true,
+            pagesize: 40,
+            pagesizeoptions: ['20', '40', '100'],
+
+            enablebrowserselection: true,
+
+            filterable: true,
+
+            ready: function () {
+            },
+
+
+            columns: [
+
+                {
+                    text: 'MinLength', datafield: 'MinLength'
+                },
+                {
+                    text: 'MinUpperCase', datafield: 'MinUpperCase'
+
+                },
+                {
+                    text: 'MinLowerCase', datafield: 'MinLowerCase'
+
+                },
+                {
+                    text: 'MinNumbers', datafield: 'MinNumbers'
+
+                },
+                {
+                    text: 'MinSpecialChars', datafield: 'MinSpecialChars'
+
+                },
+                {
+                    text: 'MinAgeDays', datafield: 'MinAgeDays'
+
+                },
+                {
+                    text: 'MaxAgeDays', datafield: 'MaxAgeDays'
+
+                },
+                {
+                    text: 'ReminderDays', datafield: 'ReminderDays'
+
+                },
+                {
+                    text: 'PreventReuse', datafield: 'PreventReuse'
+
+                },
+                {
+                    text: 'LockoutFailedAttempts', datafield: 'LockoutFailedAttempts'
+
+                },
+                {
+                    text: 'LockoutMinutes', datafield: 'LockoutMinutes'
+
+                },
+                {
+                    text: 'Actions', width: '15%', cellsrenderer: cellsrenderer
+                },
+
+
+            ],
+        });
+
+         var ColumnsForReconGrid ='@ViewBag.PasswordPolicyData';
+
+         if (ColumnsForReconGrid != '')
+        {
+             document.getElementById('lnkCreate').style.display = 'none';
+         }
+
+
+
+    });  //End of document ready
+
+
+    //function that calls the modal popup window
+    function fnShowPopUp() {
+
+        $("#Update").hide();
+        $("input.form-control").val('');
+        $('#passwordPolicyPopup').modal(); //modal pop up opens
+        }
+
+        function FnEdit()
+        {
+            var GridRows = $("#jqxLPasswordPolicyGrid").jqxGrid('getrows');
+
+            $("#Update").show();
+            $("#Save").hide();
+         var selectedrowindex = $('#jqxLPasswordPolicyGrid').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxLPasswordPolicyGrid').jqxGrid('getrowdata', selectedrowindex);
+        var Id = rowdata.Id;
+
+               $.ajax({
+                   type: "Get",
+                   cache: false,
+                  data: { Id: Id },
+                  url: "/LPasswordPolicies/Edit",
+                  dataType: "html",
+              success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('Id').value = obj.Id;
+                document.getElementById('MinLength').value = obj.MinLength;
+                document.getElementById('MinUpperCase').value = obj.MinUpperCase;
+                document.getElementById('MinLowerCase').value = obj.MinLowerCase;
+                document.getElementById('MinNumbers').value = obj.MinNumbers;
+                document.getElementById('MinSpecialChars').value = obj.MinSpecialChars;
+                document.getElementById('MinAgeDays').value = obj.MinAgeDays;
+                document.getElementById('MaxAgeDays').value = obj.MaxAgeDays;
+                document.getElementById('ReminderDays').value = obj.ReminderDays;
+                document.getElementById('PreventReuse').value = obj.PreventReuse;
+                document.getElementById('LockoutFailedAttempts').value = obj.LockoutFailedAttempts;
+                document.getElementById('LockoutMinutes').value = obj.LockoutMinutes;
+
+                $("#passwordPolicyPopup").modal("show");
+                $("#passwordPolicyPopup .modal-content").html(data.html);
+            }
+        })
+        }
+
+
+       // function FnUpdateData() {
+        $("#Update").click(function (event)
+        {
+            $("#frm").validate();
+
+            if ($('#frm').valid())
+            {
+            var id = document.getElementById('Id').value;
+            $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&id=" + id,
+                url: '@Url.Action("PutPasswordPolicy", "LPasswordPolicies")',
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Data Updated successfully.");
+                        window.location.href = "/LPasswordPolicies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+        }
+            else
+            {
+            event.stopPropagation();
+            }
+
+        });
+            
+
+    function FnbackButton() {
+
+        window.location.href = "/LPasswordPolicies/Index";
+
+    }
+
+
+
+    //function FnSaveData()
+       $("#Save").click(function (event)
+        {
+            $("#Update").hide();
+            $("#frm").validate();
+              if ($('#frm').valid()) {
+              var Form = $("#frm");
+
+            $.ajax({
+                type: "POST",
+                data: Form.serialize(),
+                cache: false,
+                url: "/LPasswordPolicies/SaveData",
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Data saved successfully.");
+                        window.location.href = "/LPasswordPolicies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                }
+            });
+        }
+
+
+        else {
+            event.stopPropagation();
+        }
+
+    });
+
+     //As discussion with Vikas Sir, delete link from UI has deleted but code is present here for future use if required
+    function FnDelete()
+    {
+        var r = confirm("Do you want to delete the Password Policy");
+        if (r == false)
+        {
+            return;
+        }
+        else
+        {
+
+            var selectedrowindex = $('#jqxLPasswordPolicyGrid').jqxGrid('selectedrowindex');
+            var rowdata = $('#jqxLPasswordPolicyGrid').jqxGrid('getrowdata', selectedrowindex);
+            var id = rowdata.Id;
+            $.ajax({
+                type: "POST",
+                data: { id: id },
+                cache: false,
+                url: "/LPasswordPolicies/Delete",
+                success: function (data) {
+                    if (data.success) {
+
+                        alert("Data deleted successfully.");
+                        window.location.href = "/LPasswordPolicies/Index";
+
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                }
+            });
+        }
+
+        }
+
+
+
+</script>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqxgridbundle")
+}

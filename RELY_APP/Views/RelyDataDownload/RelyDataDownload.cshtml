@@ -1,0 +1,83 @@
+﻿@model RELY_APP.ViewModel.RelyDataDownload
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Rely Data Download</h2>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    <div style="padding:10px;" id="relydataform">
+        <div class="form-horizontal">
+            @Html.HiddenFor(model => model.Id)
+            <div class="row">
+                <div class="container col-md-12">
+                    <div class="col-sm-2 col-md-2 col-lg-2" style="padding-left:0px">
+                        @Html.LabelFor(model => model.CompanyName, htmlAttributes: new { @class = "required" })
+                    </div>
+                    <div id="drpdown" class="col-sm-4 col-md-4 col-lg-4">
+                        @Html.DropDownListFor(model => model.CompanyName, null, "-- Please choose: --", new { @class = "form-control", @style = "text-align: left;", @onchange = "fnGetCompanyId();" })
+                        @Html.ValidationMessageFor(model => model.CompanyName, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div id="drpdownTxt" class="col-sm-4 col-md-4 col-lg-4">
+                        
+                    </div>
+
+                    <div class="col-sm-6 col-md-6 col-lg-6">
+                        <input type="button" class="btn btn-red" value="Download Data Dump" onclick="GenerateRelyDataDump();" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@*<div id="loadertext" class="text">loading...It may take some time</div>*@
+<div id="loadertext" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog" style="width:23%;">
+        <div class="modal-content">
+            <div class="modal-body">
+                Processing......It may take some time
+                <input type="button" class="btn btn-red" value="OK" data-dismiss="modal" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+<script type="text/javascript">
+    var CurrentRole = '@HttpContext.Current.Session["CurrentRoleName"]'
+
+
+    var company = '@HttpContext.Current.Session["CompanyName"]'
+    var companyid; //this variable store id of the selected company Name from dropdown
+
+    //alert(company);
+    if (CurrentRole == 'Admin') {
+        $("#drpdown").hide();
+        $("#drpdownTxt").html(company).show();
+       // companyid = 1;
+    }
+    else if (CurrentRole == 'L2Admin') {
+
+        $("#drpdownTxt").hide();
+    }
+
+    
+
+    //function to get the value of selected dropdown value and store in variable
+    function fnGetCompanyId() {
+        companyid = document.getElementById('CompanyName').value;
+    }
+
+    //function call on button to generate Rely Data Dump
+    function GenerateRelyDataDump() {
+        $('#loadertext').modal('show');
+        if ($('#frm').valid()) {
+            window.location.href = '/RelyDataDownload/GenerateRelyDataDump?companyid=' + companyid;
+            //window.location.reload();
+        }
+    }
+</script>
+

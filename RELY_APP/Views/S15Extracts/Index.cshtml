@@ -1,0 +1,344 @@
+﻿
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqxgridbundle")
+}
+
+<script src="~/Scripts/jqxgrid.export.js"></script>
+<script src="~/Scripts/jqxcalendar.js"></script>
+<script src="~/Scripts/jqxgrid.js"></script>
+<script src="~/Scripts/jqxgrid.pager.js"></script>
+<script src="~/Scripts/jqxgrid.selection.js"></script>
+<script src="~/Scripts/jqxgrid.sort.js"></script>
+<script src="~/Scripts/jqxgrid.columnsresize.js"></script>
+<script src="~/Scripts/jqxgrid.columnsreorder.js"></script>
+<script src="~/Scripts/jqxgrid.filter.js"></script>
+<script src="~/Scripts/jqxdatetimeinput.js"></script>
+<script src="~/Scripts/jqxdata.js"></script>
+<script src="~/Scripts/jqxscrollbar.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#loadertext').hide();
+        $("#jqxDateTimeInputStartDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+        $("#jqxDateTimeInputEndDate").jqxDateTimeInput({ width: '120px', height: '25px', formatString: "dd/MM/yyyy" });
+        fnS15ExtractsGrid();
+    });
+
+    function DownloadCSVS15Extracts() {
+
+        var selectedStartDate = $("#jqxDateTimeInputStartDate").jqxDateTimeInput('getText');
+        //selectedStartDate=selectedStartDate.replace('/','-');
+        var selectedEndDate = $("#jqxDateTimeInputEndDate").jqxDateTimeInput('getText');
+        //selectedEndDate=selectedEndDate.replace('/','-');
+        var rows = $('#jqxGridS15Extracts').jqxGrid('selectedrowindexes');
+        var selectedRecords = new Array();
+        var selectedFileName = new Array();
+        var ExtractFileNameList = null;
+        var ExtractNameList = null;
+        for (var i = 0; i < rows.length; i++) {
+            var row = $("#jqxGridS15Extracts").jqxGrid('getrowdata', rows[i]);
+            var ExtractFileType = row.ExtractFileType;
+            var Extracts = row.Extracts;
+            selectedRecords.push(Extracts + ':' + ExtractFileType);
+
+            ExtractNameList = selectedRecords.join(",");
+            selectedFileName.push(row.FileName);
+            ExtractFileNameList = selectedFileName.join(",");
+        }
+        if (ExtractNameList) {
+            $('#loadertext').modal();
+            window.location.href = '/S15Extracts/DownloadS15ExtractsModel?StartDate=' + selectedStartDate + '&EndDate=' + selectedEndDate + '&ExtractNameList=' + ExtractNameList + '&ExtractFileNameList=' + ExtractFileNameList + '&FileFormat=CSV';
+        }
+        else {
+            alert('Please select extract')
+        }
+
+    }
+
+    function DownloadExcelS15Extracts() {
+
+    
+
+        var selectedStartDate = $("#jqxDateTimeInputStartDate").jqxDateTimeInput('getText');
+        //selectedStartDate=selectedStartDate.replace('/','-');
+        var selectedEndDate = $("#jqxDateTimeInputEndDate").jqxDateTimeInput('getText');
+        //selectedEndDate=selectedEndDate.replace('/','-');
+        var rows = $('#jqxGridS15Extracts').jqxGrid('selectedrowindexes');
+        var selectedRecords = new Array();
+        var selectedFileName = new Array();
+        var ExtractFileNameList = null;
+        var ExtractNameList = null;
+        for (var i = 0; i < rows.length; i++) {
+            var row = $("#jqxGridS15Extracts").jqxGrid('getrowdata', rows[i]);
+            var ExtractFileType = row.ExtractFileType;
+            var Extracts = row.Extracts;
+            selectedRecords.push(Extracts + ':' + ExtractFileType);
+
+            ExtractNameList = selectedRecords.join(",");
+            selectedFileName.push(row.FileName);
+            ExtractFileNameList = selectedFileName.join(",");
+        }
+        if (ExtractNameList) {
+            $('#loadertext').modal();
+            window.location.href = '/S15Extracts/DownloadS15ExtractsModel?StartDate=' + selectedStartDate + '&EndDate=' + selectedEndDate + '&ExtractNameList=' + ExtractNameList + '&ExtractFileNameList=' + ExtractFileNameList + '&FileFormat=Excel';
+        }
+        else {
+            alert('Please select extract')
+        }
+
+    }
+
+    function GenerateS15Extracts() {
+
+        var selectedStartDate = $("#jqxDateTimeInputStartDate").jqxDateTimeInput('getText');
+
+        var selectedEndDate = $("#jqxDateTimeInputEndDate").jqxDateTimeInput('getText');
+        var SelectedRows = $('#jqxGridS15Extracts').jqxGrid('selectedrowindexes');
+        if (SelectedRows.length > 0)
+        {
+            alert('Although you selected few Extracts but according to process,it will generate all Extracts which are displayed in following list');
+        }
+       // This will get all rows in case of Generate because in case of Generate we want the abstract of all Files
+        var rows = $('#jqxGridS15Extracts').jqxGrid('getrows');
+        var selectedRecords = new Array();
+        var selectedFileName = new Array();
+        var ExtractFileNameList = null;
+        var ExtractNameList = null;
+        for (var i = 0; i < rows.length; i++) {
+            //var row = $("#jqxGridS15Extracts").jqxGrid('getrowdata', rows[i]);
+            var row = rows[i];
+            var ExtractFileType = row.ExtractFileType;
+            var Extracts = row.Extracts;
+            selectedRecords.push(Extracts + ':' + ExtractFileType);
+            //selectedRecords.push(row.Extracts);
+            ExtractNameList = selectedRecords.join(",");
+            selectedFileName.push(row.FileName);
+            ExtractFileNameList = selectedFileName.join(",");
+        }
+        if (ExtractNameList) {
+        
+            $('#loadertext').modal();
+            $.ajax({
+                data: { StartDate: selectedStartDate, EndDate: selectedEndDate, ExtractNameList: ExtractNameList, ExtractFileNameList: ExtractFileNameList },
+                cache: false,
+                url: "/S15Extracts/ExportToExcelS15ExtractsModel",
+                //dataType: "json",
+                type: "POST",
+                success: function (data) {
+
+                    $('#loadertext').hide();
+                    alert('Data was exported to the S15 Folder');
+                    window.location.reload();
+                },
+                error: function (reponse) {
+
+                    //alert();
+                    alert("error : " + reponse);
+                }
+            });
+        }
+        else {
+            alert('Please select extract')
+        }
+        //alert(ExtractNameList);
+        //window.location.href='/GGlobalPOB/DownloadTemplate';
+
+    }
+
+    
+
+    function fnS15ExtractsGrid() {
+        @*var data = @Html.Raw(Json.Encode(Refdata));
+
+
+
+        var Extracts = new Array();
+        var FileName = new Array();
+        Extracts.push({ name: 'Product Master Data', type: 'string' });
+        FileName.push({ name: 'PRODUCT_MASTER_DATA', type: 'string' });
+
+        Extracts.push({ name: 'Product Pob Mapping', type: 'string' });
+        FileName.push({ name: 'PRODUCT_POB_MAPPING', type: 'string' });
+
+        Extracts.push({ name: 'Local POB Definition', type: 'string' });
+        FileName.push({ name: 'LOCAL_POB_DEFINITION', type: 'string' });
+
+        Extracts.push({ name: 'Pob Copa Mapping', type: 'string' });
+        FileName.push({ name: 'POB_COPA_MAPPING', type: 'string' });
+
+        Extracts.push({ name: 'Copa Dimension', type: 'string' });
+        FileName.push({ name: 'COPA_DIMENSION', type: 'string' });
+
+        Extracts.push({ name: 'Local Global Usecase Mapping', type: 'string' });
+        FileName.push({ name: 'LOCAL_GLOBAL_USECASE_MAPPING', type: 'string' });
+
+        Extracts.push({ name: 'Global POB Definition', type: 'string' });
+        FileName.push({ name: 'GLOBAL_POB_DEFINITION', type: 'string' });
+
+        Extracts.push({ name: 'SSP Dimension', type: 'string' });
+        FileName.push({ name: 'SSP_DIMENSION', type: 'string' });
+
+        Extracts.push({ name: 'Accounting Scenario Product', type: 'string' });
+        FileName.push({ name: 'ACCOUNTING_SCENARIO_PRODUCT', type: 'string' });
+
+        Extracts.push({ name: 'Accounting Scenario List', type: 'string' });
+        FileName.push({ name: 'ACCOUNTING_SCENARIO_LIST', type: 'string' });
+
+        Extracts.push({ name: 'Life Cycle Events', type: 'string' });
+        FileName.push({ name: 'LIFE_CYCLE_EVENTS', type: 'string' });
+
+
+        for (var i = 0; i < data.length; ++i) {
+            alert(data[i].RefDataTypeName);
+            Extracts.push({ name: data[i].RefDataTypeName, type: 'string' });
+            FileName.push({ name: data[i].ExtractFileName, type: 'string' });
+        }
+
+        var ExtractsList = [];
+
+
+        for (j = 0; j < Extracts.length; ++j)
+        {
+            ExtractsList[j] = [];
+                ExtractsList[j][0] = Extracts[j];
+
+                ExtractsList[j][1] = FileName[j];
+
+
+        }*@
+
+        //var ExtractsList = [
+        //    { Extracts: "Product Master Data", FileName: "PRODUCT_MASTER_DATA" },
+        //    // { Extracts: "Contract Duration", FileName: "ESTIMATED_CONTRACT_DURATION" },
+        //    //{ Extracts: "Base Price Amount" },
+        //    { Extracts: "Product Pob Mapping", FileName: "PRODUCT_POB_MAPPING" },
+        //    { Extracts: "Local POB Definition", FileName: "LOCAL_POB_DEFINATION" },
+        //    { Extracts: "Pob Copa Mapping", FileName: "POB_COPA_MAPPING" },
+        //    { Extracts: "Copa Dimension", FileName: "COPA_DIMENSION" },
+        //    // { Extracts: "Local POB Use Case", FileName: "LOCAL_POB_USE_CASE" },
+        //    { Extracts: "Local Global Usecase Mapping", FileName: "LOCAL_GLOBAL_USECASE_MAPPING" },
+        //    { Extracts: "Global POB Definition", FileName: "GLOBAL_POB_DEFINITION" },
+        //    { Extracts: "SSP Dimension", FileName: "SSP_DIMENSION" },
+        //    //{ Extracts: "Fee Dimension"},
+        //    //{ Extracts: "Fee Type Dimension"},
+        //    // { Extracts: "Financing Rates", FileName: "FINANCING_RATES"},
+        //    // { Extracts: "Discounts", FileName: "DISCOUNTS" },
+        //    //{ Extracts: "Cancelation Reason Mapping", FileName: "CANCELLATION_REASON_MAPPING" },
+        //    // { Extracts: "Manual Charges", FileName: "MANUAL_CHARGES"},
+        //    //{ Extracts: "Credit Notes"},
+        //    //{ Extracts: "Terif Stuff"},
+        //    { Extracts: "Accounting Scenario Product", FileName: "ACCOUNTING_SCENARIO_PRODUCT" },
+        //    { Extracts: "Accounting Scenario List", FileName: "ACCOUNTING_SCENARIO_LIST" },
+        //    { Extracts: "Life Cycle Events", FileName: "LIFE_CYCLE_EVENTS" }
+        //];
+
+
+
+        var sourceS15Extracts = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Extracts', type: 'string' },
+                { name: 'FileName', type: 'string' },
+                { name: 'ExtractFileType', type: 'string' }
+
+            ],
+            url: "/S15Extracts/GetS15GridData"
+           // localdata: ExtractsList,
+        };
+
+        var dataAdapterS15Extracts = new $.jqx.dataAdapter(sourceS15Extracts);
+        $("#jqxGridS15Extracts").jqxGrid({
+            source: dataAdapterS15Extracts,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            selectionmode: 'checkbox',
+            showstatusbar: false,
+            pagesizeoptions: ['50', '100', '200', '500', '1000'],
+            ready: function () {
+            },
+            columns: [
+
+                { text: 'Extracts', datafield: 'Extracts' }
+            ]
+
+        });
+    }
+
+
+
+</script>
+<div class="col-md-12 col-lg-12">
+    <div class="boxes">
+        <div class="col-md-12 col-lg-12 rely-labels">
+            <div class="col-md-5 col-lg-5" style="display:none;">
+                <div class="col-md-4 col-lg-4">
+                    Date Range:
+                </div>
+                <div id='jqxDateTimeInputStartDate'></div>
+
+            </div>
+            <div class="col-md-5 col-lg-5" style="display:none;">
+                <div class="col-md-2 col-lg-2">
+                    To:
+                </div>
+                <div id='jqxDateTimeInputEndDate'></div>
+
+            </div>
+            <div class="col-md-offset-1 pull-right" style="padding-right:0px;">
+
+                <input type="button" class="btn btn-red" value="Export to S15" onclick="GenerateS15Extracts();" />&ensp;
+                <input type="button" class="btn btn-red" value="CSV Download" onclick="DownloadCSVS15Extracts();" />
+                <input type="button" class="btn btn-red" value="Excel Download" onclick="DownloadExcelS15Extracts();" />
+            </div>
+        </div>
+        <br />
+        <div id="jqxGridS15Extracts"></div>
+
+
+    </div>
+
+</div>
+
+
+
+
+    <div id="loadertext" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:20%;">
+            <div class="modal-content">
+                <div class="modal-body">
+                    Processing....It may take some time to download requested file. Once downloaded, click anyware on the screen to continue.
+                    @*<input type="button" class="btn btn-red" value="OK" data-dismiss="modal" />*@
+                </div>
+                
+            </div>
+
+
+        </div>
+    </div>
+
+
+    @*@using (Html.BeginForm("ExportToExcelGlobalPOB", "S15Exports", FormMethod.Post))
+    {
+    <input type="submit" value="S15_GlobalPOB" />
+
+    }*@
+    <br />
+
+
+    @*@using (Html.BeginForm("ExportToExcelGCopaDimension", "S15Exports", FormMethod.Post))
+    {
+    <input type="submit" value="S15_GCopaDimension" />
+    }*@
+

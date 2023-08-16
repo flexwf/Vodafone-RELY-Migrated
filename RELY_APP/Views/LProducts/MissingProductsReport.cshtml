@@ -1,0 +1,89 @@
+﻿
+
+<script>
+    $(document).ready(function () {
+
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'ProductCode', type: 'string' },
+                { name: 'SysCat', type: 'string' },
+                { name: 'A001', type: 'string' },
+                { name: 'A002', type: 'string' },
+                { name: 'A003', type: 'string' },
+                { name: 'A004', type: 'string' },
+                { name: 'A005', type: 'string' },
+                { name: 'A006', type: 'string' },
+                { name: 'A007', type: 'string' }, { name: 'A008', type: 'string' },
+                { name: 'A009', type: 'string' }, { name: 'A010', type: 'string' },
+            ],
+            url: "/LProducts/GetMissingProducts"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+        $("#jqxGrid").jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            //height: 250,
+            autoheight:true,
+            sortable: true,
+            columnsresize: true,
+            editable: false,
+            pageable: true,
+            pagesize: 10,
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+            enablebrowserselection: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            ready: function () {
+            },
+            columns: [
+                {
+                    text: 'ProductCode', datafield: 'ProductCode'
+                },
+                {
+                    text: 'SysCat', datafield: 'SysCat'
+                },
+                {
+                    text: 'A001', datafield: 'A001'
+                }, {
+                    text: 'A002', datafield: 'A002'
+                },
+                {
+                    text: 'A003', datafield: 'A003'
+                },
+                {
+                    text: 'A004', datafield: 'A004'
+                },
+                {
+                    text: 'A005', datafield: 'A005'
+                },
+                {
+                    text: 'A006', datafield: 'A006'
+                },
+                {
+                    text: 'A007', datafield: 'A007'
+                },
+                {
+                    text: 'A008', datafield: 'A008'
+                },
+                {
+                    text: 'A009', datafield: 'A009'
+                },
+                {
+                    text: 'A010', datafield: 'A010'
+                },
+
+             ],
+        });
+
+    }); //End of Document Ready
+    
+</script>
+<h4>Missing Products</h4>
+<div id="jqxGrid"></div>
+
+
+

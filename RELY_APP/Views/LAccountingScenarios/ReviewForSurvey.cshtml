@@ -1,0 +1,702 @@
+﻿@model RELY_APP.ViewModel.LAccountingScenarioViewModel
+@{
+
+    var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+}
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.7/jquery.validate.min.js"></script>
+
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+@*@Scripts.Render("~/bundles/jQuery-File-Upload")*@
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>@*SS added this line to remove error due to version difference in jquery which is not compatible with today's browsers*@
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+
+<script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    //This variable is defined to store value if form has any changes since it has loaded
+     var isChanged = false;
+    var  dataAdapterNature =undefined;
+    var dataAdapterEvent=undefined;
+    var CheckBoxAttributeValues = 'AttributeB01:null|AttributeB02:null|AttributeB03:null|AttributeB04:null|AttributeB05:null|AttributeB06:null|AttributeB07:null|AttributeB08:null|AttributeB09:null|AttributeB10:null';
+    $(document).ready(function () {
+
+     //This ajax call is being made to controller to save the current page url in session which will be the url of back button  in subsequent pages
+        $.ajax({
+            data: { path: window.location.href },
+            url: "/Home/SaveReturnPath",
+            cache:false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+
+
+
+        //Add JqxLoader when form is submitted to disable further clicks
+        $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+        //The below code checks for changes in form controls and pdates the flag
+        $('input,select,textarea').change(function () {
+            isChanged = true;
+        })
+        $('#jqxTabs').jqxTabs({ position: 'top' });
+
+        //generic attributes generation
+        var CompanySpecificArray = @Html.Raw(Json.Encode(CompanySpecificData.OrderBy(p => p.OrdinalPosition)));
+        GenerateCompanySpecificForm(CompanySpecificArray, 'Requests', null);
+
+
+        @*Comments for tabindex*@
+       // FnGetSupportingDocumentList();// called in tb index
+       // FnPopulateGenericAttributes();// called in tb index
+        @*Comments for tabindex*@
+
+    $('#jqxTabs').on('tabclick', function (event) {
+        var pageIndex = event.args.item + 1;
+        switch (pageIndex) {
+            case 1://attributes
+                FnPopulateGenericAttributes();
+                break;
+            case 2://Notes
+
+                break;
+            case 3://comments
+
+                break;
+            case 4://history
+
+                break;
+            case 5://Attached files
+                FnGetSupportingDocumentList();
+
+                break;
+            case 6://Life Cycle Events
+
+                break;
+            default:
+        }
+
+    });
+   // FnGetGridForLifeEvents();
+    if('@Model.Id' !=0 ){
+         fnAuditDetails();
+        document.getElementById("History").style.display='none';
+    }
+     //==================================================
+     var Naturesource = {
+            dataType: "json",
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Value', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            id:'Id',
+            data: {DropdownFor : 'Nature' },
+            url: "/LAccountingScenarios/BindLifecycleEventsDropdown"
+
+    };
+           dataAdapterNature = new $.jqx.dataAdapter(Naturesource,{async:false,autoBind:true})
+
+
+    var Eventsource = {
+            dataType: "json",
+            type: "GET",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Value', type: 'string' },
+                { name: 'Description', type: 'string' }
+            ],
+            id:'Id',
+            data: {DropdownFor : 'Event' },
+            url: "/LAccountingScenarios/BindLifecycleEventsDropdown"
+
+    };
+           dataAdapterEvent = new $.jqx.dataAdapter(Eventsource,{async:false,autoBind:true})
+
+    FnGetGridForLifeEvents();
+     var FormType = '@ViewBag.FormType';
+            $('*', 'form').prop('disabled', true);
+            $('#BackButton').removeAttr('disabled',false);
+            $('#jqxTabs').jqxTabs({ disabled: false });
+            $('#SecondaryFormButtons :button').prop('disabled', false);
+             $('#WFComments').removeAttr('disabled',false);
+        $('#HistoryDownload').removeAttr('disabled', false);
+        $('#EventDownload').removeAttr('disabled',false);
+
+    });//end of document.ready
+
+     @{
+         Html.RenderPartial("_HistoryGridPartial");
+         Html.RenderPartial("_AttachmentGridPartial");
+      }
+
+    function FnExportEventsGrid() {
+        var ASId = @Model.Id;
+        window.location.href = '/LAccountingScenarios/DownloadLifeEventDetails?ASId=' + ASId;
+        //start--------------------------date: 23/06/2018 comment just for making download icon un-use--------------
+
+        //var rows = $("#jqxgridEvents").jqxGrid('getRows');
+        //if (rows == null || rows == 'undefined' || rows.length == 0) {
+        //    alert("Nothing to download");
+        //    return;
+        //}
+        //$("#jqxgridEvents").jqxGrid('exportdata', 'xls', 'jqxgridEvents');
+
+        //end--------------------------date: 23/06/2018 comment just for making download icon un-use--------------
+    }
+
+
+    function FnClickBottomButtons(ActionName, StepParticipantActionId, ActionUrl)
+    {
+        var WorkflowId = '@ViewBag.WorkflowId';
+         var StepId = '@ViewBag.StepId';
+        var TransactionId = '@Model.Id';
+        var GlobalComment = document.getElementById("WFComments").value;
+        FnClickSecondaryButtons(ActionName, WorkflowId, StepId, null, TransactionId, GlobalComment, StepParticipantActionId, ActionUrl);
+
+    }
+            function FnGetGridForLifeEvents(){
+            var sourceHistory = {
+            dataType: "json",
+            dataFields: [
+                { name: 'EventId', type: 'int' },
+                { name: 'EventValue', type: 'string' },
+                { name: 'NatureId', type: 'int' },
+                { name: 'NatureValue', type: 'string' },
+                { name: 'Notes', type: 'string' },
+                { name: 'Ordinal', type: 'int' },
+                {name: 'Id', type: 'int' },
+                { name: 'AccountingScenarioId', type: 'int' }
+            ],
+            id: "Id",
+            data: {ASId:'@Model.Id'},
+            url: "/LAccountingScenarios/GetLifeeventsGrid"
+        };
+     var dataAdapter = new $.jqx.dataAdapter(sourceHistory);
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                        return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Edit</button>';
+        };
+
+                $('#jqxgridEvents').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                    height:250,
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    sortable: true,
+                    keyboardnavigation: false,
+                    enablebrowserselection: false,
+                        showeverpresentrow: false,
+                        everpresentrowposition: "top",
+                        editable: false,
+                        localization: {
+                            addrowstring: "Add",
+                            udpaterowstring: "Update",
+                            deleterowstring: "Delete",
+                            resetrowstring: "Clear",
+                            everpresentrowplaceholder: "Type: "
+                        },
+
+                    pagesize: 200,
+                    pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: [
+                        { text: '#', datafield: 'Ordinal' },
+                        //{ text: 'Event', datafield: 'EventId' },
+                        //{ text: 'Nature', datafield: 'NatureId' },
+
+                                {
+                                text: 'Events', datafield: 'EventValue',  columntype: 'dropdownlist',
+                                  createeditor: function (row, cellvalue, editor) {
+                                      editor.jqxDropDownList({ displayMember: 'Value', valueMember: 'Id', source: dataAdapterEvent });
+                                  },
+
+                                 createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                                       var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                                       inputTag.jqxDropDownList({   source: dataAdapterEvent, displayMember: 'Value', valueMember: 'Id',width:'100%'});
+                                       $(document).on('keydown.Id', function (event) {
+                                           if (event.keyCode == 13) {
+                                               if (event.target === inputTag[0]) {
+                                                   addCallback();
+                                               }
+                                               else if ($(event.target).ischildof(inputTag)) {
+                                                   addCallback();
+                                               }
+                                           }
+                                       });
+                                       return inputTag;
+                                   },
+                                 getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                                       var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                                       if (!selectedItem)
+                                           return "";
+                                       var value = selectedItem.label;
+                                       return value;
+                                   },
+                                 resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                                       htmlElement.jqxDropDownList('clearSelection');
+                                   }
+
+                            },
+                              {
+                                text: 'Nature', datafield: 'NatureValue',  columntype: 'dropdownlist',
+                                  createeditor: function (row, cellvalue, editor) {
+                                      editor.jqxDropDownList({ displayMember: 'Value', valueMember: 'Id', source: dataAdapterNature });
+                                  },
+
+                                 createeverpresentrowwidget: function (datafield, htmlElement, popup, addCallback) {
+                                       var inputTag = $("<div style='border: none;'></div>").appendTo(htmlElement);
+                                       inputTag.jqxDropDownList({   source: dataAdapterNature, displayMember: 'Value', valueMember: 'Id',width:'100%'});
+                                       $(document).on('keydown.Id', function (event) {
+                                           if (event.keyCode == 13) {
+                                               if (event.target === inputTag[0]) {
+                                                   addCallback();
+                                               }
+                                               else if ($(event.target).ischildof(inputTag)) {
+                                                   addCallback();
+                                               }
+                                           }
+                                       });
+                                       return inputTag;
+                                   },
+                                 getEverPresentRowWidgetValue: function (datafield, htmlElement, validate) {
+                                       var selectedItem = htmlElement.jqxDropDownList('getSelectedItem');
+                                       if (!selectedItem)
+                                           return "";
+                                       var value = selectedItem.label;
+                                       return value;
+                                   },
+                                 resetEverPresentRowWidgetValue: function (datafield, htmlElement) {
+                                       htmlElement.jqxDropDownList('clearSelection');
+                                   }
+
+                            },
+                            { text: 'Notes', datafield: 'Notes' }
+        //{ text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+
+                    ]
+                });
+
+            }
+
+            function FnPopulateGenericAttributes()
+            {
+    //These lines add the value to connection date and order date if present in model
+        @if (Model.AttributeD01.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD01.Value.Year', '@Model.AttributeD01.Value.Month'-1, '@Model.AttributeD01.Value.Day')
+            @: $('#AttributeD01').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD02.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD02.Value.Year', '@Model.AttributeD02.Value.Month'-1, '@Model.AttributeD02.Value.Day')
+            @: $('#AttributeD02').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD03.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD03.Value.Year', '@Model.AttributeD03.Value.Month'-1, '@Model.AttributeD03.Value.Day')
+            @: $('#AttributeD03').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD04.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD04.Value.Year', '@Model.AttributeD04.Value.Month'-1, '@Model.AttributeD04.Value.Day')
+            @: $('#AttributeD04').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD05.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD05.Value.Year', '@Model.AttributeD05.Value.Month'-1, '@Model.AttributeD05.Value.Day')
+            @: $('#AttributeD05').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD06.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD06.Value.Year', '@Model.AttributeD06.Value.Month'-1, '@Model.AttributeD06.Value.Day')
+            @: $('#AttributeD06').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD07.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD07.Value.Year', '@Model.AttributeD07.Value.Month'-1, '@Model.AttributeD07.Value.Day')
+            @: $('#AttributeD07').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD08.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD08.Value.Year', '@Model.AttributeD08.Value.Month'-1, '@Model.AttributeD08.Value.Day')
+            @: $('#AttributeD08').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+        @if (Model.AttributeD09.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD09.Value.Year', '@Model.AttributeD09.Value.Month'-1, '@Model.AttributeD09.Value.Day')
+            @: $('#AttributeD09').jqxDateTimeInput('setDate', Connection);
+        }
+/**/
+/**/
+/**/
+/**/
+         @if (Model.AttributeD10.HasValue) {
+            @: var Connection = new Date('@Model.AttributeD10.Value.Year', '@Model.AttributeD10.Value.Month'-1, '@Model.AttributeD10.Value.Day')
+            @: $('#AttributeD10').jqxDateTimeInput('setDate', Connection);
+        }
+
+    @if (! (Model.AttributeM01=="" || Model.AttributeM01 == null)) {
+            @: $('#AttributeM01').val('@Model.AttributeM01');
+    }
+
+        @if (! (Model.AttributeM02=="" || Model.AttributeM02 == null)) {
+            @: $('#AttributeM02').val('@Model.AttributeM02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeM03=="" || Model.AttributeM03 == null)) {
+            @: $('#AttributeM03').val('@Model.AttributeM03');
+        }
+
+
+            //These lines add the value to attributes columns textbox if present in Model
+        @if (! (Model.AttributeC01=="" || Model.AttributeC01 == null)) {
+            @: $('#AttributeC01').val('@Model.AttributeC01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC02=="" || Model.AttributeC02 == null)) {
+            @: $('#AttributeC02').val('@Model.AttributeC02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC03=="" || Model.AttributeC03 == null)) {
+            @: $('#AttributeC03').val('@Model.AttributeC03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC04=="" || Model.AttributeC04 == null)) {
+            @: $('#AttributeC04').val('@Model.AttributeC04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC05=="" || Model.AttributeC05 == null)) {
+            @: $('#AttributeC05').val('@Model.AttributeC05');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC06=="" || Model.AttributeC06 == null)) {
+            @: $('#AttributeC06').val('@Model.AttributeC06');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC07=="" || Model.AttributeC07 == null)) {
+            @: $('#AttributeC07').val('@Model.AttributeC07');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC08=="" || Model.AttributeC08 == null)) {
+            @: $('#AttributeC08').val('@Model.AttributeC08');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC09=="" || Model.AttributeC09 == null)) {
+            @: $('#AttributeC09').val('@Model.AttributeC09');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeC10=="" || Model.AttributeC10 == null)) {
+            @: $('#AttributeC10').val('@Model.AttributeC10');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI01 == 0 || Model.AttributeI01 == null)) {
+            @: $('#AttributeI01').val('@Model.AttributeI01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI02 == 0 || Model.AttributeI02 == null)) {
+            @: $('#AttributeI02').val('@Model.AttributeI02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI03 == 0 || Model.AttributeI03 == null)) {
+            @: $('#AttributeI03').val('@Model.AttributeI03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI04 == 0 || Model.AttributeI04 == null)) {
+            @: $('#AttributeI04').val('@Model.AttributeI04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeI05 == 0 || Model.AttributeI05 == null)) {
+            @: $('#AttributeI05').val('@Model.AttributeI05');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN01 == 0)) {
+            @: $('#AttributeN01').val('@Model.AttributeN01');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN02 == 0)) {
+            @: $('#AttributeN02').val('@Model.AttributeN02');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN03 == 0)) {
+            @: $('#AttributeN03').val('@Model.AttributeN03');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN04 == 0)) {
+            @: $('#AttributeN04').val('@Model.AttributeN04');
+        }
+/**/
+/**/
+        @if (! (Model.AttributeN05 == 0)) {
+            @: $('#AttributeN05').val('@Model.AttributeN05');
+        }
+/**/
+        @if ( Model.AttributeB01 == true) {
+            @: $('#AttributeB01').prop('checked', true);
+        }
+/**/
+         @if ( Model.AttributeB02 == true) {
+            @: $('#AttributeB02').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB03 == true) {
+            @: $('#AttributeB03').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB04 == true) {
+            @: $('#AttributeB04').prop('checked', true);
+        }
+/**/
+        @if ( Model.AttributeB05 == true) {
+            @: $('#AttributeB05').prop('checked', true);
+        }
+
+
+    }
+
+
+</script>
+
+<div id="jqxLoader">
+</div>
+
+@using (Html.BeginForm("Create", "LLocalPOB", FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+        <h4 class="text-danger" id="ValidationMessage"></h4>
+        @Html.HiddenFor(m => m.CompanyCode)
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CreatedById)
+        @Html.HiddenFor(m => m.UpdatedById)
+        @Html.HiddenFor(m => m.CreatedDateTime)
+        @Html.HiddenFor(m => m.UpdatedDateTime)
+        @Html.HiddenFor(m => m.Status)
+        @Html.HiddenFor(m => m.WFOrdinal)
+        @Html.HiddenFor(m => m.WFStatus)
+        @Html.HiddenFor(m => m.WFType)
+        @Html.HiddenFor(m => m.WFRequesterId)
+        @Html.HiddenFor(m => m.WFRequesterRoleId)
+        @Html.HiddenFor(m => m.WFAnalystId)
+        @Html.HiddenFor(m => m.WFManagerId)
+        @Html.HiddenFor(m => m.WFCurrentOwnerId)
+        @Html.Hidden("Comments")
+        @Html.Hidden("FormType")
+        @Html.Hidden("EffectiveStartDate")
+        @Html.Hidden("EffectiveEndDate")
+        @Html.Hidden("WorkFlowId")
+        @Html.Hidden("ProductId")
+        <div id="ErrorMessageDetails"></div>
+        <div class="col-md-11 col-lg-11 col-sm-11">
+            <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+                @Html.LabelFor(model => model.Reference, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels " })
+                <div class="col-md-11 col-lg-11">
+                    @Html.EditorFor(model => model.Reference, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.Reference, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.BusinessAreaId, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.DropDownListFor(model => Model.BusinessAreaId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;" })
+                    @Html.ValidationMessageFor(model => model.BusinessAreaId, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.Dataset, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels " })
+                <div class="col-md-11 col-lg-11">
+                    @Html.EditorFor(model => model.Dataset, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.Dataset, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.ContractType, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.EditorFor(model => model.ContractType, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.ContractType, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.PaymentMethod, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.EditorFor(model => model.PaymentMethod, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.PaymentMethod, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.ProductsIncluded, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.EditorFor(model => model.ProductsIncluded, new { htmlAttributes = new { @class = "form-control input-sm", @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.ProductsIncluded, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.Standards, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.TextAreaFor(model => model.Standards, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                </div>
+
+            </div>
+
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.ScenarioDescription, htmlAttributes: new { @class = " col-md-11 col-lg-11 rely-labels" })
+                <div class="col-md-11 col-lg-11">
+                    @Html.TextAreaFor(model => model.ScenarioDescription, new { @class = "form-control textarea1", @style = "min-height:90px;" })
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4 " style="min-height:80px;">
+                @Html.LabelFor(model => model.Subsidies, htmlAttributes: new { @class = " col-md-4 col-lg-4 rely-labels", @style = "text-align: right; " })
+                <div class="col-md-8 col-lg-8">
+                    @Html.CheckBoxFor(model => model.Subsidies, new { htmlAttributes = new { @style = "text-align: left;" } })
+                    @Html.ValidationMessageFor(model => model.Subsidies, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="col-md-1 col-lg-1" style="padding:0px;">
+
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.close()">Back</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save">Save</button>
+            <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="attach" name="attach">Attach</button>
+            @*<label for="FileUpload" class="CustomFileUpload-SideLayout " style="font-weight:normal; padding:4px;"> Attach </label>*@
+            <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+
+            <div name="SecondaryFormButtons" id="SecondaryFormButtons">
+                @Html.Raw(ViewBag.BottomButtons)
+            </div>
+        </div>
+
+
+        <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+            <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+                <ul class="nav nav-tabs tabs tabs-container-border ">
+                    <li style="margin-left: 30px;">Attributes</li>
+                    <li>Notes</li>
+                    <li>Comments</li>
+                    <li>History</li>
+                    <li>Attached Files</li>
+                    <li>Life Cycle Events </li>
+                </ul>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+                        <br /><br />
+
+                    </div>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    No details for notes in document
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                </div>
+
+                <div class="tab-content" style="padding:10px;">
+                    @*<i class="fa fa-download" aria-hidden="true" title="Download" onclick="FnExportGrid()" style="cursor:pointer;font-size:15px !important;color:red"></i>*@
+                    <div id="jqxgridHistory"></div>
+                    <textarea id="History" name="History" placeholder="No History so far" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+                    <div class="col-lg-1 col-md-1" style="margin-top:10px;padding-left:0px;">
+                        <button type="button" class="btn btn-red-SideLayout btn-cons" id="HistoryDownload" name="HistoryDownload" onclick=" FnExportGrid();">Download</button>
+                    </div>
+                </div>
+                <div class="tab-content" style="padding:10px;">
+                    <div id="jqxgrid"></div>
+                </div>
+
+                <div class="tab-content" style="padding:10px;">
+                    @*<i class="fa fa-download" aria-hidden="true" title="Download" onclick="FnExportEventsGrid()" style="cursor:pointer;font-size:15px !important;color:red"></i>*@
+                    <div id="jqxgridEvents"></div>
+                    <div class="col-lg-1 col-md-1" style="margin-top:10px;padding-left:0px;">
+                        <button type="button" class="btn btn-red-SideLayout btn-cons" id="HistoryDownload" name="HistoryDownload" onclick=" FnExportGrid();">Download</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system for Upload Utility*@
+<div class="col-md-8" id="FileDiv">
+</div>
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

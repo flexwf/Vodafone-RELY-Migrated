@@ -1,0 +1,197 @@
+﻿
+<script>
+    $(document).ready(function () {
+    });
+
+    function GetGridData(){
+        $.ajax({
+            cache: false,
+            url: "/SSPDimensions/GetExistingSspsCount",
+            dataType: "json",
+            type: "GET",
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'int' },
+                        { name: 'SspId', type: 'int' },
+                        { name: 'SspAmount', type: 'string' },
+                        { name: 'EffectiveStartDate', type: 'date' },
+                        { name: 'EffectiveEndDate', type: 'date' },
+                        { name: 'IsSelectable', type: 'string' },
+                    ],
+                    id: "Id",
+                    url: "/SSPDimensions/GetExistingSsps",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGrid').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxGrid').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGrid').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxGrid').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    },
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxGrid").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxGrid").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxGrid').jqxGrid({
+                        source: ParentdataAdapter,
+                        width: '100%',
+                        height: '50%',
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: true,
+                        altrows: true,
+                        pageable: true,
+                        pagesize: 200,
+                        pagesizeoptions: ['50', '100', '200', '500', '1000'],
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        showstatusbar: false,
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return ParentdataAdapter.records;
+                        },
+                        columns: [
+                            { text: 'Ssp Id', datafield: 'SspId' },
+                            { text: 'Amount', datafield: 'SspAmount' },
+                            { text: 'Start Date', datafield: 'EffectiveStartDate', cellsformat: 'dd/MM/yyyy' },
+                            { text: 'End Date', datafield: 'EffectiveEndDate', cellsformat: 'dd/MM/yyyy' },
+                        ]
+                    });
+                }
+                $('#jqxGrid').on('rowselect', function (event) {
+                    // event arguments.
+                    var args = event.args;
+                    // row's bound index.
+                    var rowBoundIndex = args.rowindex;
+                    // row's data. The row's data object or null(when all rows are being selected or unselected with a single action). If you have a datafield called "firstName", to access the row's firstName, use var firstName = rowData.firstName;
+                    var rowData = args.row;
+                    if (rowData.IsSelectable == 'n') {
+                        alert("Please choose the latest SSP row for this SSP Id.");
+                        $('#jqxGrid').jqxGrid('unselectrow', rowBoundIndex);
+                        return;
+                    }
+                });
+               
+            }
+        });
+    }
+    //Load Popup
+    function FnLoadGrid() {
+        GetGridData();
+        $('#SSPModal').modal({ backdrop: 'static', keyboard: false }, 'show'); 
+    }
+
+    function FnChooseSSP() {
+        var item = $('#jqxGrid').jqxGrid('getselectedrowindex');
+        var data = $('#jqxGrid').jqxGrid('getrowdata', item);
+        
+        var IsSelectable = data.IsSelectable;
+        if (IsSelectable == 'n') {
+            alert("Please choose the latest SSP row for this SSP Id.");
+            return;
+        }
+        document.getElementById("SspId").value = data.SspId;
+        
+       
+        ShowSelectedSSPDetails(data.SspId);
+        debugger;
+        var dt = data.EffectiveStartDate;
+        var StartDate = data.EffectiveStartDate;
+        //Start date manipulation and Setting Mininum date for startdate of new version.
+        var year = StartDate.getFullYear();
+        var Month = StartDate.getMonth();
+        var day = StartDate.getDate();
+        $('#SSPDate1').jqxDateTimeInput({ min: new Date(year, Month, day + 1) });
+        $('#SSPDate1').jqxDateTimeInput('setDate', new Date());
+    }
+
+    function ShowSelectedSSPDetails(SelectedSspIdValue) {
+        document.getElementById("SSPGrid").style.display = 'block';
+        var source =
+        {
+            dataType: "json",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'SspId', type: 'int' },
+                { name: 'SspAmount', type: 'string' },
+                { name: 'EffectiveStartDate', type: 'date' },
+                { name: 'EffectiveEndDate', type: 'date' },
+                { name: 'IsSelectable', type: 'string' },
+            ],
+            id: "Id",
+            cache: false,
+            async: false,
+            data: { SelectedSspIdValue: SelectedSspIdValue},
+            url: "/SSPDimensions/GetBySSPId",
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        //Check whether the grid is already defined or not and ready for use.
+        var ready = $("#jqxGridSSPSelected").jqxGrid('ready');
+        //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+        if (typeof ready != 'undefined') {
+            $("#jqxGridSSPSelected").jqxGrid('updatebounddata');
+        }
+        else {
+            $('#jqxGridSSPSelected').jqxGrid({
+            source: dataAdapter,
+            width: '100%',
+            //height: '50%',
+            autoheight: true,
+            theme: 'bootstrap',
+            altrows: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            showstatusbar: false,
+            columns: [
+                { text: 'Ssp Id', datafield: 'SspId' },
+                { text: 'Amount', datafield: 'SspAmount' },
+                { text: 'Start Date', datafield: 'EffectiveStartDate', cellsformat: 'dd/MM/yyyy' },
+                { text: 'End Date', datafield: 'EffectiveEndDate', cellsformat: 'dd/MM/yyyy' },
+            ]
+        });
+        }
+    }
+</script>
+
+<!-- This code displays a popup to get Selected LProducts-->
+<div class="modal fade" id="SSPModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h3>Choose from existing SSPs</h3>
+            </div>
+            <div class="modal-body">
+                <div id="jqxGrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-red pull-left" onclick="FnChooseSSP();" data-dismiss="modal">Choose</button>&ensp;
+                <button type="button" class="btn btn-red pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+

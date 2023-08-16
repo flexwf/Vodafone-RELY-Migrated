@@ -1,0 +1,156 @@
+﻿
+
+
+<script type="text/javascript">
+    var SelectedStatus = '';
+    $(document).ready(function () {
+        //$("#csvExport").jqxButton();
+        //$("#csvExport").click(function () {
+
+        //    var dt = new Date();
+
+        //    // Display the month, day, and year. getMonth() returns a 0-based number.  
+        //    var month = dt.getMonth() + 1;
+        //    var day = dt.getDate();
+        //    var year = dt.getFullYear();
+        //    var currentDate = day + '-' + month + '-' + year;
+        //    $("#jqxgrid").jqxGrid('exportdata', 'csv', 'NewScenarioDemand_' + currentDate);
+        //});
+
+        $("#jqxgrid").bind('bindingcomplete', function () {
+            var localizationobj = {};
+            filterstringcomparisonoperators = ['empty', 'not empty', 'contains', 'contains(match case)',
+                'does not contain', 'does not contain(match case)', 'equal', 'equal(match case)', 'null', 'not null'];
+            filternumericcomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterdatecomparisonoperators = ['equal', 'not equal', 'less than', 'less than or equal', 'greater than', 'greater than or equal', 'null', 'not null'];
+            filterbooleancomparisonoperators = ['equal', 'not equal'];
+            localizationobj.filterstringcomparisonoperators = filterstringcomparisonoperators;
+            localizationobj.filternumericcomparisonoperators = filternumericcomparisonoperators;
+            localizationobj.filterdatecomparisonoperators = filterdatecomparisonoperators;
+            localizationobj.filterbooleancomparisonoperators = filterbooleancomparisonoperators;
+            // apply localization.
+            $("#jqxgrid").jqxGrid('localizestrings', localizationobj);
+        });  
+
+    });
+
+    function fnNewScenarioDemand(Interval, NumberOfBuckets) {
+
+        var sourceNewScenarioDemand = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'Name', type: 'string' },
+                { name: 'Status', type: 'string' },
+                { name: 'CreationDate', type: 'string' },
+                { name: 'StatusDate', type: 'string' },
+                { name: 'Age', type: 'int' },
+                { name: 'DateInterval', type: 'string' },
+                { name: 'SurveyStatus', type: 'string' },
+                { name: 'DemandStatus', type: 'string' },
+                { name: 'DemandCreationDate', type: 'string' },
+                { name: 'DemandStatusDate', type: 'string' },
+                { name: 'ImplementationDate', type: 'date' }
+            ],
+            data: { Interval: Interval, NumberOfBuckets: NumberOfBuckets },
+            url: "/Reports/GetNewScenarioDemand"
+        };
+        var dataAdapterNewScenarioDemand = new $.jqx.dataAdapter(sourceNewScenarioDemand);
+        $("#jqxgrid").jqxGrid({
+            source: dataAdapterNewScenarioDemand,
+            width: '100%',
+            //height: "10%",
+            autoHeight: true,
+            theme: 'bootstrap',
+            sortable: true,
+            enablebrowserselection: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 100,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //selectionmode: 'checkbox',
+            showstatusbar: false,
+            pagesizeoptions: ['50', '100', '200', '500', '1000'],
+            ready: function () {
+            },
+            columns: [
+
+                { text: 'Request ID', datafield: 'Id' },
+                { text: 'Name', datafield: 'Name' },
+                { text: 'Status', datafield: 'Status' },
+                { text: 'CreationDate', datafield: 'CreationDate' },
+                { text: 'StatusDate', datafield: 'StatusDate' },
+                { text: 'Age', datafield: 'Age' },
+                { text: 'DateInterval', datafield: 'DateInterval' },
+                { text: 'SurveyStatus', datafield: 'SurveyStatus' },
+                { text: 'DemandStatus', datafield: 'DemandStatus' },
+                { text: 'DemandCreationDate', datafield: 'DemandCreationDate' },
+                { text: 'DemandStatusDate', datafield: 'DemandStatusDate' },
+                { text: 'ImplementationDate', datafield: 'ImplementationDate', cellsformat: "dd-MMM-yyyy" }
+            ]
+        });
+    }
+
+    function fnShowNewScenarioDemand() {
+        //alert('Hello');
+        var txtInterval = $('#txtInterval').val();
+        var txtNumberOfBuckets = $('#txtBuckets').val();
+        if (txtInterval == "") {
+            alert("Please fill Interval");
+            $('#txtInterval').focus();
+            return;
+        }
+        if (txtNumberOfBuckets == "") {
+            alert("Please fill Number of buckets");
+            $('#txtBuckets').focus();
+            return;
+        }
+        $("#divRequestInProgress").show();
+        $("#DownloadExcel").show();
+        fnNewScenarioDemand(txtInterval, txtNumberOfBuckets);
+
+    }
+   
+    function fnDownloadScenarioDemands() {
+        var txtInterval = $('#txtInterval').val();
+        var txtNumberOfBuckets = $('#txtBuckets').val();
+        if (txtInterval == "") {
+            alert("Please fill Interval");
+            $('#txtInterval').focus();
+            return;
+        }
+        if (txtNumberOfBuckets == "") {
+            alert("Please fill Number of buckets");
+            $('#txtBuckets').focus();
+            return;
+        }
+        window.location.href = '/Reports/DownloadScenarioDemands?Interval=' + txtInterval + '&NumberofBuckets=' + txtNumberOfBuckets;
+    }
+</script>
+<div class="col-md-12 col-lg-12">
+    <div class="col-md-8 col-lg-8 boxes">
+        <div class="col-md-4 col-lg-4">
+            <label for="Interval" class="rely-labels col-lg-4 col-md-4">Interval:</label>
+            <input type="text" class="form-control col-lg-2 col-md-2" id="txtInterval" onkeypress="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" onkeyup="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" style="width:50%" />
+        </div>
+        <div class="col-md-4 col-lg-4">
+            <label for="Buckets" class="rely-labels col-lg-5 col-md-5"># Of Buckets:</label>
+            <input type="text" class="form-control col-lg-2 col-md-2" id="txtBuckets" onkeypress="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" onkeyup="if(this.value.match(/\D/)) this.value=this.value.replace(/\D/g,'')" style="width:50%" />
+        </div>
+        <div class="col-md-1 col-lg-1">
+            <input type="button" id="GetDetails" class="btn btn-red" onclick="fnShowNewScenarioDemand();" value="Go" />
+            @*<h5 class="text-danger text-capitalize"><i id="csvExport" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important;"></i></h5>*@
+        </div>
+        <div id="DownloadExcel" class="col-md-1 col-lg-1">
+            <h class="text-danger text-capitalize"><i id="csvExport" onclick="fnDownloadScenarioDemands();" class="fa fa-download" aria-hidden="true" style="cursor:pointer;font-size:15px !important"></i></h>
+            @*<input type="button" id="csvExport" class="btn btn-red" value="Download" />*@
+        </div>
+    </div>
+    <br />
+    <div id="jqxgrid"></div>
+</div>
+

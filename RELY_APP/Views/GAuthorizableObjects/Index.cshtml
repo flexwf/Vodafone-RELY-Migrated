@@ -1,0 +1,239 @@
+﻿@model RELY_APP.ViewModel.GAuthorizableObjectViewModel
+
+<div id="ErrorMessage"></div>
+<div id="jqxgrid">
+</div>
+<br>&ensp;<br>
+<input type="button" class="btn btn-red" value="Save" onclick="FnAddAuthorizableObjects();">
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+
+<script type="text/javascript">
+     var editedRows = new Array();
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        if ('@TempData["Error"]')
+        {
+            alert('@TempData["Error"]')
+        }
+    
+
+        var source = {
+            dataType: "json",
+            dataFields: [
+                { name: 'Id', type: 'int' },
+                { name: 'ControllerName', type: 'string' },
+                { name: 'MethodName', type: 'string' },
+                { name: 'Description', type: 'string' }
+
+            ],
+            id: "Id",
+            url: "/GAuthorizableObjects/GetAuthorizableObjects"
+
+        };
+
+
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+      var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                    var rowdata = $('#jqxgrid').jqxGrid('getrowdata', row);
+                    if (Number(rowdata.Id) != 0) {
+                        return '&emsp;<a href="#" onclick="FnDelete(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i>';
+                    }
+                    else {
+     isChanged=true;
+                        return '&emsp;<a href="#" onclick="FnDeleteGridRow(' + rowdata.Id + ')"> <i class="fa fa-times" aria-hidden="true" style="color:#e60000;font-size:20px !important;" title="Delete"></i> </a>';
+                    }
+                };
+
+                // validation function
+                var validateFunc = function (datafield, value) {
+                    switch (datafield) {
+                        case "LdName":
+                            if (value.length == 0) {
+                                return { message: "Name is required", result: false };
+                            }
+                            return true;
+                        case "Id":
+                            if (value.length > 0) {
+                                return { message: "Cannot Enter value in this field", result: false };
+                            }
+                            return true;
+                    }
+                    return true;
+                }
+
+                var cellclass = function (row, datafield, value, rowdata) {
+                    for (var i = 0; i < editedRows.length; i++) {
+                        if (editedRows[i].index == row) {
+                            return "ChangeFontColor";
+                        }
+                    }
+                }
+
+        $('#jqxgrid').jqxGrid({
+                         source: dataAdapter,
+                        width: "100%",
+                        columnsresize: true,
+                        pageable: true,
+                        pagesize: 200,
+                        filterable: true,
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        sortable: true,
+                        keyboardnavigation: false,
+                        enablebrowserselection: true,
+                        showeverpresentrow: true,
+                        everpresentrowposition: "top",
+                        editable: true,
+                        localization: {
+                            addrowstring: "Add",
+                            udpaterowstring: "Update",
+                            deleterowstring: "Delete",
+                            resetrowstring: "Clear",
+                            everpresentrowplaceholder: "Type: "
+                        },
+                        selectionmode: 'multiplecellsadvanced',
+                        pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+                        columns: [
+                            {
+                                text: 'ControllerName', datafield: 'ControllerName', validateEverPresentRowWidgetValue: validateFunc, cellclassname: cellclass
+
+                            },
+                            {
+                                text: 'MethodName', datafield: 'MethodName', validateEverPresentRowWidgetValue: validateFunc, cellclassname: cellclass
+
+                            },
+                            {
+                                text: 'Description', datafield: 'Description',  cellclassname: cellclass
+
+                            },
+
+                            {
+                                text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%', editable: false,validateEverPresentRowWidgetValue: validateFunc,
+    initEverPresentRowWidget: function (datafield, htmlElement) {
+                          var input = htmlElement.find('input');
+                          input.attr('readonly', true);
+                          input.attr('disabled', true);
+                          htmlElement.addClass('jqx-fill-state-disabled');
+                      }
+    }
+                        ]
+
+        });
+    });
+
+     ////function to delete unsaved grid row from grid
+    function FnDeleteGridRow(Id)
+    {
+    var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+    }
+
+    //
+    debugger;
+      //This method is called when User clicks on delete glymph in grid
+    function FnDelete(Id)
+    {
+        var commit = $("#jqxgrid").jqxGrid('deleterow', Id);
+       $.ajax({
+            data: { Id: Id },
+                        url: "/GAuthorizableObjects/DeleteAuthorizableObjects",
+                       type: "POST",
+                       traditional: true,
+                       cache: false,
+                        success: function (data) {
+                        isChanged=false;
+                            $('#jqxgrid').jqxGrid('updatebounddata');
+                            if (data) {
+                                var ResponseObj = data;
+                                if (ResponseObj.ErrorMessage) {
+                                    document.getElementById('ErrorMessage').innerHTML = ResponseObj.ErrorMessage;
+                                }
+                                else if (ResponseObj.PopupMessage) {
+                                    alert(ResponseObj.PopupMessage)
+                                }
+                                if (ResponseObj.RedirectToUrl) {
+                                    window.location.href = ResponseObj.RedirectToUrl;
+                                }
+
+                            }
+                            else {
+                                //Any unhanded error has been caught
+                                window.location.href = "/Home/Error";
+                            }
+                        },
+                        error: function (reponse) {
+                            //  alert("error : " + reponse);
+                        }
+                    });
+    }
+
+    //Add Types Function
+
+    function FnAddAuthorizableObjects()
+    {
+    debugger;
+        var arr = [];
+        var rows = $('#jqxgrid').jqxGrid('getrows');
+        for (var i = 0; i < rows.length; i++)
+        {
+            arr[i] = [];
+            arr[i][0] = rows[i].Id;
+            arr[i][1] = rows[i].ControllerName;
+            arr[i][2] = rows[i].MethodName;
+            arr[i][3] = rows[i].Description;
+
+        }
+
+        $.ajax({
+            data: { GridData: arr },
+                        url: "/GAuthorizableObjects/EditAuthorizableObjects",
+                        type: "POST",
+                        cache: false,
+                         traditional: true,
+                        success: function (data) {
+                        isChanged=false;
+                            $('#jqxgrid').jqxGrid('updatebounddata');
+                               if(data){
+
+                                   var ResponseObj = data;
+                                //alert(ResponseObj.ErrorMessage);
+                                if (ResponseObj.ErrorMessage) {
+                                   document.getElementById('ErrorMessage').innerHTML = ResponseObj.ErrorMessage;
+                                }
+                                else if (ResponseObj.PopupMessage) {
+                                    alert(ResponseObj.PopupMessage)
+                                }
+                                if (ResponseObj.RedirectToUrl) {
+                                    window.location.href = ResponseObj.RedirectToUrl;
+                                }
+
+                            }
+                            else {
+                                //Any unhanded error has been caught
+                                window.location.href = "/Home/Error";
+                            }
+                        },
+                        error: function (reponse) {
+                            //  alert("error : " + reponse);
+                        }
+                    });
+
+    }
+
+</script>
+
+

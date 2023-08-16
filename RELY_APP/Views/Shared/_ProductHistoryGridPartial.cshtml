@@ -1,0 +1,78 @@
+﻿@*@{
+        int ColumnsCountForHistoryGrid = @ViewBag.ProductHistorycolumnCount;
+    }*@
+
+
+function fnProductHistory(){
+
+    var datafieldsProductHistory =new Array();
+    var columnsProductHistory = new Array();
+    datafieldsProductHistory.push({ name: 'AttributeName', type: 'string' });
+    datafieldsProductHistory.push({ name: 'Details', type: 'string' });
+
+    columnsProductHistory.push({ text: 'Attributes', datafield: 'AttributeName'});
+    columnsProductHistory.push({ text: 'Details', datafield: 'Details'});
+
+    @*var count=Number('@ColumnsCountForHistoryGrid')-2;
+
+    if(count>0)
+    {
+    //for(var i=count;i>=1;--i)
+    for(var i=1; i <= count ;i++)
+    {
+    var colname='Version-' + i;
+    datafieldsProductHistory.push({ name:colname, type: 'string' });
+    columnsProductHistory.push({ text:colname, datafield: colname});
+    }
+    }*@
+
+    var sourceProductHistory = {
+    dataType: "json",
+    cache: false,
+    dataFields: datafieldsProductHistory,
+    data:{ProductId: '@Model.Id'},
+    url: "/LProducts/GetDataForProductHistory"
+    };
+
+    var dataAdapterProductHistory=new $.jqx.dataAdapter(sourceProductHistory);
+    $("#jqxProductHistoryGrid").jqxGrid({
+    source: dataAdapterProductHistory,
+    width: '100%',
+    height: '8%',
+    theme: 'bootstrap',
+    sortable: true,
+    columnsresize: true,
+    columnsreorder: true,
+    altrows: true,
+    pageable: true,
+    pagesize: 200,
+    pagesizeoptions: ['100', '200', '500'],
+    filterable: true,
+    autoshowcolumnsmenubutton:false,//down arrow always visible for filter and sorting,
+    showstatusbar: false,
+    ready: function () {
+    },
+    columns: columnsProductHistory
+
+    });
+
+    }
+
+
+    function FnExportProductHistoryGrid() {
+    @*var rows = $("#jqxProductHistoryGrid").jqxGrid('getRows');
+        if (rows == null || rows == 'undefined' || rows.length == 0) {
+        alert("Nothing to download");
+        return;
+        }
+        $("#jqxProductHistoryGrid").jqxGrid('exportdata', 'xls', 'jqxProductHistoryGrid');
+        }*@
+    ProductId = '@Model.Id'
+    DownloadProductHistoryDetails(ProductId);
+    }
+
+    function DownloadProductHistoryDetails(ProductId) {
+    window.location.href = '/LProducts/DownloadProductHistoryDetails?ProductId=' + ProductId;
+    }
+
+

@@ -1,0 +1,77 @@
+﻿@{
+
+}
+
+
+
+
+
+@*Partial View for Creating Hiostory Grid------Created By Namita Singla*@
+
+
+    function fnAuditDetails()
+{
+    var sourceHistory = {
+    dataType: "json",
+    dataFields: [
+    { name: 'Action', type: 'string' },
+    { name: 'ActionLabel', type: 'string' },
+    { name: 'ActionType', type: 'string' },
+    { name: 'ActionDateTime', type: 'date' },
+    { name: 'EntityName', type: 'string' },
+    { name: 'UserName', type: 'string' },
+    { name: 'UserRole', type: 'string' },
+    { name: 'StepName', type: 'string' },
+    { name: 'Comments', type: 'string' }
+    ],
+    id: "Id",
+    cache: false,
+    data: {EntityType:'@ViewBag.EntityType',EntityId:'@ViewBag.EntityId'},
+    url: "/LAudit/GetDetails"
+    };
+    var dataAdapter = new $.jqx.dataAdapter(sourceHistory);
+
+    $('#jqxgridHistory').jqxGrid({
+    source: dataAdapter,
+    width: '100%',
+    //autoheight: true,
+    height:125, //height is fixed for displaying scrollbar and commenting autoheight
+    //theme: 'bootstrap',
+    sortable: true,
+    columnsresize: true,
+    columnsreorder: true,
+    altrows: true,
+    // pageable: true,
+    editable: false,
+    //pagesize: 200,
+    //pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+    filterable: true,
+    autoshowcolumnsmenubutton:false,//down arrow always visible for filter and sorting
+    // selectionmode: 'checkbox',
+    showstatusbar: false,
+    ready: function () {
+    },
+    columns: [
+    { text: 'Action On', datafield: 'ActionDateTime' ,columntype: 'date', cellsformat: 'dd/MM/yyyy',width:'10%'},
+    { text: 'User', datafield: 'UserName',width:'15%' },
+    { text: 'Role', datafield: 'UserRole' ,width:'15%'},
+    { text: 'Step', datafield: 'StepName' ,width:'15%'},
+    { text: 'Action', datafield: 'ActionLabel' ,width:'15%'},
+    { text: 'Comments', datafield: 'Comments' },
+    ]
+    });
+
+    }
+
+    function FnExportGrid(){
+    @*var rows = $("#jqxgridHistory").jqxGrid('getRows');
+        if (rows == null || rows == 'undefined' || rows.length == 0 ) {
+            alert("Nothing to download");
+            return;
+        }
+             $("#jqxgridHistory").jqxGrid('exportdata', 'xls', 'jqxgridHistory');*@
+
+    var EntityType='@ViewBag.EntityType';
+    var EntityId='@ViewBag.EntityId';
+    window.location.href = '/LAudit/DownloadHistoryDetails?EntityType=' + EntityType + '&EntityId=' +EntityId;
+    }

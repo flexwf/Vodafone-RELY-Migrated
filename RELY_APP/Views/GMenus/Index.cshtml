@@ -1,0 +1,491 @@
+﻿@model RELY_APP.ViewModel.GMenuViewModel
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+<script src="~/Scripts/jqxpanel.js" type="text/javascript"></script>
+<div class="col-md-12 col-lg-12 " style="display:flex;margin-bottom:10px;">
+    @*<div class="col-sm-4 col-md-4 col-lg-4">
+        <div class="col-sm-4 col-md-4 col-lg-4">*@
+    <button id="btnCollapsAll" type="submit" class="btn btn-red pull-left" onclick="fnCollapsAll();">Collapse All</button>&nbsp;
+    @*</div>*@
+    @*<div class="col-sm-4 col-md-4 col-lg-4">*@
+    <button id="btnCollapsAll" type="submit" class="btn btn-red pull-left" onclick="fnExpandAll();">Expand All</button>
+    @*</div>*@
+    @*</div>*@
+</div>
+
+@*Search code here*@
+<div class="col-md-12 col-lg-12 " style="display:flex;margin-bottom:10px;">
+
+    @Html.Label("Menu Name")
+
+    @Html.Editor("SearchMenuName", new { htmlAttributes = new { @class = "form-control", @style = "margin-left: 5px;" } })
+
+    <a href="#" onclick="fnSearchMenu()" style="margin-left:10px;">
+        <i class="fa fa-search" aria-hidden="true" title="zoom to select Product" style="color:#e60000;"></i>
+    </a>
+
+</div>
+
+<div class="container col-md-12" style="margin-top:5px">
+    <div id='jqxTree'></div>
+</div>
+<div id='jqxMenu'>
+    <ul>
+        <li>Add Item Above</li>
+        <li>Add Item Below</li>
+        <li>Remove Item</li>
+        <li>Add Child Item</li>
+        <li>Edit Item</li>
+        <li>Move up</li>
+        <li>Move down</li>
+    </ul>
+</div>
+
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+    <div id="MenuPopUp" class="modal fade" role="dialog">
+        <div class="modal-dialog" style="width:40%">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title" id="popupHeaderEdit" style="color:red;">
+                        Manage Menus
+                    </h4>
+                </div>
+
+                <div class="modal-body">
+                    @Html.HiddenFor(model => model.Id)
+                    @Html.HiddenFor(model => model.OrdinalPosition)
+                    @Html.HiddenFor(model => model.ParentId)
+                    <div class="container col-md-12">
+                        <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px">
+                            @Html.LabelFor(model => model.MenuName, htmlAttributes: new { @class = "required" })
+                        </div>
+
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            @Html.EditorFor(model => model.MenuName, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessageFor(model => model.MenuName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="container col-md-12">
+
+                        <div class="col-sm-4 col-md-4 col-lg-4" style="padding-left:0px;margin-top:10px">
+                            @Html.LabelFor(model => model.MenuURL)
+                        </div>
+
+                        <div class="col-sm-8 col-md-8 col-lg-8" style="margin-top:10px">
+                            @Html.EditorFor(model => model.MenuURL, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessageFor(model => model.MenuURL, "", new { @class = "text-danger" })
+
+                            <div style="color:blue;margin-top:10px;font-size:12px;width:90%">
+                                e.g (/controllerName/MethodName)
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        @*button on Edit pop up*@
+                        <button id="btnSave" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Save</button>
+                        <button id="btnUpdate" type="submit" class="btn btn-red pull-left" data-dismiss="modal">Update</button>
+                    </div>
+
+                </div>
+
+
+
+
+            </div>
+
+        </div>
+    </div>
+}
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+<script type="text/javascript">
+
+    var MenuLabel = null;
+    var MenuId = null;
+    var ParentMenuId = null;
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        $('#btnUpdate').hide();
+        $('#btnSave').show();
+        builddata();
+
+
+
+        var contextMenu = $("#jqxMenu").jqxMenu({ width: '120px', height: '200px', autoOpenPopup: false, mode: 'popup', theme: 'darkblue' });
+
+
+        var clickedItem = null;
+        var attachContextMenu = function () {
+            // open the context menu when the user presses the mouse right button.
+            $("#jqxTree").on('mousedown', function (event) {
+                var target = $(event.target).parents('li:first')[0];
+                var rightClick = isRightClick(event);
+                if (rightClick && target != null) {
+                    $("#jqxTree").jqxTree('selectItem', target);
+                    var scrollTop = $(window).scrollTop();
+                    var scrollLeft = $(window).scrollLeft();
+                    contextMenu.jqxMenu('open', parseInt(event.clientX) + 5 + scrollLeft, parseInt(event.clientY) + 5 + scrollTop);
+                    return false;
+                }
+            });
+        }
+        // We trigger the Context Menu’s ‘itemclick’ event which is raised when the user clicks a menu item
+        attachContextMenu();
+        $("#jqxMenu").on('itemclick', function (event) {
+            var item = $.trim($(event.args).text());
+            var selectedItem = $('#jqxTree').jqxTree('selectedItem');
+            MenuLabel = item;
+            MenuId = selectedItem.id;
+            ParentMenuId = selectedItem.parentId;
+            switch (item) {
+                case "Add Item Above":
+                    if (selectedItem != null) {
+                        $('#MenuPopUp').modal();
+                        //console.log(records);
+                        //var itemToAdd = { source: records };
+                        // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+
+                    }
+                    break;
+                case "Add Item Below":
+                    if (selectedItem != null) {
+                        $('#MenuPopUp').modal();
+                        //console.log(records);
+                        //var itemToAdd = { source: records };
+                        // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+
+                    }
+                    break;
+                case "Add Child Item":
+                    if (selectedItem != null) {
+                        $("input.form-control").val('');
+                        $('.text-danger').text(""); /*to clear validation message*/
+                        $('#MenuPopUp').modal();
+                        //console.log(records);
+                        //var itemToAdd = { source: records };
+                        // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+
+                    }
+                    break;
+                case "Edit Item":
+                    if (selectedItem != null) {
+                        $('#btnSave').hide();
+                        $('#btnUpdate').show();
+                        FnEdit();
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+
+                    }
+                    break;
+                case "Remove Item":
+                    var r = confirm("If the deleted menu contains children, they too will be deleted automatically");
+                    if (r == false) {
+                        return;
+                    }
+                    else {
+                        if (selectedItem != null) {
+                            //fnMenuProcessing();
+                            fnProcessMenuItem();
+                            //console.log(records);
+                            //var itemToAdd = { source: records };
+                            // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                            $('#jqxTree').jqxTree('refresh');
+                            $('#jqxTree').jqxTree('render');
+                        }
+                    }
+                    break;
+                case "Move up":
+                    if (selectedItem != null) {
+                        //fnMenuProcessing();
+                        fnProcessMenuItem();
+                        //console.log(records);
+                        //var itemToAdd = { source: records };
+                        // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+                    }
+                    break;
+                case "Move down":
+                    if (selectedItem != null) {
+                        //fnMenuProcessing();
+                        fnProcessMenuItem();
+                        //console.log(records);
+                        //var itemToAdd = { source: records };
+                        // $('#jqxTree').jqxTree('addTo', itemToAdd, selectedItem);
+                        $('#jqxTree').jqxTree('refresh');
+                        $('#jqxTree').jqxTree('render');
+                    }
+                    break;
+            }
+        });
+        // disable the default browser's context menu.
+        $(document).on('contextmenu', function (e) {
+            if ($(e.target).parents('.jqx-tree').length > 0) {
+                return false;
+            }
+            return true;
+        });
+        // Create an utility function which checks whether the user clicked the mouse’s right button.
+        function isRightClick(event) {
+            var rightclick;
+            if (!event) var event = window.event;
+            if (event.which) rightclick = (event.which == 3);
+            else if (event.button) rightclick = (event.button == 6);
+            return rightclick;
+        }
+
+    });//End of Documet.ready
+
+    var builddata = function () {
+        var source = [];
+        var items = [];
+        $.ajax({
+            url: "/GMenus/GetMenuList",
+            dataType: "json",
+            cache: false,
+            type: "GET",
+            success: function (data) {
+
+                var source =
+                {
+                    datatype: "json",
+                    datafields: [
+                        { name: 'id' },
+                        { name: 'parentid' },
+                        { name: 'text' }
+                    ],
+                    id: 'id',
+                    localdata: data
+                };
+                // create data adapter.
+                var dataAdapter = new $.jqx.dataAdapter(source);
+                // perform Data Binding.
+                dataAdapter.dataBind();
+                records = dataAdapter.getRecordsHierarchy('id', 'parentid', 'items', [{ name: 'text', map: 'label' }]);
+                $('#jqxTree').jqxTree
+                    ({
+                        source: records,
+                        width: '400px',
+                        height: '400px',
+                        //theme: 'darkblue',
+
+
+                    });
+
+            },//End of Success
+        });//End of ajax call
+
+    }
+
+    //function fnMenuProcessing() {
+    $("#btnSave").click(function (event) {
+        if ($('#frm').valid()) {
+            $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&MenuLabel=" + MenuLabel + "&MenuId=" + MenuId + "&ParentMenuId=" + ParentMenuId,
+                url: "/GMenus/ProcessMenuItems",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            window.location.reload();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#MenuPopUp").modal({ "backdrop": "static" });
+                        window.location.reload();
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+
+
+        }
+        else {
+            event.stopPropagation();
+        }
+    });
+
+
+
+    function FnEdit() {
+        
+        var rowdata = $('#jqxTree').jqxTree('selectedItem');
+        var id = rowdata.id;
+
+        $.ajax({
+            type: "Get",
+            cache: false,
+            data: { id: id },
+            url: "/GMenus/GetMenuById",
+            dataType: "html",
+            success: function (data) {
+                var obj = JSON.parse(data);
+                document.getElementById('MenuName').value = obj[0].MenuName;
+                document.getElementById('MenuURL').value = obj[0].MenuURL;
+                document.getElementById('Id').value = obj[0].Id;
+                document.getElementById('OrdinalPosition').value = obj[0].OrdinalPosition;
+                document.getElementById('ParentId').value = obj[0].ParentId;
+                $("#MenuPopUp").modal("show");
+                $("#MenuPopUp .modal-content").html(data.html);
+            }
+        })
+    }
+
+
+
+
+
+
+
+
+    function fnProcessMenuItem() {
+        if ($('#frm').valid()) {
+            $.ajax({
+                type: "POST",
+                cache: false,
+                data: $("#frm").serialize() + "&MenuLabel=" + MenuLabel + "&MenuId=" + MenuId + "&ParentMenuId=" + ParentMenuId,
+                url: "/GMenus/ProcessMenuItems",
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            window.location.reload();
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#MenuPopUp").modal({ "backdrop": "static" });
+                        window.location.reload();
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                }
+            });
+
+
+        }
+
+    }
+
+    function fnSearchMenu() {
+        $('#jqxTree').jqxTree('collapseAll');
+        var items = $('#jqxTree').jqxTree("getItems");
+        var searchedValue = $("#SearchMenuName").val();
+        var status = true;
+        //var val = searchedValue.toLoCase();
+        if (searchedValue == '') {
+            alert('Enter some value to search');
+        }
+        else {
+            for (var i = 0; i < items.length; i++)
+            {
+                var res = (items[i].label.toLowerCase()).match(searchedValue.toString().toLowerCase());
+
+                if (searchedValue.toLowerCase() == (items[i].label).toLowerCase() || res != null) 
+                {
+                    $('#jqxTree').jqxTree('expandItem', items[i].parentElement);
+                    $('#jqxTree').jqxTree('selectItem', items[i]);
+                    status = false;
+                }
+            }
+            if (status) {
+                alert('No match found');
+            }
+        }
+
+    }
+
+    function fnCollapsAll() {
+        $('#jqxTree').jqxTree('collapseAll');
+    }
+
+
+    function fnExpandAll() {
+        $('#jqxTree').jqxTree('expandAll');
+    }
+
+     $("#btnUpdate").click(function (event) {
+         $("#frm").validate();
+         if ($('#frm').valid()) {
+             var id = document.getElementById('Id').value;
+             var OrdinalPosition = document.getElementById('OrdinalPosition').value;
+              $.ajax({
+                type: "POST",
+                cache: false,
+                  //data: $("#frm").serialize() + "&id=" + id + "&ParentMenuId=" + ParentMenuId + "&OrdinalPosition=" + OrdinalPosition,
+                  data: $("#frm").serialize() + "&id=" + id,
+                url: '@Url.Action("Update", "GMenus")',
+                success: function (data) {
+                    if (data.PopupMessage) {
+                        if (data.PopupMessage != "") {
+                            alert(data.PopupMessage);
+                            $('.modal-backdrop').remove(); /*blank screen hides after modal dismiss*/
+                            window.location.reload();
+                           
+                        }
+                    }
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage);
+                        $("#MenuPopUp").modal({ "backdrop": "static" });
+                        window.location.reload();
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");
+                    window.location.reload();
+                }
+              });
+         }
+         else {
+             event.stopPropagation();
+         }
+     });
+
+
+</script>

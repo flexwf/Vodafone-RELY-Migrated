@@ -1,0 +1,35 @@
+﻿@model RELY_APP.ViewModel.LReferenceDataViewModel
+
+@{
+    Layout = null;
+}
+
+
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxtabs.js"></script>
+@*<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>*@@*//this script will contain methods common in different views*@
+
+@*<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.9/jquery-ui.js" type="text/javascript"></script>
+
+    <link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.9/themes/blitzer/jquery-ui.css"
+          rel="stylesheet" type="text/css" />*@
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+
+<
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="col-md-5 col-lg-5">
+        <div class="col-md-12 col-lg-12" style="min-height:40px;">
+            @Html.LabelFor(model => model.AttributeC01, htmlAttributes: new { @class = "required col-md-4 col-lg-4 rely-labels ", @style = "text-align: right;" })
+            <div class="col-md-8 col-lg-8">
+                @Html.EditorFor(model => model.AttributeC01, new { htmlAttributes = new { @class = " required form-control ", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.AttributeC01, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        }
+    </div>

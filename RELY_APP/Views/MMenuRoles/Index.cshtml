@@ -1,0 +1,210 @@
+﻿@{
+    var ColumnsMenuRole = (List<RELY_APP.ViewModel.LRoleViewModel>)ViewBag.MenuRolesColumn;
+}
+
+
+<script>
+    var Args = [];
+    
+    $(document).ready(function () {
+
+
+        fnMenuRole();
+        var count = 0;
+
+    //This function will call on every click og check boxes in #jqxMenuRoleGrid
+        $("#jqxMenuRoleGrid").on('cellendedit', function (event) {
+            var args = event.args;
+            var columnDataField = args.datafield;
+            var cellValue = args.value;
+            var oldValue = args.oldvalue;
+            var rowIndex = args.rowindex;
+
+            var rowData = args.row;
+            var MenuRoleId = rowData.MenuRoleId;
+
+            //This if block will check if the user revoking any rights then it will give warning for revoking rights of child Menus too
+            if (cellValue == false)
+            {
+                var r = confirm("If the revoked menu contains children, they too will be revoked automatically");
+                if (r == false)
+                {
+                   
+                   //In case of cancel,it will persist the old value in cellValue
+                    $("#jqxMenuRoleGrid").jqxGrid('setcellvalue', rowIndex, columnDataField, oldValue);
+                    return;
+                }
+                
+            }
+           
+          
+
+            Args[count] = [];
+            Args[count][0] = MenuRoleId;
+            Args[count][1] = columnDataField;
+            Args[count][2] = cellValue;
+            Args[count][3] = oldValue;
+
+             count++;
+            
+        });
+
+
+
+    }); //End of Document Ready
+
+
+
+
+    function fnMenuRole() {
+
+
+        var tooltiprenderer = function (element) {
+            $(element).jqxTooltip({ position: 'mouse', content: $(element).text() });
+        }
+
+        var datafieldsMenuRole = new Array();
+        var columnsMenuRole = new Array();
+        datafieldsMenuRole.push({ name: 'MenuName', type: 'string' });
+        datafieldsMenuRole.push({ name: 'MenuRoleId', type: 'int' });
+        columnsMenuRole.push({ text: 'MenuName', datafield: 'MenuName', width: '20%', rendered: tooltiprenderer });
+
+
+
+        var data = @Html.Raw(Json.Encode(ColumnsMenuRole));
+        for (var i = 0; i < data.length; ++i) {
+            
+            datafieldsMenuRole.push({ name: data[i].RoleName, type: 'string' });
+            columnsMenuRole.push({ text: data[i].RoleName, datafield: data[i].RoleName, width: '7%', columntype: 'checkbox', rendered: tooltiprenderer });
+        }
+
+        var source = {
+            dataType: "json",
+            dataFields: datafieldsMenuRole,
+            cache: false,
+            url: "/MMenuRoles/GetDataForMenuRoleMapping"
+        };
+
+        var dataAdapterAORole = new $.jqx.dataAdapter(source);
+
+        $("#jqxMenuRoleGrid").jqxGrid({
+            source: dataAdapterAORole,
+            width: '98%',
+            height: '8%',
+            theme: 'bootstrap',
+            sortable: true,
+            columnsautoresize: true,
+            enabletooltips: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: true,
+            pagesize: 200,
+            editable: true,
+            editmode: 'click',
+            pagesizeoptions: ['100', '200', '500'],
+            keyboardnavigation: true,
+            // virtualmode: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            // selectionmode: 'checkbox',
+            //enablebrowserselection: true,
+            showstatusbar: false,
+            ready: function () {
+            },
+            columns: columnsMenuRole
+
+
+
+        });
+    }
+
+    function FnSaveData()
+        {
+        if (Args.length > 0) {
+            $.ajax({
+                //data: "Args=" + Args ,
+                data: { Args: Args },
+                cache: false,
+                url: "/MMenuRoles/SaveDataForMenuRole",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data.ErrorMessage) {
+                        alert(data.ErrorMessage)
+                        window.location.href = "/MMenuRoles/Index";
+                    } else {
+
+                        alert('Data Saved Successfully.');
+                        window.location.href = "/MMenuRoles/Index";
+                    }
+                },
+
+
+
+
+            });
+        }
+        else
+        {
+            alert('Please make some changes before clicking on Save button.');
+        }
+    }
+
+    function FnbackButton()
+    {
+
+            //DialogResult dr = MessageBox.Show("Are you want to quit without saving the data?","Authorized Object", MessageBoxButtons.YesNo);
+            //switch (dr) {
+            //    case DialogResult.Yes:
+            //        window.location.href = "/MAuthorizableObjectRole/Index";
+            //        break;
+            //    case DialogResult.No:
+            //        // this.close();
+            //        dr.close();
+            //         }
+
+        if (Args.length > 0) {
+            if (confirm("You are leaving the page without saving the data"))
+            {
+                window.location.href = "/MMenuRoles/Index";
+            }
+
+            else
+            {
+                window.location.href = "/MMenuRoles/Index";
+            }
+        }
+        else
+
+        {
+            window.location.href = "/MMenuRoles/Index";
+
+           // window.location.href = "/Home/DecideDashboard";
+        }
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+<div id="jqxMenuRoleGrid"></div>
+
+<div class="col-md-12 col-lg-12" style="padding:0px;">
+    @*@*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" width="10" id="BackButton" name="BackButton" onclick="FnbackButton();">Back</button>*@
+    @*<button type="button" class="btn btn-borderRed-SideLayout btn-cons" width="10" id="save" name="save" onclick=" FnSaveData();">Save</button>*@
+    <br>&ensp;<br>
+    <button type="button" class="btn btn-red btn-cons" id="bck" onclick="FnbackButton();">Back &nbsp;</button>
+    <button type="button" class="btn btn-red btn-cons" id="btnSubmit" name="save" onclick="FnSaveData();"><b>Save&nbsp;</b></button>
+</div>
+
+

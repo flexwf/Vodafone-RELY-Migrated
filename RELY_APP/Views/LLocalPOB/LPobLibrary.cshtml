@@ -1,0 +1,237 @@
+﻿<script type="text/javascript">
+    $(document).ready(function () {
+        $.ajax({            
+            url: "/LLocalPOB/GetAllLPobsCounts",           
+            dataType: "json",
+            type: "POST",
+            cache: false,
+            success: function (counts) {
+                var source = {
+                    dataType: "json",
+                    type: "GET",
+                    dataFields: [
+                        { name: 'aa.Id', type: 'int' },
+                        { name: 'aa.Name', type: 'string' },
+                        { name: 'aa.Description', type: 'string' },
+                        { name: 'lp.Name', type: 'string' },
+                        { name: 'aa.Version', type: 'int' },
+                        { name: 'aa.WFStatus', type: 'string' },
+                        { name: 'gp1.Name', type: 'string' },
+                        //{ name: 'gp2.Name', type: 'string' },
+                        { name: 'gc1.Description', type: 'string' },
+                        //{ name: 'gc2.Description', type: 'string' },
+                        //{ name: 'gc3.Description', type: 'string' },
+                        //{ name: 'gc4.Description', type: 'string' }
+                    ],
+                    url: "/LLocalPOB/GetAllLPobsDetails",
+                    filter: function () {
+                        $("#jqxGrid").jqxGrid('updatebounddata', 'filter');
+                        $("#jqxGrid").jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        $("#jqxGrid").jqxGrid('updatebounddata', 'sort');
+                        $("#jqxGrid").jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        source.totalrecords = counts;
+                    }
+                };
+                var dataAdapter = new $.jqx.dataAdapter(source)
+                var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                    return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnReview(); " class="GridButton">Review</button>';
+                };
+                $("#jqxGrid").jqxGrid({
+                    source: dataAdapter,
+                    width: "100%",
+                    //height: 250,
+                    autoheight: true,
+                    sortable: true,
+                    columnsresize: true,
+                    editable: false,
+                    pageable: true,
+                    pagesize: 10,
+                    pagesizeoptions: ['10', '50', '100', '200', '500'],
+                    enablebrowserselection: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    virtualmode: true,
+                    rendergridrows: function () {
+                        return dataAdapter.records;
+                    },
+
+                    columns: [
+                        {
+                            text: 'Name', datafield: 'aa.Name', width: '15%'
+                        },
+                        {
+                            text: 'Pob Type', datafield: 'lp.Name', width: '10%'
+                        },
+                        {
+                            text: 'Version', datafield: 'aa.Version', width: '5%'
+                        },
+                        {
+                            text: 'GlobalPOB', datafield: 'gp1.Name', width: '20%'
+                        },
+                        {
+                            text: 'Copa Dimension', datafield: 'gc1.Description', width: '20%'
+                        },
+                        //{
+                        //    text: 'COPA5', datafield: 'gc2.Description', width: '10%'
+                        //},
+                        //{
+                        //    text: 'Retention', datafield: 'gp2.Name', width: '10%'
+                        //},
+                        //{
+                        //    text: 'COPA2(Ret.)', datafield: 'gc3.Description', width: '10%'
+                        //},
+                        //{
+                        //    text: 'COPA5(Ret.)', datafield: 'gc4.Description', width: '10%'
+                        //},
+                        {
+                            text: 'Description', datafield: 'aa.Description', width: '10%'
+                        },
+                        {
+                            text: 'Status', datafield: 'aa.WFStatus', width: '10%'
+                        },
+                        { text: 'Actions', datafield: 'aa.Id', cellsrenderer: cellsrenderer, width: '10%' },
+                    ],
+                });
+            },
+            error: function (reponse) {
+
+            }
+        });
+    });
+
+    function FnReview(){
+        var selectedrowindex = $('#jqxGrid').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxGrid').jqxGrid('getrowdata', selectedrowindex);
+        var xx = rowdata["aa.Id"];
+
+         @{
+            System.Web.HttpContext.Current.Session["WorkFlow"] = "LocalPobs";
+         }
+        sessionStorage.setItem("WorkFlow", "LocalPobs");//setting WorkFlow in Session as it will be used in Review Action
+        var  url = '@Url.Action("Review", "LLocalPOB")?Id=' + xx +'&WorkFlowId=' + '0' + '&Source=Request&StepId='+'0' ;
+        window.open(url,'_blank');
+
+    }
+</script>
+<h4>Local POB Library</h4>
+<div id="jqxGrid"></div>
+<div id="Infodiv" style="color: red;font-size:small;">
+    <br />
+    Note : Status column contains <br />
+    1. Parked - Local POBs that are created 'On-the-Fly' from within a Product and that Product has not yet completed the Workflow.<br />
+    2. Saved - Local POBs that are just been created independently (from within Local POB workflow).<br />
+    3. InProgress - Local POBs that are been created independently (from within Local POB workflow) and have progressed within the workflow but not yet completed the workflow.<br />
+    4. Completed - Local POBs that have completed the workflow and are approved/ready.<br />
+</div>
+
+
+@*Comment for the server side paging implementation*@
+@*<script>
+        $(document).ready(function () {
+
+            var source = {
+                dataType: "json",
+                type: "GET",
+                dataFields: [
+                    { name: 'Id', type: 'int' },
+                    { name: 'Name', type: 'string' },
+                    { name: 'Description', type: 'string' },
+                    { name: 'LLocalPOBType', type: 'string' },
+                    { name: 'Version', type: 'int' },
+                    { name: 'Status', type: 'string' },
+                    { name: 'POB1', type: 'string' },
+                    { name: 'Retention', type: 'string' },
+                    { name: 'COPA2', type: 'string' },
+                    { name: 'COPA5', type: 'string' },
+                    { name: 'COPA22', type: 'string' },
+                    { name: 'COPA52', type: 'string' },
+
+                ],
+                url: "/LLocalPOB/GetAllLPobsDetails"
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source)
+            var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnReview(); " class="GridButton">Review</button>';
+                        };
+            $("#jqxGrid").jqxGrid({
+                source: dataAdapter,
+                width: "100%",
+                //height: 250,
+                autoheight:true,
+                sortable: true,
+                columnsresize: true,
+                editable: false,
+                pageable: true,
+                pagesize: 10,
+                pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+                enablebrowserselection: true,
+                filterable: true,
+                ready: function () {
+                },
+                columns: [
+                    { text: 'Name', datafield: 'Name', width: '10%'
+                    },
+                    {
+                        text: 'Pob Type', datafield: 'LLocalPOBType', width: '10%'
+                    },
+                    { text: 'Version', datafield: 'Version', width: '5%'
+                    },
+                    {
+                        text: 'GPob', datafield: 'POB1', width: '10%'
+                    },
+                    {
+                        text: 'COPA2', datafield: 'COPA2', width: '10%'
+                    },
+                    {
+                        text: 'COPA5', datafield: 'COPA5', width: '10%'
+                    },
+                    {
+                        text: 'Retention', datafield: 'Retention', width: '10%'
+                    },
+                    {
+                        text: 'COPA2(Ret.)', datafield: 'COPA22', width: '10%'
+                    },
+                    {
+                        text: 'COPA5(Ret.)', datafield: 'COPA52', width: '10%'
+                    },
+                    {
+                        text: 'Description', datafield: 'Description', width: '10%'
+                    },
+                    {
+                        text: 'Status', datafield: 'Status', width: '10%'
+                    },
+                    { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer, width: '10%' },
+                 ],
+            });
+
+        }); //End of Document Ready
+
+        function FnReview(){
+            var selectedrowindex = $('#jqxGrid').jqxGrid('selectedrowindex');
+            var rowdata = $('#jqxGrid').jqxGrid('getrowdata', selectedrowindex);
+            var xx = rowdata.Id;
+
+             @{
+                System.Web.HttpContext.Current.Session["WorkFlow"] = "LocalPobs";
+             }
+            sessionStorage.setItem("WorkFlow", "LocalPobs");//setting WorkFlow in Session as it will be used in Review Action
+            var  url = '@Url.Action("Review", "LLocalPOB")?Id=' + xx +'&WorkFlowId=' + '0' + '&Source=Request&StepId='+'0' ;
+            window.open(url,'_blank');
+
+        }
+
+    </script>
+    <h4>Local POB Library</h4>
+    <div id="jqxGrid"></div>*@
+
+@*//21st june 2018-------------------------------------------------------------------------------------------------*@
+
+
+
+

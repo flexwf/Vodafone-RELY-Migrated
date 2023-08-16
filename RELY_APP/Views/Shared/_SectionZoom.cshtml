@@ -1,0 +1,33 @@
+﻿@Scripts.Render("~/bundles/jQuery-File-Upload")
+@Styles.Render("~/Content/jQuery-File-Upload")
+<script src="https://code.jquery.com/jquery-migrate-1.2.1.js"></script>
+<script>
+     $(function () {
+            $("#dialogSectionDetails").dialog({
+                modal: true,
+                autoOpen: false,
+                title: "Section Details",
+                width: 1000,
+                height: 500
+            });
+    });
+
+      
+ </script>
+
+
+<h3 id="sectionHeading"></h3>
+<div id="sectionItems" name="sectionItems">
+    @*@if (ItemTypeName == "YN_QUESTION")
+    {*@
+        @*@Html.Partial("_YN_Question_Template")*@
+    @*}
+    else if (ItemTypeName == "TEXT")
+    {*@
+        @*@Html.Partial("_Text_Question_Template")*@
+    @*}*@
+
+
+
+</div>
+

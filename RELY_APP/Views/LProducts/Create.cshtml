@@ -1,0 +1,1242 @@
+﻿@model RELY_APP.ViewModel.LProductViewModel
+@{
+
+    //var CompanySpecificData = (List<RELY_APP.ViewModel.LCompanySpecificColumnViewModel>)@ViewBag.CompanySpecificColumns;
+    var BotButtons = (List<string>)ViewBag.BottomButtons;
+}
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+
+<script>
+    //This variable is defined to check for the validation errors in selecting reports to for the roles in listbox
+
+    var TransactionId = 0;
+    var IsRecordValid = true;
+    var ValidationErrorMessage = "";
+    var IsPOBCreatedOnFly = false;
+    var CheckBoxAttributeValues = 'AttributeB01:@Model.AttributeB01|AttributeB02:@Model.AttributeB02|AttributeB03:@Model.AttributeB03|AttributeB04:@Model.AttributeB04|AttributeB05:@Model.AttributeB05|AttributeB06:@Model.AttributeB06|AttributeB07:@Model.AttributeB07|AttributeB08:@Model.AttributeB08|AttributeB09:@Model.AttributeB09|AttributeB10:@Model.AttributeB10';
+    //This variable is defined to store value if form has any changes since it has loaded
+    var isChanged = false;
+    var GlobalPOBId = [];
+    var GlobalPOBValue = [];
+    var TypeValue = [];
+    var AccValue = [];
+    var Copa2Value = [];
+    var Copa5Value = [];
+    var Copa2Id = [];
+    var Copa5Id = [];
+    var SelectedLocalPOB = '';
+    var SelectedLocalPOBId = 0;
+    var SSPStartDate = '';
+    var SSPEndDate = '';
+    var ProductId = 0;
+    var datafields = new Array();
+    var columns = new Array();
+    var ObligationFlag = 'Add';
+    $(document).ready(function () {
+         ProductId = '@Model.Id';
+        $("#EffectiveStartDate").jqxDateTimeInput({
+            width: '200px',
+            height: '30px',
+        });
+        $("#EffectiveEndDate").jqxDateTimeInput({
+            width: '200px',
+            height: '30px',
+        });
+        $("#EffectiveStartDate").jqxDateTimeInput('setDate', new Date(2010, 00, 01));
+        $("#EffectiveEndDate").jqxDateTimeInput('setDate', new Date(2099, 11, 31));
+         //Add JqxLoader when form is submitted to disable further clicks
+         $("#jqxLoader").jqxLoader({ isModal: true, width: 200, height: 150, imagePosition: 'center' });
+         //The below code checks for changes in form controls and pdates the flag
+         $('input,select,textarea').change(function () {
+             isChanged = true;
+         })
+
+         // Method to load jqxtabs in view.
+         $('#jqxTabs').jqxTabs({ position: 'top' });
+
+    //Load Local POB
+     //  GetLocalPobDropDown();
+
+        //JQXGrid for obligations
+        // debugger;
+         var data = new Array();
+         var LLocalPOB = [];
+         var Pay = [];
+         var SSP = [];
+         var POB = [];
+         var Usage = [];
+         var POB1 = [];
+         var Type = [];
+         var COPA2 = [];
+         var COPA5 = [];
+         var Retention = [];
+         var Usage1 = [];
+         var COPA22 = [];
+         var COPA52 = [];
+         var k = 0;
+         for (var i = 0; i < LLocalPOB.length; i++) {
+             var row = {};
+             row["LLocalPOB"] = LLocalPOB[k];
+             row["Pay"] = Pay[k];
+             row["SSP"] = SSP[k];
+             row["POB"] = POB[k];
+             row["Usage"] = Usage[k];
+             row["POB1"] = POB1[k];
+             row["Type"] = Type[k];
+             row["COPA2"] = COPA2[k];
+             row["COPA5"] = COPA5[k];
+             row["Retention"] = Retention[k];
+             row["Usage1"] = Usage1[k];
+             row["COPA22"] = COPA22[k];
+             row["COPA52"] = COPA52[k];
+             data[i] = row;
+             k++;
+         }
+         var Source = '@Model.Source';
+        if(Source == 'Request'){
+            document.getElementById('saveclose').style.display = 'block';
+            document.getElementById('BackButton').style.display = 'none';
+            document.getElementById('ProductCode').value = '@Model.RequestName';
+        }else {
+            document.getElementById('saveclose').style.display = 'none';
+            document.getElementById('BackButton').style.display = 'block';
+        }
+    });
+
+    function FnGetAttributesForProduct(SysCatId){
+        //  debugger;
+         $.ajax({
+             type: "GET",
+             cache: false,
+                 data: { SysCatId :SysCatId } ,
+                 url: "/LProducts/GetAttributesForProducts",
+                 success: function (data) {
+
+                    GenerateCompanySpecificForm(data, 'Products', -1);//call this method placed in ProjectScript file to repaint the form with new labels order and validations
+                    document.getElementById('SysCatId').style.pointerEvents = 'none';
+                    document.getElementById('SysCatId').style.backgroundColor = 'lightgray';
+                    $("#DIVSysCatId").attr('disabled', 'disabled');
+
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                    // alert("error");
+                 }
+             });
+      }
+    function FnGetAttributesforProductPob(SysCatId){
+        //  debugger;
+         $.ajax({
+             type: "GET",
+             cache: false,
+                 data: { SysCatId :SysCatId } ,
+                 url: "/LProducts/GetAttributesForProductPob",
+                 success: function (data) {
+
+                    GenerateCompanySpecificForm(data, 'LProductPobs', ProductId);//call this method placed in ProjectScript file to repaint the form with new labels order and validations
+                    document.getElementById('jqxgridObg').style.display = 'block';
+   // debugger;
+
+
+    datafields.push({ name: 'LLocalPOB', type: 'string' });
+    datafields.push({ name: 'POB1', type: 'string' });
+    //datafields.push({ name: 'Type', type: 'string' });
+    datafields.push({ name: 'COPA2', type: 'string' });
+    datafields.push({ name: 'COPA5', type: 'string' });
+    datafields.push({ name: 'Retention', type: 'string' });
+    //datafields.push({ name: 'Type1', type: 'string' });
+    datafields.push({ name: 'COPA22', type: 'string' });
+    datafields.push({ name: 'COPA52', type: 'string' });
+    datafields.push({ name: 'LocalPobId', type: 'int' });
+    datafields.push({ name: 'GlobalPobId1', type: 'int' });
+    datafields.push({ name: 'GlobalPobId2', type: 'int' });
+    datafields.push({ name: 'CopaId1', type: 'int' });
+    datafields.push({ name: 'CopaId2', type: 'int' });
+    datafields.push({ name: 'CopaId3', type: 'int' });
+    datafields.push({ name: 'CopaId4', type: 'int' });
+
+
+    columns.push({ text: 'LocalPOB', datafield: 'LLocalPOB', width:'10%'});
+    columns.push({ text: 'GPOB1', datafield: 'POB1', width:'20%'});
+    //columns.push({ text: 'GPOB1Type', datafield: 'Type', width:'10%'});
+    columns.push({ text: 'COPA2', datafield: 'COPA2', width:'20%'});
+    columns.push({ text: 'COPA5', datafield: 'COPA5', width:'20%'});
+    columns.push({ text: 'GPOB2', datafield: 'Retention', width:'20%'});
+    //columns.push({ text: 'GPOB2Type', datafield: 'Type1', width:'10%'});
+    //columns.push({ text: 'COPA2', datafield: 'COPA22', width:'10%'});
+    //columns.push({ text: 'COPA5', datafield: 'COPA52'});
+                     //Loop though list of columns and populate arrays of datafiels of grid
+                    for (var i = 0; i < data.length; ++i) {
+                            datafields.push({ name: data[i].ColumnName, type: data[i].DataType });
+                    }
+                     var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                     var FormType = '@ViewBag.FormType';
+
+                        return '&emsp;<button type="button" id="ReviewButton" name="ReviewButton" onclick="FnEdit(); " class="GridButton">Edit</button>&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete(); " class="GridButton">Delete</button>';
+                    };
+                    columns.push({ text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer ,width:'10%'});
+                     //New method to load dynamic grid
+                        var source = {
+                            dataType: "json",
+                            dataFields: datafields,
+                            data : {ProductId: ProductId },
+                            url: "/LProducts/GetProductObligations",
+                            root: 'Rows'
+                        };
+                     var dataAdapter = new $.jqx.dataAdapter(source)
+                     $('#jqxgridObg').jqxGrid({
+                             source: dataAdapter,
+                             width: '100%',
+                             autoheight: true,
+                             theme: 'bootstrap',
+                             sortable: true,
+                             columnsresize: true,
+                             columnsreorder: false,
+                             altrows: true,
+                             showstatusbar: true,
+                             ready: function () {
+                             },
+                             columns: columns
+                    });
+
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                     //alert("error");
+                 }
+             });
+
+    }
+          //This function simply deletes the existing Product POB from the Product
+      function FnDelete(){
+        var r = confirm("Are you sure to delete the selected Product POB?");
+        if (r == false) {
+                return;
+        }
+        else {
+
+             var selectedrowindex = $('#jqxgridObg').jqxGrid('selectedrowindex');
+             var rowdata = $('#jqxgridObg').jqxGrid('getrowdata', selectedrowindex);
+             var Id = rowdata.Id;
+            if(typeof Id == 'undefined'){
+                $("#jqxgridObg").jqxGrid('deleterow', selectedrowindex);
+                $('#jqxgridObg').jqxGrid('refreshdata');
+                alert("Product POB deleted successfully.");
+              return;
+            }
+
+            }//else ends here
+        }//function ends here.
+
+    //This function allows user to modify the existing Product POB details by displaying in the Obligations div
+    function FnEdit()
+    {
+        var selectedrowindex = $('#jqxgridObg').jqxGrid('selectedrowindex');
+        var rowdata = $('#jqxgridObg').jqxGrid('getrowdata', selectedrowindex);
+            ProductObligationId = rowdata.Id;
+            //$("#POBdropdownlist").jqxDropDownList('selectItem',rowdata.LocalPobId);
+            var GPob = String(rowdata.GlobalPobId1);
+            FnGetLocalPobDetails(rowdata.LocalPobId);
+            //opens the Obligations div
+           // document.getElementById("UpdatePob").style.display = 'inline-block';
+            document.getElementById("savePob").style.display = 'none';
+     document.getElementById("UpdatePob").style.display = 'inline-block';
+            document.getElementById("divObligations").style.display = 'block';
+            ObligationFlag = 'Add';
+            return false;
+    }
+
+     function FnPopulateTypeAndAcc(row,Acc,Type)
+     {
+         $('#jqxgridGlobalPob').jqxGrid('setcellvalue', row, 'Type', Type);
+         $('#jqxgridGlobalPob').jqxGrid('setcellvalue', row, 'Acc', Acc);
+     }
+
+     function FnAttach() {
+         alert("Functionality not yet implemented.");
+     }
+
+     function FnSetAccScenario() {
+         alert("In this release, it is reduced to setting a text field.\n Will be implemented in one of the future releases.");
+     }
+
+     //This function is defined to get file names uploaded
+     function FnGetUploadedFileName(Files) {
+         debugger;
+         // var Files = document.getElementById("File1")
+         alert("Files" + Files);
+         var FileHtml = ''
+         for (var i = 0; i < Files.files.length; ++i) {
+             FileHtml = FileHtml + '<li>' + Files.files.item(i).name + '</li>'
+         }
+         document.getElementById('AttachedFiles').innerHTML = '<p>Recent Attachments</p><ul>' + FileHtml + '</ul>'
+
+     }
+    //This function is used to store comments typed on any of the text area
+     var GlobalComment = '';
+     function FnAttachComments(Comments) {
+         GlobalComment = Comments;
+         document.getElementById('Comments').value = Comments;
+     }
+     function FnAddGPob() {
+         var rows = $("#jqxgridGlobalPob").jqxGrid('getRows');
+         //alert("rows" + rows);
+         if (rows == null || rows == 'undefined' || rows.length == 0 || rows.length < 2) {
+             $("#jqxgridGlobalPob").jqxGrid('addrow', null, {});
+             return;
+         }
+         alert("No more Global POB insertions are allowed");
+
+     }
+     function FnClose() {
+            document.getElementById('divObligations').style.display = 'none';
+            ResetObligation();
+            //document.getElementById('frm').style.display = 'block';
+        }
+
+  function getContent()
+  {
+   //debugger;
+    var row = {}; var strTobeRemoved = 'LProductPobs'; var attributeString = '';
+    var attribDiv = document.getElementById('DIVProductPOBAttributeContainer');
+    var elements = attribDiv.getElementsByTagName('input');
+
+    for (x = 0 ; x < elements.length; x++) {
+        if(elements[x].type == 'checkbox' ){
+            if(elements[x].checked)
+               elements[x].value =  true;
+            else
+               elements[x].value = false;
+        }
+             var name = elements[x].name.replace(strTobeRemoved,'');
+             var value = elements[x].value;
+            row[name] = value;
+             attributeString = attributeString + ", " + name + ": " + elements[x].value;
+             //data.push(elements[x].name + ":" + elements[x].value);
+   }
+
+    return row;
+  }
+
+  function FnSaveData(IsClose)
+  {
+      var WorkFlowId = '@ViewBag.WorkFlowId';
+      var StepId = '@ViewBag.StepId';
+      var Source = '@Model.Source';
+
+      var SSPDate1 = null;
+      var SSPDate2 = null;
+      var ValidStartDate = null; var ValidEndDate = null;
+      if ($("#EffectiveStartDate").length > 0) {
+          SSPDate1 = $('#EffectiveStartDate').jqxDateTimeInput('getText');
+          ValidStartDate = $('#EffectiveStartDate').jqxDateTimeInput('val', 'date');
+      }
+      if ($("#EffectiveEndDate").length > 0) {
+          SSPDate2 = $('#EffectiveEndDate').jqxDateTimeInput('getText');
+          ValidEndDate = $('#EffectiveEndDate').jqxDateTimeInput('val', 'date');
+      }
+
+      document.getElementById("SSPDate1").value = SSPDate1;
+      document.getElementById("SSPDate2").value = SSPDate2;
+
+      if (ValidStartDate > ValidEndDate) {
+          alert("Valid Start Date should greater than Valid End Date");
+          return;
+      }
+
+    // var AttributesList = getContent();
+    var AttributesList = '';
+    $("#frm").validate();
+         //store data in db
+         if ($('#frm').valid()) {
+
+    if ($("#AttributeB01").length > 0){
+            if(document.getElementById("AttributeB01").checked)
+                   document.getElementById('AttributeB01').value =  true;
+        }
+        if ($("#AttributeB02").length > 0){
+            if(document.getElementById('AttributeB02').checked)
+                   document.getElementById('AttributeB02').value =  true;
+        }
+         if ($("#AttributeB03").length > 0){
+             if(document.getElementById('AttributeB03').checked)
+                   document.getElementById('AttributeB03').value =  true;
+        }
+         if ($("#AttributeB04").length > 0){
+            if(document.getElementById('AttributeB04').checked)
+                   document.getElementById('AttributeB04').value =  true;
+        }
+        if ($("#AttributeB05").length > 0){
+            if(document.getElementById('AttributeB05').checked)
+                   document.getElementById('AttributeB05').value =  true;
+        }
+
+    var GridArray = [];
+    var GridRows = $('#jqxgridObg').jqxGrid('getrows');
+    var TotalRows = GridRows.length;
+    var collength = datafields.length; //will consider hidden columns as well
+            if (GridRows.length > 0) {
+                           for (var i = 0; i < GridRows.length; i++) {              //For Row
+                             GridArray[i] = [];
+                                 for (var j = 0; j < datafields.length; j++) {     //For Columns
+                                 var datafieldname = datafields[j].name;
+                                 GridArray[i][j] = datafieldname + ':' + GridRows[i][datafieldname];
+                              }
+                     }
+            }
+           // Store the Name in case of record added in fly
+            sessionStorage.setItem("LatestProductName", document.getElementById('Name').value);
+            var PC = document.getElementById('ProductCode').value;
+            if(('@Model.ProductCode' != null && '@Model.ProductCode' != 'undefined' && '@Model.ProductCode' != '' ) ||(PC != null && PC != 'undefined' && PC != '') )
+                document.getElementById("DuplicityCheckFlag").value = true;
+            else
+                document.getElementById("DuplicityCheckFlag").value = false;
+             var Form = $("#frm");
+             $.ajax({
+                 type: "POST",
+                 cache: false,
+                 data: Form.serialize() + "&GridArray=" + GridArray + "&collength=" + collength + "&CheckBoxAttributeValues=" + CheckBoxAttributeValues,
+                 url: "/LProducts/SaveProducts",
+                 //dataType: "json",
+                 success: function (data) {
+                   //  console.log(data);
+                     document.getElementById("Id").value = data.Id;
+                     if (data.ErrorMessage) {
+                            if(data.ErrorMessage.substring("already exists").length > 0){
+                               alert(data.ErrorMessage);
+                                return;
+                            }
+                         alert("Errors occured - " + data.ErrorMessage);
+                     }
+                     else {
+                         alert('Product Saved Sucessfully');
+                         if ('@Model.Source' == 'Request' && IsClose) {
+                              window.close();
+                         }
+                         //opening Product in edit mode
+
+                         if (IsClose) {
+                             window.location.href = "/GenericGrid/Index";
+                         } else {
+                             window.location.href = "/LProducts/Edit?id=" + data.Id + "&Source=" + Source;
+                         }
+                     }
+                 },
+                 error: function (reponse) {
+                     Console.log(reponse);
+                    // alert("error");
+                 }
+             });
+         }
+             //if block ends here.
+     }
+
+     function FnOpenObligation() {
+         //window.open('/LLocalPOB/Create', 'mywindow', 'width=200,height=100');
+        // document.getElementById('frm').style.display = 'none';
+         fnGetGpobDetails();
+         fnGetCopaDetails();
+         fnGetLPobSSPDetails();//no localpob attached so localPobId passed is 0
+         document.getElementById("divObligations").style.display = 'block';
+     }
+
+     function FnGetLocalPobDetails(LocalPobId) {
+         if (LocalPobId) {
+
+             var url = "/LLocalPOB/GetLLocalPOBForProduct/";
+
+             $.ajax({
+                 url: url,
+                 data: { LocalPobId: LocalPobId },
+                 dataType : "json",
+                 cache: false,
+                 type: "POST",
+                 success: function (data) {
+                     //alert("data :" + JSON.stringify(data));
+                  //   var jsonStartDate = data.EffectiveStartDate;
+                    // var jsonEndDate = data.EffectiveEndDate;
+                    // var startdate = new Date(parseInt(jsonStartDate.substr(6)));
+                    // var endDate = new Date(parseInt(jsonEndDate.substr(6)));
+                     //document.getElementById('divObgDetails').style.display = 'block';
+                     //Populating elements with the data received in ajax call
+    document.getElementById('PobName').value = data.Name;
+                     document.getElementById('PobType').value = data.LLocalPOBType;
+                     document.getElementById('PobDescription').value = data.Description;
+
+                      document.getElementById('GPob1').value = data.POB1;
+                     document.getElementById('Copa2').value = data.COPA2;
+                     document.getElementById('Copa5').value = data.COPA5;
+                     document.getElementById('GPob2').value = data.Retention;
+                     document.getElementById('Copa22').value = data.COPA22;
+                     document.getElementById('Copa52').value = data.COPA52;
+
+                    SelectedLocalPOBId=LocalPobId;
+                    SelectedLocalPOB = data.Name;
+                     GlobalPOBValue[0] = data.POB1;
+                     Copa2Value[0] = data.COPA2;
+                     Copa5Value[0] = data.COPA5;
+                     GlobalPOBValue[1] = data.Retention;
+                     Copa2Value[1] = data.COPA22;
+                     Copa5Value[1] = data.COPA52;
+
+                  /*   document.getElementById('SSP1').value = data.SSP;
+
+                     $('#jqxStartDate').jqxDateTimeInput('setDate', startdate);
+                     $('#jqxEndDate').jqxDateTimeInput('setDate', endDate);
+                     //document.getElementById('SSPStartDate').value = (startdate.toLocaleString() == 'Invalid Date') ? '' : startdate.toLocaleString();//startdate.getDate()  + "/" +  startdate.getMonth()+1 + "/" + startdate.getFullYear();
+                     //document.getElementById('SSPEndDate').value = (endDate.toLocaleString() == 'Invalid Date') ? '' : endDate.toLocaleString();//endDate.getDate() + "/" + endDate.getMonth()+1 + "/" + endDate.getFullYear();
+                   //  document.getElementById('SSP1').style.pointerEvents = 'none';
+                    // document.getElementById('SSP1').style.backgroundColor = 'lightgray'
+                     //debugger;
+                     document.getElementById('POBIndicator').value = data.PobIndicator;
+                     document.getElementById('POBIndicator').style.pointerEvents = 'none';
+                     document.getElementById('POBIndicator').style.backgroundColor = 'lightgray'
+
+                     ////document.getElementById('UsageIndicator').value = data.UsageIndicator;
+                     ////document.getElementById('UsageIndicator').style.pointerEvents = 'none';
+                     ////document.getElementById('UsageIndicator').style.backgroundColor = 'lightgray'
+
+                     //document.getElementById('BundleIndicator').value = data.BundleIndicator;
+                     //document.getElementById('BundleIndicator').style.pointerEvents = 'none';
+                     //document.getElementById('BundleIndicator').style.backgroundColor = 'lightgray'
+
+                     //document.getElementById('IsHardwareType').value = data.IsHardwareType;
+                     //document.getElementById('IsHardwareType').style.pointerEvents = 'none';
+                     //document.getElementById('IsHardwareType').style.backgroundColor = 'lightgray'
+
+                     if (document.getElementById('POBIndicator').value == 'true') { document.getElementById('POBIndicator').checked = true; }
+                     //if (document.getElementById('BundleIndicator').value == 'true') { document.getElementById('BundleIndicator').checked = true; }
+                     if (document.getElementById('UsageIndicator').value == 'true') { document.getElementById('UsageIndicator').checked = true; }
+                    // if (document.getElementById('IsHardwareType').value == 'true') { document.getElementById('IsHardwareType').checked = true;}
+
+                     //document.getElementById('SpecialIndicator').value = data.SpecialIndicator;
+                     //document.getElementById('SpecialIndicator').style.pointerEvents = 'none';
+                     //document.getElementById('SpecialIndicator').style.backgroundColor = 'lightgray'*/
+                 },
+                 error: function (reponse) {
+                    // alert("error : " + reponse);
+                 }
+             });
+         }
+     }
+    function FnEditLPob(){
+         var WorkFlowId = document.getElementById('WorkFlowId').value;
+         var TransactionId = '@Model.Id';
+         var stepid =0;//stepid will be 0 as we dont have stepid while creating Product
+         if (SelectedLocalPOBId == 0) {
+             alert("Please select Local POB for editing.")
+             return false;
+         }
+         @*url = '@Url.Action("Edit", "LLocalPOB")?id=' + SelectedLocalPOBId + '&Source=Product&WorkFlowId=' + WorkFlowId + '&StepId=' + stepid;*@
+         url = '@Url.Action("Edit", "LLocalPOB")?id=' + SelectedLocalPOBId + '&Source=Product';
+        var returnValue = window.open(url,'_blank');
+    if (typeof returnValue.attachEvent != "undefined") {
+        returnValue.attachEvent("onunload", EditTabClosed);
+    } else if (typeof returnValue.addEventListener != "undefined") {
+        returnValue.addEventListener("unload", EditTabClosed, false);
+    }
+     }
+     function EditTabClosed()
+     {
+         FnGetLocalPobDetails(SelectedLocalPOBId);
+         IsLPobCreatedOnFly = true;
+     }
+
+
+     function FnCreateNewLPob() {
+         var TransactionId = '@Model.Id';
+         if (TransactionId == 0) {
+             if (confirm('You need to save Product. Do you want to continue?')) {
+                 FnSaveData(false);//Add Product First
+             }
+         } else {
+             var WorkFlowId = document.getElementById('WorkFlowId').value;
+             url = '@Url.Action("Create", "LLocalPOB")?WorkFlowId=' + WorkFlowId + '&Source=Product';
+             var returnValue = window.open(url, '_blank');
+             /*returnValue.onbeforeunload = function(){
+             Add Event Listener to child Window
+             }*/
+             if (typeof returnValue.attachEvent != "undefined") {
+                 returnValue.attachEvent("onunload", ChildTabClosed);
+             } else if (typeof returnValue.addEventListener != "undefined") {
+                 returnValue.addEventListener("unload", ChildTabClosed, false);
+             }
+         }
+        // }
+     }
+
+     function FnDownloadAccountingMemo() {
+                $.ajax({
+                    data: { EntityType: 'LProducts', EntityId: '@Model.Id' },
+                    url: "/Reports/DownloadAccountingMemo",
+                    cache: false,
+                    //dataType: "json",
+                    type: "POST",
+                    success: function (data) {
+                        alert('Extract ran successfully and files has been saved in shared extract folder');
+                    },
+                    error: function (reponse) {
+
+                        //alert();
+                        alert("error : " + reponse);
+                    }
+                });
+            }
+    /*Once created on the fly, LocalPOB is not immediately available in dropdown in Product create form.*/
+    function ChildTabClosed()
+    {
+    //$("#POBdropdownlist") update the dropdownlist
+        //GetLocalPobDropDown();
+        //Get POB on Fly
+        IsPOBCreatedOnFly = true;
+        if (IsPOBCreatedOnFly == true) {
+            var Id = document.getElementById('Id').value;
+            //ajax call to get latest product
+            $.ajax({
+                data: { ProductId: Id },
+                cache: false,
+                url: "/LRequests/GetLatestPOBCreatedOnFly",
+                dataType: "json",
+                type: "POST",
+                success: function (data) {
+                    if (data) {
+                        SelectedLocalPOB = data.Name;
+                        SelectedLocalPOBId = data.Id;
+                        document.getElementById('PobName').value = data.Name;
+                        document.getElementById('PobType').value = data.LLocalPOBType;
+                        document.getElementById('PobDescription').value = data.Description;
+
+                        document.getElementById('GPob1').value = data.POB1;
+                        document.getElementById('Copa2').value = data.COPA2;
+                        document.getElementById('Copa5').value = data.COPA5;
+                        document.getElementById('GPob2').value = data.Retention;
+                        //document.getElementById('Copa22').value = data.COPA22;
+                        //document.getElementById('Copa52').value = data.COPA52;
+
+                        GlobalPOBValue[0] = data.POB1;
+                        Copa2Value[0] = data.COPA2;
+                        Copa5Value[0] = data.COPA5;
+                        GlobalPOBValue[1] = data.Retention;
+                        Copa2Value[1] = data.COPA22;
+                        Copa5Value[1] = data.COPA52;
+                        FnAddFinalPOB();
+                    }
+                },
+                error: function (reponse) {
+                    //  alert("error : " + reponse);
+                }
+            });
+        }
+
+    }
+
+    //This method will update final grid with all POB related data populated in it
+
+function FnUpdateFinalPOB(){
+
+    var selectedrowindex = $("#jqxgridObg").jqxGrid('getselectedrowindex');
+        var rowdata = $('#jqxgridObg').jqxGrid('getrowdata', selectedrowindex);
+
+
+     var AttributesList = getContent();
+    AttributesList['LLocalPOB'] = SelectedLocalPOB;
+    AttributesList['POB1'] = GlobalPOBValue[0];
+    AttributesList['Type'] = TypeValue[0];
+    AttributesList['COPA2'] = Copa2Value[0];
+    AttributesList['COPA5'] = Copa5Value[0];
+    AttributesList['Retention'] = GlobalPOBValue[1];
+    AttributesList['Type1'] = TypeValue[1];
+    AttributesList['COPA22'] = Copa2Value[1];
+    AttributesList['COPA52'] = Copa5Value[1];
+
+    AttributesList['LocalPobId'] = SelectedLocalPOBId;
+    AttributesList['GlobalPobId1'] = GlobalPOBId[0];
+    AttributesList['GlobalPobId2'] = GlobalPOBId[1];
+    AttributesList['CopaId1'] = Copa2Id[0];
+    AttributesList['CopaId2'] = Copa5Id[0];
+    AttributesList['CopaId3'] = Copa2Id[1];
+    AttributesList['CopaId4'] = Copa5Id[1];
+    AttributesList['Id'] = ProductObligationId;
+    $("#jqxgridObg").jqxGrid('updaterow', selectedrowindex, AttributesList);
+         ResetObligation();
+         ResetObligationFlag();
+    }
+
+
+
+    //This method will load final grid with all POB related data populated in it
+     function FnAddFinalPOB()
+     {
+         alert('Please save Product first.');
+         FnClose();
+         return;
+         //the below code will not execute
+         var AttributesList = getContent();
+            AttributesList['LLocalPOB'] = SelectedLocalPOB;
+            AttributesList['POB1'] = GlobalPOBValue[0];
+            AttributesList['COPA2'] = Copa2Value[0];
+            AttributesList['COPA5'] = Copa5Value[0];
+            AttributesList['Retention'] = GlobalPOBValue[1];
+            AttributesList['Type1'] = TypeValue[1];
+            AttributesList['COPA22'] = Copa2Value[1];
+            AttributesList['COPA52'] = Copa5Value[1];
+
+            AttributesList['LocalPobId'] = SelectedLocalPOBId;
+            AttributesList['GlobalPobId1'] = GlobalPOBId[0];
+            AttributesList['GlobalPobId2'] = GlobalPOBId[1];
+            AttributesList['CopaId1'] = Copa2Id[0];
+            AttributesList['CopaId2'] = Copa5Id[0];
+            AttributesList['CopaId3'] = Copa2Id[1];
+            AttributesList['CopaId4'] = Copa5Id[1];
+
+            $("#jqxgridObg").jqxGrid('addrow', null, AttributesList);
+            ResetObligation();
+            ResetObligationFlag();
+     }
+
+    function ResetObligationFlag(){
+
+            if(ObligationFlag == 'Add'){
+              document.getElementById("UpdatePob").style.display = 'none';
+              document.getElementById("savePob").style.display = 'inline-block';
+            }
+      }
+
+     function ResetObligation()
+     { SelectedLocalPOB = ''; GlobalPOBValue[0] = '';TypeValue[0] = '';Copa2Value[0] = '';Copa5Value[0] = '';
+    GlobalPOBValue[1] = '';TypeValue[1] = '';Copa2Value[1] = '';Copa5Value[1] = '';
+    GlobalPOBId[0] = '';GlobalPOBId[1] ='';SelectedLocalPOBId ='';Copa2Id[0] =''; Copa2Id[1]='';Copa5Id[0] = '' ; Copa5Id[1] ='';
+         $('#divObligations').find('input:text').val('');
+        // $('#divObligations').find('input:checkbox').checked = false;
+         document.getElementById('divObligations').style.display = 'none'
+        // $("#POBdropdownlist").jqxDropDownList('clearSelection', true);
+        /* $("#GPOBdropdownlist").jqxDropDownList('clearSelection', true);
+         $("#GPOBRetentiondropdownlist").jqxDropDownList('clearSelection', true);
+         $("#Copa2dropdownlist").jqxDropDownList('clearSelection', true);
+         $("#Copa5dropdownlist").jqxDropDownList('clearSelection', true);
+         $("#Copa2Retentiondropdownlist").jqxDropDownList('clearSelection', true);
+         $("#Copa5Retentiondropdownlist").jqxDropDownList('clearSelection', true);
+    */
+        // $("#POBdropdownlist").jqxDropDownList('clearFilter');
+      /*   $("#GPOBdropdownlist").jqxDropDownList('clearFilter');
+         $("#GPOBRetentiondropdownlist").jqxDropDownList('clearFilter');
+         $("#Copa2dropdownlist").jqxDropDownList('clearFilter');
+         $("#Copa5dropdownlist").jqxDropDownList('clearFilter');
+         $("#Copa2Retentiondropdownlist").jqxDropDownList('clearFilter');
+         $("#Copa5Retentiondropdownlist").jqxDropDownList('clearFilter');*/
+       //  $('#jqxStartDate').jqxDateTimeInput('setDate', null);
+       //  $('#jqxEndDate').jqxDateTimeInput('setDate', null);
+       //  document.getElementById('PaymentLikelihood').value = '';
+       //  document.getElementById('SSP1').value = '';
+       //  document.getElementById('UsageIndicator').checked = false;
+     }
+/*
+     function FnManagePayementLiklihood(inputvalue)
+     {
+         if (inputvalue < 0 || inputvalue > 100)
+         {
+             alert('Please choose value between 0 and 100')
+             document.getElementById('PaymentLikelihood').value = '';
+         }
+         //else {
+         //    document.getElementById('PaymentLikelihood').value = inputvalue + ' %';
+         //}
+     }*/
+
+    //Calling Partial View for attachment Files Grid
+         @{
+
+            Html.RenderPartial("_AttachmentGridPartial");
+      }
+
+    @*function FnGetSupportingDocumentList(){
+    var Id='@Model.Id';
+      //  document.getElementById('ProductsDiv').style.display = 'block';
+        var source = {
+            dataType: "json",
+            dataFields: [
+               { name: 'FileName', type: 'string' },
+                { name: 'OriginalFileName', type: 'string' },
+                { name: 'Description', type: 'string' },
+     { name: 'Label', type: 'string' },
+                { name: 'LoginEmail', type: 'string' },
+      { name: 'CreatedDateTime', type: 'date' },
+     { name: 'Id', type: 'string' }
+            ],
+            id: "Id",
+    data:{EntityType:'LProducts',EntityId:Id},
+            url: "/Home/GetSupportingDocuments"
+        };
+     var dataAdapter = new $.jqx.dataAdapter(source);
+
+     var SupportingDocumentscellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                         return '&emsp;<button type="button"  onclick=FnDownloadSupportingDoc('+value+'); " title="Download" class="GridButton"><i class="fa fa-download" style="color:red;" aria-hidden="true"></i></button>&emsp;<button type="button"  onclick=FnDeleteSupportingDoc('+value+'); " title="Delete" class="GridButton"><i class="fa fa-trash" style="color:red;" aria-hidden="true"></i></button>';
+        };
+
+
+                $('#jqxgrid').jqxGrid({
+                    source: dataAdapter,
+                    width: '100%',
+                   // autoheight: true,
+    height:125,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                   // selectionmode: 'checkbox',
+                    showstatusbar: false,
+                    ready: function () {
+                    },
+                    columns: [
+                       { text: 'Date Uploaded', datafield: 'CreatedDateTime',cellsformat: 'dd/MM/yyyy' },
+                        { text: 'Original File Name', datafield: 'OriginalFileName' },
+                        { text: 'Content', datafield: 'Description' },
+                        { text: 'Uploaded By', datafield: 'LoginEmail' },
+                        { text: 'Step', datafield: 'Label' },
+    { text: 'Actions', datafield: 'Id',cellsrenderer:SupportingDocumentscellsrenderer }
+                    ]
+                });
+    }
+
+    //This function will nload Supporting Document
+    function FnDownloadSupportingDoc(Id)
+    {
+    window.location.href='/LSupportingDocuments/DownloadSupportingDocument/'+Id
+    }
+
+    //This function will delete Supporting Document
+    function FnDeleteSupportingDoc(Id)
+    {
+    window.location.href='/LSupportingDocuments/Delete/'+Id
+    }*@
+
+
+
+</script>
+
+<div id="jqxLoader">
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ErrorMessage"></h4>
+    <div id="ErrorMessageDetails"></div>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+    @Html.Hidden("FormType")
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.RequestId)
+    @Html.Hidden("Comments")
+    @Html.HiddenFor(m => m.Source)
+    @Html.Hidden("WorkFlowId")
+    @Html.Hidden("StepId")
+    @Html.Hidden("SSPDate1")
+    @Html.Hidden("SSPDate2")
+    @Html.Hidden("EstDate1")
+    @Html.Hidden("EstDate2")
+    @Html.Hidden("DuplicityCheckFlag")
+    @Html.HiddenFor(m => m.SspId)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.RequestId)
+    @Html.HiddenFor(m => m.UpdatedById)
+    @Html.HiddenFor(m => m.CreatedById)
+    @Html.HiddenFor(m => m.CreatedDateTime)
+    @Html.HiddenFor(m => m.UpdatedDateTime)
+    @Html.HiddenFor(m => m.Version)
+    @Html.HiddenFor(m => m.Status)
+    @Html.HiddenFor(m => m.SourceProductId)
+    @Html.HiddenFor(m => m.WFOrdinal)
+    @Html.HiddenFor(m => m.WFStatus)
+    @Html.HiddenFor(m => m.WFType)
+    @Html.HiddenFor(m => m.WFRequesterId)
+    @Html.HiddenFor(m => m.WFRequesterRoleId)
+    @Html.HiddenFor(m => m.WFAnalystId)
+    @Html.HiddenFor(m => m.WFManagerId)
+    @Html.HiddenFor(m => m.WFCurrentOwnerId)
+
+    <div class="col-md-11 col-lg-11">
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.ProductCode, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels ", @style = "text-align: right;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.ProductCode, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.ProductCode, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-11 col-lg-11">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control ", @style = "text-align: left;" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;" id="DIVSysCatId">
+            @Html.LabelFor(model => model.SysCatId, htmlAttributes: new { @class = "required col-md-11 col-lg-11 rely-labels", @style = "text-align: right; " })
+            <div class="col-md-11 col-lg-11">
+                @Html.DropDownListFor(model => model.SysCatId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;", @onblur = "FnGetAttributesForProduct(this.value);FnGetAttributesforProductPob(this.value);" })
+                @Html.ValidationMessageFor(model => model.SysCatId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-4 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.SurveyId, htmlAttributes: new { @class = "col-md-11 col-lg-11 rely-labels", @style = "text-align: right; " })
+            <div class="col-md-11 col-lg-11">
+                @Html.DropDownListFor(model => model.SurveyId, null, "-- Select Here --", new { @class = "form-control", @style = "text-align: left;" })
+                @Html.ValidationMessageFor(model => model.SurveyId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-4 col-lg-4" style="min-height:80px;">
+            <label class="required col-md-11 col-lg-11 rely-labels">Valid Start Date</label>
+            <div class="col-md-11 col-lg-11">
+                <div id="EffectiveStartDate" style="text-align: left;"></div>
+                @Html.ValidationMessageFor(model => model.EffectiveStartDate, "", new { @class = "text-danger" })
+            </div>
+
+        </div>
+
+        <div class="col-md-4 col-lg-4" style="min-height:80px;">
+            <label class="required col-md-11 col-lg-11 rely-labels">Valid End Date</label>
+            <div class="col-md-11 col-lg-11">
+                <div id="EffectiveEndDate" style="text-align: left;"></div>
+                @Html.ValidationMessageFor(model => model.EffectiveEndDate, "", new { @class = "text-danger" })
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="window.location.href = '/GenericGrid/Index'">Back</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick=" FnSaveData(false);">Save</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="saveclose" name="saveclose" onclick=" FnSaveData(true);">Save & Close</button>
+        <label for="FileUpload" class="btn btn-borderRed-SideLayout btn-cons">Attach</label>
+        <button type="button" name="FileUpload" id="FileUpload" class="btn-red" style="display:none;"></button>
+        @*<label for="FileUpload1" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Add Management Summary &nbsp;<i class="fa fa-folder"></i></label>
+        <button type="button" name="FileUpload1" id="FileUpload1" onclick="FnAttach();" style="display:none;"></button>*@
+        @*<label for="FileUpload2" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Acc Memo </label>*@
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="FileUpload2" onclick="FnAttach();">Acc Memo</button>
+        @*<label for="FileUpload3" class="CustomFileUpload " style="font-weight:normal; padding:4px;"> Set Accounting Scenario &nbsp;<i class="fa fa-folder"></i></label>
+        <button type="button" name="FileUpload3" id="FileUpload3" onclick="FnSetAccScenario();" style="display:none;"></button>*@
+    </div>
+
+    <div class="col-md-12 col-lg-12" style="border-radius: 5px; border: 1px solid lightgrey;width:100%;margin-top:10px;">
+        <div id='jqxTabs' class="inner-tabs" style="margin-top:0px;">
+            <ul class="nav nav-tabs tabs tabs-container-border ">
+                <li style="margin-left: 30px;">Attributes</li>
+                <li>Obligations</li>
+                <li>SSP</li>
+                <li>Comments</li>
+                <li>History</li>
+                <li>Attached Files</li>
+                <li>Request</li>
+
+            </ul>
+            <div class="tab-content" style="padding:10px;">
+                <div id="DIVAttributeContainer" name="DIVAttributeContainer" class="col-md-12 col-lg-12">
+                </div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div class="col-md-12 col-lg-12" style="width:100%">
+                    <br />
+                    <div id="jqxgridObg" style="display:none;"></div>
+                    <br>
+                    <div class="col-md-12 boxes" id="divObligations" style="display:none;">
+
+                        <h4>Obligation Details</h4>
+
+                        <div class="panel panel-default col-md-12 col-lg-12" style="min-height:150px;background-color:white;">
+                            <div class="panel-heading" style="max-height:40px;">Local POB</div>
+                            <div class="panel-body form-horizontal" style="padding:0px;padding-top:3px;">
+                                <div class="col-md-12 col-lg-12 " style="display:flex;margin-bottom:10px;">
+
+                                    @Html.Label("Local POB", htmlAttributes: new { @class = " col-md-2 col-lg-2 rely-labels" })
+                                    <div class="col-md-4" style="min-height:80px" id="DIVPayeeId">
+                                        <a href="#" onclick="FnLoadPopup()"><i class="fa fa-search" aria-hidden="true" title="zoom to select payee" style="color:#e60000;"></i></a>
+                                        <div class="col-md-11">
+                                            @Html.Editor("LPobId", new { htmlAttributes = new { @class = "form-control", style = "display:none;" } })
+                                            @Html.Editor("LPobName", new { htmlAttributes = new { @class = "form-control", style = "pointer-Events:none;background:lightgray;", title = "this.value" } })
+
+                                        </div>
+                                    </div>
+                                    @*<div id="POBdropdownlist" style="background:white !important;"></div>*@
+                                    &ensp;
+                                    @*<a href="#" onclick="FnLoadLPobDropDownData();">
+                                            <span class="glyphicon glyphicon-refresh"></span>
+                                        </a>&nbsp;*@OR
+                                    <a href="#" style="padding-left:10px;vertical-align:top;" onclick="FnCreateNewLPob();">
+                                        <span>
+                                            Create New Local POB
+                                        </span>
+                                    </a>&nbsp;&nbsp;
+                                    <a href="#" id="EditLPobLink" name="EditLPobLink" style="display:none; padding-left:10px;vertical-align:top;" onclick="FnEditLPob();">
+                                        <span>
+                                            Edit Selected Local POB
+                                        </span>
+                                    </a>
+
+                                </div>
+
+                                <div class="col-md-12" style="padding-left:0px;padding-right:0px;margin-bottom:20px;">
+
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("Name", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("PobName", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("Type", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("PobType", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("Description", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextArea("PobDescription", new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+                                </div>
+                                <div class="col-md-12" style="padding-left:0px;padding-right:0px;margin-bottom:20px;">
+
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("GPob", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("GPob1", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("Copa2", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("Copa2", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("Copa5", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("Copa5", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+                                </div>
+                                <div class="col-md-12" style="padding-left:0px;padding-right:0px;margin-bottom:20px;">
+
+                                    <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                        @Html.Label("GPob(Ret)", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                        @Html.TextBox("GPob2", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                    </div>
+                                    @*Commenting as Andre's Request  on 5 Feb 2019*@
+                                    @*<div class="col-md-4 col-lg-4 " style="display:flex;">
+                                            @Html.Label("Copa2", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                            @Html.TextBox("Copa22", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                        </div>
+                                        <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                            @Html.Label("Copa5", htmlAttributes: new { @class = "rely-labels col-lg-3 col-md-3" })
+                                            @Html.TextBox("Copa52", null, new { @class = "form-control pull-right", disabled = "disabled" })
+                                        </div>*@
+                                </div>
+
+                                @*<div class="col-md-12"  style="padding-left:0px;padding-right:0px;margin-bottom:10px;">
+
+                                        <div class="col-md-4 col-lg-4" style="display:flex;">
+                                            @Html.Label("SSP", htmlAttributes: new { @class = "input-sm " })
+
+                                            @Html.TextBox("SSP1", null, new { @class = "form-control", @type = "number" })
+
+                                        </div>
+                                        <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                            @Html.Label("Start", htmlAttributes: new { @class = " input-sm " })
+
+                                            <div id="jqxStartDate"></div>
+
+                                        </div>
+                                        <div class="col-md-4 col-lg-4 " style="display:flex;">
+                                            @Html.Label("End", htmlAttributes: new { @class = "input-sm " })
+
+                                            <div id="jqxEndDate"></div>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-12" style="margin-bottom:10px;">
+
+                                        <div class="col-md-6 col-lg-6 form-group">
+                                            @Html.Label("POB Indicator", htmlAttributes: new { @class = " input-sm " })
+
+                                            @Html.CheckBox("POBIndicator",false,new { disabled="disabled"})
+
+                                        </div>
+                                        <div class="col-md-6 col-lg-6 form-group">
+                                            @Html.Label("Usage Indicator", htmlAttributes: new { @class = " input-sm " })
+
+                                            @Html.CheckBox("UsageIndicator", false, new { disabled = "disabled" })
+
+                                        </div>
+                                    </div>*@
+
+                            </div>
+
+                        </div>
+
+                        @*<div class="panel panel-default col-md-3" style="background-color:white; min-height:150px;padding:0px;">
+                                <div class="panel-heading" style="max-height:40px;">Global POB(Unique and Aquisition)</div>
+                                <div class="panel-body form-horizontal" style="padding:3px;">
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Global POB", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="GPOBdropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Type", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-8 col-lg-8">
+                                            @Html.TextBox("Type1", null, new { @class = "form-control",disabled="disabled" })
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Account", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-8 col-lg-8">
+                                            @Html.TextBox("Acc1", null, new { @class = "form-control", disabled = "disabled" })
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("COPA2", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="Copa2dropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("COPA5", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="Copa5dropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div class="panel panel-default col-md-3" style="background-color:white;min-height:150px;padding:0px;">
+                                <div class="panel-heading" style="max-height:40px;">Global POB(Retention)</div>
+                                <div class="panel-body form-horizontal" style="padding:3px;">
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Global POB", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label " })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="GPOBRetentiondropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Type", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-8 col-lg-8">
+                                            @Html.TextBox("Type2", null, new { @class = "form-control", disabled = "disabled" })
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("Account", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-8 col-lg-8">
+                                            @Html.TextBox("Acc2", null, new { @class = "form-control", disabled = "disabled" })
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("COPA2", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="Copa2Retentiondropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+                                    <div class="col-md-12 col-lg-12 form-group">
+                                        @Html.Label("COPA5", htmlAttributes: new { @class = " col-md-4 col-lg-4 input-sm control-label" })
+                                        <div class="col-md-6 col-lg-6">
+                                            <div id="Copa5Retentiondropdownlist" style="background:white !important;"></div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>*@
+
+                        <div id="DIVProductPOBAttributeContainer" name="DIVProductPOBAttributeContainer" class="col-md-12 col-lg-12">
+                            <br /><br />
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div id="jqxGridSSP"></div>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                @Html.TextAreaFor(model => model.WFComments, new { @class = "form-control textarea1", @style = "min-height:120px;" })
+                @*<textarea id="Comments" name="Comments" style="min-height:120px;" class=" textarea1" onchange="FnAttachComments(this.value)"></textarea>*@
+            </div>
+
+            <div class="tab-content" style="padding:10px;">
+                <textarea id="History" name="History" placeholder="No History so far" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+            </div>
+            <div class="tab-content" style="padding:10px;">
+                <div id="AttachedFiles">
+
+                    <div id="jqxgrid"></div>
+                </div>
+            </div>
+            <div class="tab-content" style="padding:3px;">
+                <div id="Authorization">
+                    @*<img src="~/Content/RequestTab.png" style="max-width:100%;max-height:95%;padding-bottom:3px;" />*@
+                    <textarea id="SpanRequest" name="SpanRequest" placeholder="This product is not associated with any Request" style="min-height:120px;background-color: lightgray;" readonly="readonly" class=" textarea1"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <p class=" col-lg-12 col-md-12 col-sm-12 col-xs-12" style="color:red;"><br/>
+        Note : In case of 'Marker SOC'/'Discount SOC' product, system will automatically attach relevant LocalPOB and 0 SSPId.
+    </p>
+
+</div>
+
+
+
+
+}
+
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+
+@*div for Upload Utility*@
+<div id="dialog" style="display: none;width:100%" align="center">
+    @Html.Partial("_UploadDocuments", (RELY_APP.ViewModel.FileUploaderParametersViewModel)ViewBag.FileUploaderParameters)
+</div>
+@*Section to display list of files which are currently uploaded in system*@
+<div class="col-md-8" id="FileDiv">
+</div>
+
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+@Html.Partial("_LocalPobCompletedList")
+
+@Html.Partial("_GpobPartial")
+@Html.Partial("_CopaPartial")
+@*SS intentionally added styles in create Edit pages where new CSS desgn is to be implemented*@
+<style>
+    /*.CustomFileUpload {
+        font-size: 14px !important;
+        width: 95% !important;
+        margin-bottom: 5px !important;
+        text-align: center;
+    }
+
+    .btn {
+        width: 95% !important;
+        margin-bottom: 5px !important;
+    }*/
+</style>

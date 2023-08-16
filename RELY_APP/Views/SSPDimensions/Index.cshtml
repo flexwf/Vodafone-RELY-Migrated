@@ -1,0 +1,171 @@
+﻿<h3>Manage SSP Dimensions</h3>
+<a style="cursor:pointer" onclick="fnCreate();">Manage</a>
+<div id="jqxGrid">
+</div>
+<br>&ensp;<br>
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+@Scripts.Render("~/bundles/jqueryval")
+<script>
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            cache: false,
+            url: "/Home/SaveReturnPath",
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+
+            }
+        });
+        fnGetSSPs();
+    });
+    function fnCreate() {
+        window.location.href = "/SSPDimensions/Create";
+    }
+    function fnGetSSPs() {
+        $.ajax({
+            cache: false,
+            url: "/SSPDimensions/GetExistingSspsCount",
+            dataType: "json",
+            type: "GET",
+            success: function (counts) {
+                //The below code will load a grid of portfolios on this page
+                var Parentsource = {
+                    dataType: "json",
+                    dataFields: [
+                        { name: 'Id', type: 'int' },
+                        { name: 'SspId', type: 'int' },
+                        { name: 'SspAmount', type: 'string' },
+                        { name: 'EffectiveStartDate', type: 'date' },
+                        { name: 'EffectiveEndDate', type: 'date' },
+                        { name: 'IsSelectable', type: 'string' },
+                    ],
+                    id: "Id",
+                    url: "/SSPDimensions/GetExistingSsps",
+                    // update the grid and send a request to the api
+                    filter: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGrid').jqxGrid('updatebounddata', 'filter');
+                        $('#jqxGrid').jqxGrid('clearselection');
+                    },
+                    // update the grid and send a request to the api
+                    sort: function () {
+                        // $("#jqxGrid").jqxGrid('clear');
+                        $('#jqxGrid').jqxGrid('updatebounddata', 'sort');
+                        $('#jqxGrid').jqxGrid('clearselection');
+                    },
+                    root: 'Rows',
+                    beforeprocessing: function (data) {
+                        Parentsource.totalrecords = counts;
+                    },
+                };
+
+                var ParentdataAdapter = new $.jqx.dataAdapter(Parentsource)
+                //var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+                //    return '&emsp;<button type="button" id="DeleteButton" name="DeleteButton" onclick="FnDelete()" class="GridButton">Delete</button>&emsp;';
+                //};
+                var getLocalization = function () {
+                    var localizationobj = {};
+                    var patterns = {
+                        d: "dd.MM.yyyy",
+                        D: "dddd, d. MMMM yyyy",
+                        t: "HH:mm",
+                        T: "HH:mm:ss",
+                        f: "dddd, d. MMMM yyyy HH:mm",
+                        F: "dddd, d. MMMM yyyy HH:mm:ss",
+                        M: "dd MMMM",
+                        Y: "MMMM yyyy"
+                    }
+                    localizationobj.patterns = patterns;
+                    return localizationobj;
+                }
+                
+                //Check whether the grid is already defined or not and ready for use.
+                var ready = $("#jqxGrid").jqxGrid('ready');
+                //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
+                if (typeof ready != 'undefined') {
+                    $("#jqxGrid").jqxGrid('updatebounddata');
+                }
+                else {
+                    $('#jqxGrid').jqxGrid({
+                        source: ParentdataAdapter,
+                        width: '100%',
+                        height: '50%',
+                        theme: 'bootstrap',
+                        sortable: true,
+                        columnsresize: true,
+                        columnsreorder: true,
+                        altrows: true,
+                        pageable: true,
+                        pagesize: 200,
+                        pagesizeoptions: ['50', '100', '200', '500', '1000'],
+                        filterable: true,
+                        localization: getLocalization(),
+                        autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                        showstatusbar: false,
+                        virtualmode: true,
+                        rendergridrows: function () {
+                            return ParentdataAdapter.records;
+                        },
+                        columns: [
+                            { text: 'Ssp Id', datafield: 'SspId' },
+                            { text: 'Amount', datafield: 'SspAmount' },
+                            { text: 'Start Date', datafield: 'EffectiveStartDate', cellsformat: 'dd/MM/yyyy' },
+                            { text: 'End Date', datafield: 'EffectiveEndDate', cellsformat: 'dd/MM/yyyy' },
+                        ]
+                    });
+                }
+            }
+        });
+    }
+
+    //This method is called when User clicks on delete glymph in grid
+    function FnDelete() {
+        var r = confirm("Are you sure to delete the selected SSP?");
+        if (r == false) {
+            return;
+        }
+        else {
+            var selectedrowindex = $('#jqxGrid').jqxGrid('selectedrowindex');
+            var rowdata = $('#jqxGrid').jqxGrid('getrowdata', selectedrowindex);
+            var id = rowdata.Id;
+            $.ajax({
+                data: { id: id },
+                cache: false,
+                url: "/SSPDimensions/Delete",
+                traditional: true,
+                success: function (data) {
+                    if (data) {
+                        if (data.ErrorMessage) {
+                            alert(data.ErrorMessage);
+                        }
+                        else {
+                            alert(data.PopupMessage);
+                        }
+                        window.location.reload();
+                    }
+                    else {
+                        //Any unhanded error has been caught
+                        window.location.href = "/Home/Error";
+                    }
+                },
+                error: function (reponse) {
+                    console.log(reponse);
+                    alert("error");  //  alert("error : " + reponse);
+                }
+            });
+        }
+    }
+</script>
+
+<br>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+@Html.Partial("_ExistingSSPsPartial")
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />

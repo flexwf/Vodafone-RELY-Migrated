@@ -1,0 +1,223 @@
+﻿
+<div class="boxes">
+    <a class="top_links" href="/LLocalPOB/Create">  <i class="glyphicon glyphicon-pencil"></i> Create New Local POB</a>
+    <br>
+
+    <div id="jqxgrid">
+    </div>
+</div>
+
+@Scripts.Render("~/bundles/jqxgridbundle")
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        //save return url
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "/Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "POST",
+            success: function (data) {
+            },
+            error: function (reponse) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        if ('@TempData["Error"]')
+        {
+            alert('@TempData["Error"]')
+        }
+        //This line adds tabs in the view
+        //$('#jqxTabs').jqxTabs({ position: 'top' });
+
+        var source = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'CompanyCode', type: 'string' },
+                { name: 'ArticleNumber', type: 'string' },
+                { name: 'Name', type: 'string' },
+                { name: 'Description', type: 'string' },
+                { name: 'PobIndicator', type: 'bool' },
+                { name: 'BundleIndicator', type: 'bool' },
+                { name: 'UsageIndicator', type: 'bool' },
+                { name: 'IsHardwareType', type: 'bool' },
+                { name: 'SpecialIndicator', type: 'string' },
+                { name: 'WFOrdinal', type: 'string' },
+                { name: 'WFStatus', type: 'string' },
+                { name: 'WFType', type: 'string' },
+                { name: 'WFComments', type: 'string' },
+                { name: 'WFRequester', type: 'string' },
+                { name: 'WFAnalyst', type: 'string' },
+                { name: 'WFManager', type: 'string' },
+                { name: 'WFCurrentOwner', type: 'string' },
+                { name: 'WFRequesterRoleId', type: 'int' },
+                { name: 'CreatedBy', type: 'string' },
+                { name: 'UpdatedBy', type: 'string' },
+                { name: 'CreatedDateTime', type: 'date' },
+                { name: 'UpdatedDateTime', type: 'date' },
+                { name: 'Attribute001', type: 'string' },
+                { name: 'Attribute002', type: 'string' },
+                { name: 'Attribute003', type: 'string' },
+                { name: 'Attribute004', type: 'string' },
+                { name: 'Attribute005', type: 'string' },
+                { name: 'Attribute006', type: 'string' },
+                { name: 'Attribute007', type: 'string' },
+                { name: 'Attribute008', type: 'string' },
+                { name: 'Attribute009', type: 'string' },
+                { name: 'Attribute010', type: 'string' },
+                { name: 'Attribute011', type: 'string' },
+                { name: 'Attribute012', type: 'string' },
+                { name: 'Attribute013', type: 'string' },
+                { name: 'Attribute014', type: 'string' },
+                { name: 'Attribute015', type: 'string' },
+                { name: 'Attribute016', type: 'string' },
+                { name: 'Attribute017', type: 'string' },
+                { name: 'Attribute018', type: 'string' },
+                { name: 'Attribute019', type: 'string' },
+                { name: 'Attribute020', type: 'string' }
+            ],
+
+            id: "Id",
+            url: "/LLocalPOB/GetLocalPOBs"
+        };
+        // This function is used for displaying row details
+        var initrowdetails = function (index, parentElement, gridElement, datarecord) {
+            var tabsdiv = null;
+            var information = null;
+            var Attributes = null;
+            var Description = null;
+           // debugger;
+            tabsdiv = $($(parentElement).children()[0]);
+            if (tabsdiv != null) {
+                information = tabsdiv.find('.information');
+                Attributes = tabsdiv.find('.Attributes');
+                Description = tabsdiv.find('.Description');
+             //  var title = tabsdiv.find('.title');
+              //  title.text(datarecord.firstname);
+                var container = $('<div style="margin: 5px;"></div>')
+                container.appendTo($(information));
+
+                var leftcolumn = $('<div style="float: left; width: 45%;"></div>');
+                var rightcolumn = $('<div style="float: left; width: 40%;"></div>');
+                container.append(leftcolumn);
+                container.append(rightcolumn);
+                var WFOrdinal = "<div style='margin: 10px;'><b>WF Ordinal:</b> " + datarecord.WFOrdinal + "</div>";
+                var WFStatus = "<div style='margin: 10px;'><b>WF Status:</b> " + datarecord.WFStatus + "</div>";
+                var WFType = "<div style='margin: 10px;'><b>WF Type:</b> " + datarecord.WFType + "</div>";
+                var WFComments = "<div style='margin: 10px;'><b>WF Comments:</b> " + datarecord.WFComments + "</div>";
+
+                $(leftcolumn).append(WFOrdinal);
+                $(leftcolumn).append(WFStatus);
+                $(leftcolumn).append(WFType);
+                $(leftcolumn).append(WFComments);
+
+                var WFRequester = "<div style='margin: 10px;'><b>WF Requester:</b> " + datarecord.WFRequester + "</div>";
+                var WFAnalyst = "<div style='margin: 10px;'><b>WF Analyst:</b> " + datarecord.WFAnalyst + "</div>";
+                var WFManager = "<div style='margin: 10px;'><b>WF Manager:</b> " + datarecord.WFManager + "</div>";
+                var WFCurrentOwner = "<div style='margin: 10px;'><b>WF Current Owner:</b> " + datarecord.WFCurrentOwner + "</div>";
+                
+                $(rightcolumn).append(WFRequester);
+                $(rightcolumn).append(WFAnalyst);
+                $(rightcolumn).append(WFManager);
+                $(rightcolumn).append(WFCurrentOwner);
+
+                var AttributesContainer = $('<div style="margin: 5px;"></div>')
+                AttributesContainer.appendTo($(Attributes));
+                var Attributeleftcolumn = $('<div style="float: left; width: 45%;"></div>');
+                var Attributerightcolumn = $('<div style="float: left; width: 40%;"></div>');
+                AttributesContainer.append(Attributeleftcolumn);
+                AttributesContainer.append(Attributerightcolumn);
+                var Attribute1 = "<div style='margin: 10px;'><b>Attribute 1:</b> " + datarecord.Attribute001 + "</div>";
+                $(Attributeleftcolumn).append(Attribute1);
+
+                var DescriptionContainer = $('<div style="margin: 5px;"></div>')
+                DescriptionContainer.appendTo($(Description));
+                var Descriptionleftcolumn = $('<div style="float: left; width: 45%;"></div>');
+                var Descriptionrightcolumn = $('<div style="float: left; width: 40%;"></div>');
+                DescriptionContainer.append(Descriptionleftcolumn);
+                DescriptionContainer.append(Descriptionrightcolumn);
+                var CreatedBy = "<div style='margin: 10px;'><b>Created By:</b> " + datarecord.CreatedBy + "</div>";
+                var UpdatedBy = "<div style='margin: 10px;'><b>Updated By:</b> " + datarecord.UpdatedBy + "</div>";
+                var CreatedDateTime = "<div style='margin: 10px;'><b>Created DateTime:</b> " + datarecord.CreatedDateTime + "</div>";
+                var UpdateDateTime = "<div style='margin: 10px;'><b>Updated DateTime:</b> " + datarecord.UpdatedDateTime + "</div>";
+                $(Descriptionleftcolumn).append(CreatedBy);
+                $(Descriptionleftcolumn).append(UpdatedBy);
+                $(Descriptionleftcolumn).append(CreatedDateTime);
+                $(Descriptionleftcolumn).append(UpdateDateTime);
+
+                var Description = "<div style='margin: 10px;'><b>Description</b> " + datarecord.Description + "</div>";
+                $(Descriptionrightcolumn).append(Description);
+
+                $(tabsdiv).jqxTabs({ width: 750, height: 170 });
+            }
+        }
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+
+            return '&emsp;<button onclick="return FnEdit()" class="GridButton">Edit</button>';
+        };
+        $('#jqxgrid').jqxGrid({
+            
+            source: dataAdapter,
+            width: '100%',
+            autoheight: true,
+            rowdetails: true,
+            //rowdetailstemplate: { rowdetails: "<div style='margin: 10px;'><ul style='margin-left: 30px;'><li class='title'>WF</li><li>Attributes</li><li>Description</li></ul><div class='information'></div><div class='Attributes'></div><div class='Description'></div>", rowdetailsheight: 300 },
+            //ready: function () {
+            //    $("#jqxgrid").jqxGrid('showrowdetails', 0);
+            //    $("#jqxgrid").jqxGrid('showrowdetails', 1);
+            //},
+        //    initrowdetails: initrowdetails, //commented initrowdetails and rowdetailstemplate as we dont need expander.
+            theme: 'bootstrap',
+            sortable: true,
+            columnsresize: true,
+            columnsreorder: true,
+            altrows: true,
+            pageable: false,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            showstatusbar: false,
+            ready: function () {
+
+            },
+
+            columns: [
+                { text: 'Article#', datafield: 'ArticleNumber' },
+                { text: 'Name', datafield: 'Name' },
+                { text: 'POB', datafield: 'PobIndicator', columntype: 'checkbox' },
+                { text: 'Bundle', datafield: 'BundleIndicator', columntype: 'checkbox' },
+                { text: 'Usage', datafield: 'UsageIndicator', columntype: 'checkbox' },
+                { text: 'Hardware', datafield: 'IsHardwareType', columntype: 'checkbox' },
+                { text: 'Special', datafield: 'SpecialIndicator'},
+               { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+            ]
+        });
+    });
+
+    function FnEdit()
+    {
+        var selectedrowindex = $('#jqxgrid').jqxGrid('selectedrowindex');
+        var xx = $('#jqxgrid').jqxGrid("getrowid", selectedrowindex);
+      
+        if (xx) {
+            var url = '@Url.Action("Edit", "LLocalPOB", new {Id = "__id__" })';
+            window.location.href = url.replace("__id__", xx);
+        }
+
+      
+    }
+    function CGdelete()
+    {
+        @*var selectedrowindex = $('#jqxgrid').jqxGrid('selectedrowindex');
+        var xx = $('#jqxgrid').jqxGrid("getrowid", selectedrowindex);
+        if (xx) {
+            var url = '@Url.Action("Delete", "RActiveTypes", new {Id = "__id__" })';
+            window.location.href = url.replace("__id__", xx);
+        }*@
+    }
+</script>

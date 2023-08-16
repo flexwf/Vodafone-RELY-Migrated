@@ -1,0 +1,145 @@
+﻿@model RELY_APP.ViewModel.LProductViewModel
+
+
+
+<div class="boxes">
+    <a class="top_links" href="/LProducts/Create?Source="> <i class="glyphicon glyphicon-pencil"></i> Create Product</a>
+    <br/>
+    <div id="jqxgrid">
+    </div>
+    </div>
+    @Scripts.Render("~/bundles/jqxgridbundle")
+
+    <script type="text/javascript">
+    $(document).ready(function () {
+        $.ajax({
+            data: { path: window.location.pathname },
+            url: "Home/SaveReturnPath",
+            cache: false,
+            dataType: "json",
+            type: "post",
+            success: function (data) { },
+            error: function (respose) {
+                //  alert("error : " + reponse);
+            }
+        });
+
+        if ('@TempData["Error"]') {
+            alert('@TempData["Error"]')
+        }
+
+        var source = {
+            dataType: "json",
+            cache: false,
+            dataFields: [
+                { name: 'ProductCode', type: 'string' },
+                { name: 'Name', type: 'string' },
+            ],
+
+            id: "Id",
+            url: "/LProducts/GetByCompanyCode"
+        };
+        // This function is used for displaying row details
+        var initrowdetails = function (index, parentElement, gridElement, datarecord) {
+            //var tabsdiv = null;
+            //var information = null;
+            //var Attributes = null;
+            //var Description = null;
+            // debugger;
+            //tabsdiv = $($(parentElement).children()[0]);
+            //if (tabsdiv != null) {
+            //    information = tabsdiv.find('.information');
+            //    Attributes = tabsdiv.find('.Attributes');
+            //    Description = tabsdiv.find('.Description');
+
+            //  var title = tabsdiv.find('.title');
+            //  title.text(datarecord.firstname);
+
+            //var container = $('<div style="margin: 5px;"></div>')
+            //container.appendTo($(information));
+
+            //var leftcolumn = $('<div style="float: left; width: 45%;"></div>');
+            //var rightcolumn = $('<div style="float: left; width: 40%;"></div>');
+            //container.append(leftcolumn);
+            //container.append(rightcolumn);
+            var ProductCode = "<div style='margin: 10px;'><b>Class:</b> " + datarecord.ProductCode + "</div>";
+            var Description = "<div style='margin: 10px;'><b>Description:</b> " + datarecord.Description + "</div>";
+            var AccountingScenario = "<div style='margin: 10px;'><b>Dimension:</b> " + datarecord.AccountingScenario + "</div>";
+            var ProductSystemId = "<div style='margin: 10px;'><b>CopaValue:</b> " + datarecord.ProductSystemId + "</div>";
+            var ProductCategoryId = "<div style='margin: 10px;'><b>CopaValue:</b> " + datarecord.ProductCategoryId + "</div>";
+            var RequestId = "<div style='margin: 10px;'><b>CopaValue:</b> " + datarecord.RequestId + "</div>";
+
+            $().append(ProductCode);
+            $().append(Description);
+            $().append(AccountingScenario);
+            $().append(ProductSystemId);
+            $().append(ProductCategoryId);
+            $().append(RequestId);
+
+            //var Description = "<div style='margin: 10px;'><b>Description</b> " + datarecord.Description + "</div>";
+            //$(Descriptionrightcolumn).append(Description);
+
+            //$(tabsdiv).jqxTabs({ width: 750, height: 170 });
+        }
+   // }
+        var cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+
+            return '&emsp;<button onclick="return FnEdit()" class="GridButton">Edit</button>';
+        };
+               var dataAdapter = new $.jqx.dataAdapter(source)
+
+                $('#jqxgrid').jqxGrid({
+
+                    source: dataAdapter,
+                    width: '100%',
+                    autoheight: true,
+                    rowdetails: true,
+                    //rowdetailstemplate: { rowdetails: "<div style='margin: 10px;'><ul style='margin-left: 30px;'><li class='title'>WF</li><li>Attributes</li><li>Description</li></ul><div class='information'></div><div class='Attributes'></div><div class='Description'></div>", rowdetailsheight: 300 },
+                    //ready: function () {
+                    //    $("#jqxgrid").jqxGrid('showrowdetails', 0);
+                    //    $("#jqxgrid").jqxGrid('showrowdetails', 1);
+                    //},
+                    initrowdetails: initrowdetails,
+                    theme: 'bootstrap',
+                    sortable: true,
+                    columnsresize: true,
+                    columnsreorder: true,
+                    altrows: true,
+                    pageable: true,
+                    filterable: true,
+                    autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+                    showstatusbar: false,
+                    ready: function () {
+
+                    },
+
+                    columns: [
+                        //{ text: 'Id#', datafield: 'Id' },
+                        { text: 'ProductCode', datafield: 'ProductCode' },
+                        { text: 'CategoryName', datafield: 'CategoryName' },
+                        { text: 'SystemName', datafield: 'SystemName' },
+                        { text: 'TicketNumer', datafield: 'TicketNumer' },
+                        { text: 'AccountingScenario', datafield: 'AccountingScenario' },
+                        { text: 'Description', datafield: 'Description' },
+                        { text: 'Actions', datafield: 'Id', cellsrenderer: cellsrenderer }
+
+
+                       // { text: 'Updated DateTime', datafield: 'UpdatedDateTime', cellsformat: 'dd/MM/yyyy' },
+
+                    ]
+                });
+            });
+        function FnEdit() {
+            var selectedrowindex = $('#jqxgrid').jqxGrid('selectedrowindex');
+            var xx = $('#jqxgrid').jqxGrid("getrowid", selectedrowindex);
+            if (xx) {
+                var url = '@Url.Action("Edit", "LProducts", new {Id = "__id__" ,Source = ""})';
+                window.location.href = url.replace("__id__", xx);
+            }
+
+         //   alert("Functionality not yet implemented.");
+            return;
+        }
+
+    </script>
+

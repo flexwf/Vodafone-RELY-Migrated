@@ -1,0 +1,126 @@
+﻿@model RELY_APP.ViewModel.SSPDimensionViewModel
+<link rel="stylesheet" href="~/Content/styles/labelStyle.css" type="text/css">
+<script src="~/Scripts/jqxloader.js"></script>
+<script src="~/Scripts/ProjectScripts/ProjectScript.js"></script>@*//this script will contain methods common in different views*@
+<script>
+    $(document).ready(function () {
+        var dt = '@ViewBag.str';
+        document.getElementById("EffectiveEndDate").value = dt;
+        document.getElementById("SspId").style.pointerEvents = 'none';
+        document.getElementById("SspId").style.backgroundColor='lightgrey'
+        $("#SSPDate1").jqxDateTimeInput({
+            width: '270px',
+            height: '25px',
+        });
+    });//End of document ready
+    function FnbackButton() {
+        //window.location.href = "/SSPDimensions/Index";
+        alert("Functionality Coming Soon.");
+    }
+    function FnSaveData() {
+        var SSPDate1 = null;
+        if ($("#SSPDate1").length > 0) {
+            CheckSSPFields = true;
+            SSPDate1 = $('#SSPDate1').jqxDateTimeInput('getText');
+        }
+        document.getElementById("EffectiveStartDate").value = SSPDate1;
+
+       $("#frm").validate();
+        if ($('#frm').valid()) {
+            var Form = $("#frm");
+
+             $.ajax({
+                 type: "POST",
+                 data: Form.serialize(),
+                 cache:false,
+                 url: "/SSPDimensions/Create",
+                 success: function (data) {
+                     if (data.success) {
+                         alert("Data saved successfully.");
+                         window.location.href = "/SSPDimensions/Index";
+                     }
+                 },
+                 error: function (reponse) {
+                     console.log(reponse);
+                 }
+             });
+        }
+    }
+    
+</script>
+
+<h3>SSP Dimensions Configuration</h3>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "frm", name = "frm", @encType = "multipart/form-data" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    <h4 class="text-danger">@ViewData["ErrorMessage"]</h4>
+    <h4 class="text-danger" id="ErrorMessage"></h4>
+    <div id="ErrorMessageDetails"></div>
+    <h4 class="text-danger" id="ValidationMessage"></h4>
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CompanyCode)
+    @Html.HiddenFor(m => m.EffectiveStartDate)
+    @Html.HiddenFor(m => m.CreatedById)
+    @Html.HiddenFor(m => m.CreatedDateTime)
+    @Html.HiddenFor(m => m.UpdatedById)
+    @Html.HiddenFor(m => m.UpdatedDateTime)
+    @Html.HiddenFor(m => m.SspId)
+    @Html.Hidden("FormType")
+
+    @*@Html.HiddenFor(m => m.EffectiveEndDate)*@
+
+    <div class="col-md-11 col-lg-11">
+        @*<div class="col-md-5 col-lg-5 col-sm-5">*@
+        <div class="col-md-12 col-lg-12 col-sm-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.SspId, htmlAttributes: new { @class = "required col-md-2 col-lg-2 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                @Html.EditorFor(model => model.SspId, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; text-align: left;background-color: white ;" } })
+                @Html.ValidationMessageFor(model => model.SspId, "", new { @class = "text-danger" })
+                @*<a href="#" onclick="FnOpenExistingSSP();">Choose Existing SSP</a>*@
+            </div>
+
+        </div>
+        <div class="col-md-12 col-lg-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.SspAmount, htmlAttributes: new { @class = "required col-md-2 col-lg-2 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                @Html.EditorFor(model => model.SspAmount, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; text-align: left;background-color: white ;" } })
+                @Html.ValidationMessageFor(model => model.SspAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-12 col-lg-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.EffectiveStartDate, htmlAttributes: new { @class = "required col-md-2 col-lg-2 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                <div id="SSPDate1"></div>
+                @Html.ValidationMessageFor(model => model.EffectiveStartDate, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="col-md-12 col-lg-12" style="min-height:80px;">
+            @Html.LabelFor(model => model.EffectiveEndDate, htmlAttributes: new { @class = "required col-md-2 col-lg-2 rely-labels", @style = "text-align: right;" })
+            <div class="col-md-7 col-lg-7">
+                <input type="text" name="EffectiveEndDate" id="EffectiveEndDate" value="31/12/2099" readonly
+                       class="form-control input-sm"
+                       style="min-height:30px; text-align: left;background-color: lightgrey ;">
+                @*@Html.EditorFor(model => model.EffectiveEndDate, new { htmlAttributes = new { @class = "form-control input-sm", @style = "min-height:30px; text-align: left;background-color: lightgrey ;pointer-event:none; readonly" } })*@
+                @Html.ValidationMessageFor(model => model.EffectiveEndDate, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @*</div>*@
+    </div>
+    <div class="col-md-1 col-lg-1" style="padding:0px;">
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="BackButton" name="BackButton" onclick="FnbackButton();">Back&nbsp;</button>
+        <button type="button" class="btn btn-borderRed-SideLayout btn-cons" id="save" name="save" onclick="FnSaveData();">Save</button>
+    </div>
+</div>
+
+}
+<br>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
+<script type="text/javascript" scr="~/Scripts/jquery-ui.js"></script>
+<link href="~/Content/styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+
+

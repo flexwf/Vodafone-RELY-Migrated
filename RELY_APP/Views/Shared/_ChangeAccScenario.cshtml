@@ -1,0 +1,223 @@
+﻿@model RELY_APP.ViewModel.GetAccountingScenarioMatrixViewModel
+<script>
+    $(document).ready(function () {
+        var source = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'AnswerOption', type: 'string' },
+                { name: 'MemoText', type: 'string' }
+            ],
+            data: { ResponseId: '@ViewBag.ResponseId' },
+            id: 'Id',
+            url: "/LAccountingScenarios/GetRecommendedScenarios"
+
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source)
+
+        var Section2cellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            return '&emsp;<button type="button"  onclick=FnSaveRecommendedScenario(' + value + '); " title="Save" class="GridButton"><i class="fa fa-floppy-o" style="color:red;" aria-hidden="true"></i></button>';
+        };
+
+        $('#RecommendedScenario').jqxGrid({
+            source: dataAdapter,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            height: "10%",
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            //showfilterrow: true,
+            sortable: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            editable: true,
+            //selectionmode: 'checkbox',
+            // theme: 'gridlabels',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Scenario', datafield: 'AnswerOption', width: '10%', editable: false
+                },
+                {
+                    text: 'Standards', datafield: 'Standards', editable: false
+                },
+                {
+                    text: 'Contract Type', datafield: 'ContractType', width: '10%', editable: false
+                },
+                {
+                    text: 'Description', datafield: 'MemoText', editable: false
+                },
+                {
+                    text: 'Actions', datafield: 'Id', editable: false, cellsrenderer: Section2cellsrenderer
+                }
+            ]
+
+        });
+        //Section 3
+        var AccScenariosource = {
+            dataType: "json",
+            type: "GET",
+            cache: false,
+            dataFields: [
+                { name: 'Id', type: 'string' },
+                { name: 'Reference', type: 'string' },
+                { name: 'Standards', type: 'string' },
+                { name: 'ContractType', type: 'string' },
+                { name: 'ScenarioDescription', type: 'string' }
+            ],
+            id: 'Id',
+            url: "/LAccountingScenarios/GetAccountingScenarios"
+
+        };
+        var AccScenariodataAdapter = new $.jqx.dataAdapter(AccScenariosource)
+        var AccScenariocellsrenderer = function (row, columnfield, value, defaulthtml, columnproperties) {
+            return '&emsp;<button type="button"  onclick=FnSaveAccScenario(' + value + '); " title="Save" class="GridButton"><i class="fa fa-floppy-o" style="color:red;" aria-hidden="true"></i></button>';
+        };
+        $('#AccountingScenario').jqxGrid({
+            source: AccScenariodataAdapter,
+            width: "100%",
+            columnsresize: true,
+            pageable: true,
+            pagesize: 200,
+            height: "10%",
+            //showfilterrow: true,
+            filterable: true,
+            autoshowcolumnsmenubutton: false,//down arrow always visible for filter and sorting
+            sortable: true,
+            keyboardnavigation: false,
+            enablebrowserselection: true,
+            editable: true,
+            //selectionmode: 'checkbox',
+            // theme: 'gridlabels',
+            pagesizeoptions: ['10', '50', '100', '200', '500', '1000'],
+
+            columns: [
+                {
+                    text: 'Scenario', datafield: 'Reference', width: '10%', editable: false
+                },
+                {
+                    text: 'Standards', datafield: 'Standards', editable: false
+                },
+                {
+                    text: 'Contract Type', datafield: 'ContractType', width: '10%', editable: false
+                },
+                {
+                    text: 'Description', datafield: 'ScenarioDescription', editable: false
+                },
+                {
+                    text: 'Actions', datafield: 'Id', editable: false, cellsrenderer: AccScenariocellsrenderer
+                }
+            ]
+
+        });
+
+    });
+
+    //function to save section 2 selection
+    function FnSaveRecommendedScenario(AnswerBankId) {
+        var ResponseId = '@ViewBag.ResponseId';
+        window.location.href = '/LAccountingScenarios/SaveRecommendedScenario?AnswerBankId=' + AnswerBankId + '&ResponseId=' + ResponseId;
+    }
+      //function to save section 3 selection
+    function FnSaveAccScenario(AccScenarioId) {
+        var ResponseId = '@ViewBag.ResponseId';
+        window.location.href = '/LAccountingScenarios/SaveAccountingScenario?AccountingScenarioId=' + AccScenarioId + '&ResponseId=' + ResponseId;
+    }
+</script>
+
+<button class="btn btn-red" onclick="window.location.href='@HttpContext.Current.Session["from"]'">Cancel</button><br>&ensp;<br>
+<div class="panel panel-default" style="outline:solid 1px;margin-bottom:20px !important;">
+    <div class="panel-body" style="background-color:white;">
+        <div class="col-md-7">
+            <div class="col-md-2">
+                @Html.Label("Situation:")
+            </div>
+            <div class="col-md-2">
+                @Html.DisplayFor(p => p.QuestionName)
+            </div>
+            <div class="col-md-1">
+                @Html.Label("-")
+            </div>
+            <div class="col-md-7">
+                @Html.DisplayFor(p => p.ReadableName)
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="col-md-2">
+                @Html.Label("Scenario:")
+            </div>
+            <div class="col-md-2">
+                @Html.DisplayFor(p => p.Response)
+            </div>
+            <div class="col-md-1">
+                @Html.Label("-")
+            </div>
+            <div class="col-md-7">
+                @Html.DisplayFor(p => p.ScenarioDescription)
+            </div>
+        </div>
+        @*<div class="col-md-3">
+                @Html.Label("Object Type")
+                @Html.DisplayFor(p => p.ObjectType)
+            </div>
+            <div class="col-md-3">
+                @Html.Label("Product")
+                @Html.DisplayFor(p => p.SysCat)
+            </div>
+            <div class="col-md-3">
+                @Html.Label("Scenario")
+                @Html.DisplayFor(p => p.Response)
+            </div>
+            <div class="col-md-12">
+                @Html.Label("Scenario Description")
+                @Html.DisplayFor(p => p.ScenarioDescription)
+            </div>
+            <div class="col-md-12">
+                @Html.Label("Comments")
+                @Html.DisplayFor(p => p.Comments)
+            </div>*@
+    </div>
+</div>
+<div class="panel panel-default" style="outline:solid 1px;margin-bottom:20px !important;">
+    <div class="panel-heading">
+        <h3>Delete Scenario</h3>
+    </div>
+    <div class="panel-body" style="background-color:white;">
+        <br>
+        <button class="btn btn-red" onclick="window.location.href='/LAccountingScenarios/DeleteResponse?ResponseId=@ViewBag.ResponseId'">Set Scenario Blank</button>
+    </div>
+</div>
+<div class="panel panel-default" style="outline:solid 1px;margin-bottom:20px !important;">
+    <div class="panel-heading">
+        <h3>New Scenario</h3>
+    </div>
+    <div class="panel-body" style="background-color:white;">
+        <br>
+        <button class="btn btn-red" onclick="window.location.href='/LScenarioDemand/Create?QuestionCode=@ViewBag.QuestionCode&ProductId=@ViewBag.ProductId'">Start Scenario Demand</button>
+    </div>
+</div>
+
+<div class="panel panel-default" style="outline:solid 1px;margin-bottom:20px !important;">
+    <div class="panel-heading">
+        <h3>Choose one of the Scenario from recomended list</h3>
+    </div>
+    <div class="panel-body" style="background-color:white;">
+        <div id="RecommendedScenario"></div>
+    </div>
+</div>
+<div class="panel panel-default" style="outline:solid 1px;margin-bottom:20px !important;">
+    <div class="panel-heading">
+        <h3>Choose one of the scenario from full list of existing ones</h3>
+    </div>
+    <div class="panel-body" style="background-color:white;">
+        <div id="AccountingScenario"></div>
+    </div>
+</div>
+<br>
+<button class="btn btn-red" onclick="window.location.href='@HttpContext.Current.Session["from"]'">Cancel</button>
