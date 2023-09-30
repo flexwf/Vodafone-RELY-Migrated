@@ -1906,7 +1906,6 @@
     <Content Include="Views\Shared\_UploadData.cshtml" />
     <Content Include="Views\GKeyValues\ReleaseNotes.cshtml" />
     <Content Include="Views\LRequests\Upload.cshtml" />
-    <Content Include="Views\LRequests\_PPMUploadReview.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

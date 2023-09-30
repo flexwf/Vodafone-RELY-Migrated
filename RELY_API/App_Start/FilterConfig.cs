@@ -47,8 +47,9 @@ namespace RELY_API
                 //db.GErrorLogs.Add(model);//call db.spLogError here instead
                 ObjectParameter Result = new ObjectParameter("Result", typeof(int)); //return parameter is declared
                 db.SpLogError("RELY-API", s[2], s[3], exceptionMessage, "RELY", "Type1", exceptionMessage, "resolution", "L2Admin", "field", 0, "New", Result);
-                errorid = (int)Result.Value; //getting value of output parameter
+               
                 db.SaveChanges();
+                errorid = (int)Result.Value; //getting value of output parameter
             }
             catch (Exception ex)
             {

@@ -189,39 +189,46 @@ namespace RELY_APP.Helper
 
         public DataTable UploadPPM(string FileName, string LoggedInRoleId, string iCompanyCode, string UpdatedBy, string RedirectToUrl)
         {
-            string UserName = System.Web.HttpContext.Current.Session["UserName"] as string;
-            string WorkflowName = System.Web.HttpContext.Current.Session["Workflow"] as string;
-            if (string.IsNullOrEmpty(WorkflowName))
+            try
             {
-                WorkflowName = "No Workflow";
-            }
-          
-            var request = new RestRequest("api/LRequests/GetUploadPPM?FileName={FileName}&UserName={UserName}&LoggedInRoleId={LoggedInRoleId}&iCompanyCode={iCompanyCode}&WorkflowName={WorkflowName}&UpdatedBy={UpdatedBy}", Method.GET) { RequestFormat = DataFormat.Json };
-            request.AddParameter("FileName", FileName, ParameterType.UrlSegment);
-            request.AddParameter("UserName", UserName, ParameterType.UrlSegment);
-            request.AddParameter("LoggedInRoleId", LoggedInRoleId, ParameterType.UrlSegment);
-            request.AddParameter("iCompanyCode", iCompanyCode, ParameterType.UrlSegment);
-            request.AddParameter("WorkflowName", WorkflowName, ParameterType.UrlSegment);
-            request.AddParameter("UpdatedBy", UpdatedBy, ParameterType.UrlSegment);
-            var response =_client.Execute<dynamic>(request);
-            if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Created && response.StatusCode != HttpStatusCode.NoContent)
-            {
-                if (string.IsNullOrEmpty(RedirectToUrl))
+                string UserName = System.Web.HttpContext.Current.Session["UserName"] as string;
+                string WorkflowName = System.Web.HttpContext.Current.Session["Workflow"] as string;
+                if (string.IsNullOrEmpty(WorkflowName))
                 {
-                    RedirectToUrl = "/Home/ErrorPage";
+                    WorkflowName = "No Workflow";
                 }
-                var ex = new Exception(String.Format("{0},{1}", response.ErrorMessage, response.StatusCode));
-                ex.Data.Add("ErrorCode", (int)response.StatusCode);
-                ex.Data.Add("RedirectToUrl", RedirectToUrl);
-                string source = response.Content;
-                dynamic data = JsonConvert.DeserializeObject(source);
-                string xx = data.Message;
-                ex.Data.Add("ErrorMessage", xx);
-                throw ex;
 
+                var request = new RestRequest("api/LRequests/GetUploadPPM?FileName={FileName}&UserName={UserName}&LoggedInRoleId={LoggedInRoleId}&iCompanyCode={iCompanyCode}&WorkflowName={WorkflowName}&UpdatedBy={UpdatedBy}", Method.GET) { RequestFormat = DataFormat.Json };
+                request.AddParameter("FileName", FileName, ParameterType.UrlSegment);
+                request.AddParameter("UserName", UserName, ParameterType.UrlSegment);
+                request.AddParameter("LoggedInRoleId", LoggedInRoleId, ParameterType.UrlSegment);
+                request.AddParameter("iCompanyCode", iCompanyCode, ParameterType.UrlSegment);
+                request.AddParameter("WorkflowName", WorkflowName, ParameterType.UrlSegment);
+                request.AddParameter("UpdatedBy", UpdatedBy, ParameterType.UrlSegment);
+                var response = _client.Execute<dynamic>(request);
+                if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Created && response.StatusCode != HttpStatusCode.NoContent)
+                {
+                    if (string.IsNullOrEmpty(RedirectToUrl))
+                    {
+                        RedirectToUrl = "/Home/ErrorPage";
+                    }
+                    var ex = new Exception(String.Format("{0},{1}", response.ErrorMessage, response.StatusCode));
+                    ex.Data.Add("ErrorCode", (int)response.StatusCode);
+                    ex.Data.Add("RedirectToUrl", RedirectToUrl);
+                    string source = response.Content;
+                    dynamic data = JsonConvert.DeserializeObject(source);
+                    string xx = data.Message;
+                    ex.Data.Add("ErrorMessage", xx);
+                    throw ex;
+
+                }
+                var res = JsonConvert.DeserializeObject<DataTable>(response.Content);
+                return res;
             }
-            var res = JsonConvert.DeserializeObject<DataTable>(response.Content);
-            return res;
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
 
