@@ -137,6 +137,14 @@ namespace RELY_APP.Helper
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="LoggedInUserId"></param>
+        /// <param name="Workflow"></param>
+        /// <param name="LoggedInRoleId"></param>
+        /// <param name="CompanyCode"></param>
+        /// <returns></returns>
         public GenericNameAndIdViewModel DownloadGetGridDataByWorkflowId(int LoggedInUserId, string Workflow, int LoggedInRoleId, string CompanyCode)
         {
             string UserName = System.Web.HttpContext.Current.Session["LoginEmail"] as string;
@@ -150,6 +158,13 @@ namespace RELY_APP.Helper
             return response.Data;
         }
        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="CompanyCode"></param>
+        /// <param name="LoggedInUserId"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public IEnumerable<LBatchViewModelGrid> GetByUserForRequestUploadGrid(string CompanyCode, string LoggedInUserId)
         {
             string Workflow = System.Web.HttpContext.Current.Session["Workflow"] as string;
@@ -168,6 +183,16 @@ namespace RELY_APP.Helper
                 throw new Exception(response.ErrorMessage);
             return response.Data;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="FileName"></param>
+        /// <param name="LoggedInRoleId"></param>
+        /// <param name="iCompanyCode"></param>
+        /// <param name="UpdatedBy"></param>
+        /// <param name="RedirectToUrl"></param>
+        /// <returns></returns>
         public DataTable UploadSSPs(string FileName, string LoggedInRoleId, string iCompanyCode, string UpdatedBy, string RedirectToUrl)
         {
             string UserName = System.Web.HttpContext.Current.Session["UserName"] as string;
@@ -204,6 +229,13 @@ namespace RELY_APP.Helper
             var res = JsonConvert.DeserializeObject<DataTable>(response.Content);
             return res;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="CompanyCode"></param>
+        /// <param name="Id"></param>
+        /// <returns></returns>
         public LBatchViewModelForRequestGrid GetDetailsById(string CompanyCode, int Id)
         {
             var request = new RestRequest("api/SSPDimensions/GetById?CompanyCode={CompanyCode}&Id={Id}", Method.GET) { RequestFormat = DataFormat.Json };
@@ -212,6 +244,13 @@ namespace RELY_APP.Helper
             var response = _client.Execute<LBatchViewModelForRequestGrid>(request);
             return response.Data;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="CompanyCode"></param>
+        /// <param name="BatchNumber"></param>
+        /// <returns></returns>
         public string DownloadRequestUploadErrors(string CompanyCode, int BatchNumber)
         {
             string UserName = System.Web.HttpContext.Current.Session["UserName"] as string;
@@ -222,6 +261,14 @@ namespace RELY_APP.Helper
             var res = response.Data.ToString();
             return res;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="CompanyCode"></param>
+        /// <param name="BatchNumber"></param>
+        /// <param name="AspNetUserId"></param>
+        /// <param name="LoggedinRoleId"></param>
         public void UploadValidatedRequestBatch(string CompanyCode, int BatchNumber, string AspNetUserId, int LoggedinRoleId)
         {
             string Workflow = System.Web.HttpContext.Current.Session["Workflow"] as string;
