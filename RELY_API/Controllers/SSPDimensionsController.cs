@@ -1,11 +1,15 @@
 ﻿using RELY_API.Models;
 using RELY_API.Utilities;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Validation;
+using System.Data.OleDb;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -391,5 +395,347 @@ namespace RELY_API.Controllers
                 return (string.Format(Globals.SomethingElseFailedInDBErrorMessage, errorid));
             }
         }
-    } 
- }
+
+
+        // Author: Bharat
+        // To Download grid Data in excel
+        [HttpGet]
+        public IHttpActionResult DownloadGenericDataGrid(string Workflow, string UserName, int LoggedInUserId, int LoggedInRoleId, string CompanyCode)
+        {
+            var Query = "select SspId,SspAmount,FORMAT(EffectiveStartDate,'dd/MM/yyyy') as 'Start Date',FORMAT(EffectiveEndDate,'dd/MM/yyyy') as 'End Date',NULL as 'Operation' from SSPDimensions ORDER BY SspId DESC";
+            SqlCommand cmd = new SqlCommand(Query);
+            cmd.Parameters.AddWithValue("@Workflow", Workflow);
+            cmd.Parameters.AddWithValue("@UserName", UserName);
+            cmd.Parameters.AddWithValue("@LoggedInUserId", LoggedInUserId);
+            cmd.Parameters.AddWithValue("@LoggedInRoleId", LoggedInRoleId);
+            cmd.Parameters.AddWithValue("@CompanyCode", CompanyCode);
+            var dt = Globals.GetDataTableUsingADO(cmd);
+
+            string path = ConfigurationManager.AppSettings["RelyTempPath"] + "/";
+            string Filename = Workflow + "_" + DateTime.Now.Date.ToString("dd-MM-yyyy") + ".xlsx";
+            if (dt.Columns.Count > 0)
+            {
+                Globals.ExportToExcel(dt, path, Filename);
+            }
+
+            if (!string.IsNullOrEmpty(Filename))
+            {
+                string fullpath = path + "\\" + Filename;//
+                string localpath = fullpath;
+                string S3BucketReferenceDataFolder = ConfigurationManager.AppSettings["S3BucketTempUploadFolder"];
+                string S3TargetPath = "/" + CompanyCode.ToLower() + "/" + S3BucketReferenceDataFolder + "/" + Filename;
+                Globals.UploadFileToS3(localpath, S3TargetPath);
+            }
+            GenericNameAndIdViewModel model = new GenericNameAndIdViewModel { Name = Filename };
+            return Ok(model);
+        }
+        /// <summary>
+        /// To Display the Grid data of upload excel
+        /// </summary>
+        /// <param name="CompanyCode"></param>
+        /// <param name="AspnetUserid"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public IHttpActionResult GetByUserForLRequestUploadGrid(string CompanyCode, string AspnetUserid)
+        {
+            string Qry = "select Case lb.XStatus WHEN 'ValidationFailed' Then 0 else 1 END as IsImport,lb.Id,lb.XStatus,lb.XBatchNumber,isnull(lb.XRecordCount,0) as XRecordCount,lb.XUploadStartDateTime,lbf.LbfFileName from XBatches lb join XBatchFiles lbf on  lb.id = lbf.LbfBatchId where lb.XBatchType='SSPDimensions' and lb.XCompanyCode = {0} and lb.XUpdatedBy={1} and lb.XStatus <> 'Deleted' order by lb.Id desc ";
+            var xx = db.Database.SqlQuery<LBatchViewModelGrid>(Qry, CompanyCode, AspnetUserid).ToList();
+            return Ok(xx);
+        }
+
+        [HttpGet]
+        public async Task<IHttpActionResult> GetUploadSSPs(string FileName, string UserName, string LoggedInRoleId, string iCompanyCode, string WorkflowName, string UpdatedBy)
+        {
+
+            var BatchModel = new XBatch();
+            var RawQuery = db.Database.SqlQuery<Int32>("SELECT NEXT VALUE FOR dbo.SQ_BatchNumber");
+            var Task = RawQuery.SingleAsync();
+            var BatchNumber = Task.Result;
+            Task.Dispose();
+
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                BatchModel = new XBatch
+                {
+                    XCompanyCode = iCompanyCode,
+                    XUpdatedBy = UpdatedBy,
+                    XStatus = "Saved",
+                    XBatchNumber = BatchNumber,
+                    XBatchType = "SSPDimensions",
+                    XRawDataType = null,
+                    XUploadFinishDateTime = DateTime.UtcNow,
+                    XAlteryxBatchNumber = null,
+                    XComments = null,
+                    BatchName = null,
+                    XUploadStartDateTime = DateTime.UtcNow
+                };
+                db.XBatches.Add(BatchModel);
+                await db.SaveChangesAsync();
+                db.SaveChanges();
+                var LBatchFiles = new XBatchFile { LbfBatchId = BatchModel.Id, LbfFileName = FileName, LbfFileTimeStamp = DateTime.UtcNow };
+                db.XBatchFiles.Add(LBatchFiles);
+                await db.SaveChangesAsync();
+
+                try
+                {
+                    var CompanyDetails = db.GCompanies.Where(p => p.CompanyCode == iCompanyCode).FirstOrDefault();
+                    DataTable dtdataSheet = null;
+
+                    try
+                    {
+                        //Read Excel File data
+                        dtdataSheet = ReadExcelData(FileName, iCompanyCode);
+
+                        // Check the start & end date
+                        dtdataSheet = CheckTableDate(dtdataSheet);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        var models = new GErrorLog { UserName = "Rely", Controller = "LRequests", Method = "UploadPPM", ErrorDateTime = DateTime.UtcNow, StackTrace = ex.ToString(), SourceProject = "[Vodafone-Rely WebApi]" };
+                        db.GErrorLogs.Add(models);
+                        db.SaveChanges();
+                    }
+                    //Adding new columns into table
+                    dtdataSheet = AddNewColumns(dtdataSheet, iCompanyCode, UpdatedBy, BatchNumber);
+
+                    SqlBulkInsert(dtdataSheet);
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    var models = new GErrorLog { UserName = "RELY", Controller = "LClaims", Method = "UploadClaims", ErrorDateTime = DateTime.UtcNow, StackTrace = ex.ToString(), SourceProject = "[Vodafone-Rely WebApi]" };
+                    db.GErrorLogs.Add(models);
+                    db.SaveChanges();
+                    DataTable dtE = new DataTable();
+                    dtE.Columns.Add("ExceptionMessage");
+                    return Ok(dtE);
+                }
+            }
+
+            #region commented by bharat
+            var Query = "Exec dbo.ValidateXSSPDimensions @UserID,@CompanyCode,@BatchNo";
+            SqlCommand cmd = new SqlCommand(Query);
+            cmd.Parameters.AddWithValue("@UserID", UpdatedBy);
+            cmd.Parameters.AddWithValue("@CompanyCode", iCompanyCode.ToString());
+            cmd.Parameters.AddWithValue("@BatchNo", BatchNumber);
+            DataTable dtErrors = new DataTable();
+            dtErrors = Globals.GetDataTableUsingADO(cmd);
+            return Ok();
+            #endregion
+        }
+        //---------------------------------------------
+        /// <summary>
+        /// Here we are reading the excel sheet data
+        /// </summary>
+        /// <param name="FileName"></param>
+        /// <param name="iCompanyCode"></param>
+        /// <returns></returns>
+        private DataTable ReadExcelData(string FileName, string iCompanyCode)
+        {
+            DataTable dtdataSheet = new DataTable();
+
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            DataSet TempdsSheet = new DataSet();
+            try
+            {
+                string S3BucketPPMDataFilesFolder = ConfigurationManager.AppSettings["S3BucketTempUploadFolder"];
+                string S3TargetPath = "/" + iCompanyCode.ToLower() + "/" + S3BucketPPMDataFilesFolder + "/" + FileName;
+                byte[] bytedata = Globals.DownloadFromS3(S3TargetPath);
+
+                string fileExtension = System.IO.Path.GetExtension(FileName);
+                string name = System.IO.Path.GetFileNameWithoutExtension(FileName);
+                string FileName_New = name + "_" + DateTime.UtcNow.ToString("ddMMyyyyHHmmss") + "_UPLOAD" + fileExtension;
+
+                string path = ConfigurationManager.AppSettings["LocalTempUploadFolder"];
+                string fullpath = path + "\\" + FileName_New;
+                System.IO.File.WriteAllBytes(fullpath, bytedata);
+
+                string excelConnectionString = ConfigurationManager.AppSettings["MicrosoftOLEDBConnectionString"].Replace("{0}", fullpath);
+                OleDbConnection excelConnection = new OleDbConnection(excelConnectionString);
+                excelConnection.Open();
+                OleDbDataAdapter cmd2 = new System.Data.OleDb.OleDbDataAdapter("SELECT * from [Sheet1$]", excelConnection);
+
+                cmd2.Fill(TempdsSheet);
+                dtdataSheet = TempdsSheet.Tables[0].Clone();
+                foreach (DataRow filterrow in TempdsSheet.Tables[0].Rows)
+                {
+                    string Operation_Case = Convert.ToString(filterrow["Operation"]);
+                    if (!string.IsNullOrEmpty(Operation_Case) && (string.Equals(Operation_Case.ToUpper(), "I") || string.Equals(Operation_Case.ToUpper(), "U")))
+                    {
+                        dtdataSheet.ImportRow(filterrow);
+                    }
+                }
+
+                excelConnection.Close();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+            return dtdataSheet;
+        }
+        /// <summary>
+        /// Here we are checking the sheet data date column format and converting it into the correct format
+        /// </summary>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        private DataTable CheckTableDate(DataTable table)
+        {
+
+            try
+            {
+                foreach (DataRow row in table.Rows)
+                {
+                    DateTime dtOut = new DateTime();
+
+                    if (!DateTime.TryParseExact(row["Start Date"].ToString(), "d/M/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtOut)) //DateTime.TryParse(row["Start Date"].ToString(), out dtOut)
+                    {
+                        row["Start Date"] = null;
+                    }
+                    else
+                    {
+                        row["Start Date"] = dtOut;
+                    }
+
+                    dtOut = new DateTime();
+                    if (!DateTime.TryParseExact(row["End Date"].ToString(), "d/M/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtOut)) //DateTime.TryParse(row["End Date"].ToString(), out dtOut)
+                    {
+                        row["End Date"] = null;
+                    }
+                    else
+                    {
+                        row["End Date"] = dtOut;
+                    }
+
+                    row["Operation"] = row["Operation"].ToString().ToUpper();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return table;
+        }
+
+        /// <summary>
+        /// So Here we are adding few more columns into the Datatable
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="iCompanyCode"></param>
+        /// <param name="updatedBy"></param>
+        /// <param name="batchNumber"></param>
+        /// <returns></returns>
+        private DataTable AddNewColumns(DataTable table, string iCompanyCode, string updatedBy, int batchNumber)
+        {
+            try
+            {
+                System.Data.DataColumn newColumn1 = new System.Data.DataColumn("CompanyCode", typeof(System.String));
+                newColumn1.DefaultValue = iCompanyCode;
+                table.Columns.Add(newColumn1);
+
+                System.Data.DataColumn newColumn2 = new System.Data.DataColumn("CreatedDateTime", typeof(System.DateTime));
+                newColumn2.DefaultValue = DateTime.UtcNow;
+                table.Columns.Add(newColumn2);
+
+                System.Data.DataColumn newColumn3 = new System.Data.DataColumn("UpdatedDateTime", typeof(System.DateTime));
+                newColumn3.DefaultValue = DateTime.UtcNow;
+                table.Columns.Add(newColumn3);
+
+                System.Data.DataColumn newColumn4 = new System.Data.DataColumn("CreatedById", typeof(System.String));
+                newColumn4.DefaultValue = updatedBy;
+                table.Columns.Add(newColumn4);
+
+                System.Data.DataColumn newColumn5 = new System.Data.DataColumn("UpdatedById", typeof(System.String));
+                newColumn5.DefaultValue = updatedBy;
+                table.Columns.Add(newColumn5);
+
+                System.Data.DataColumn newColumn6 = new System.Data.DataColumn("BatchNumber", typeof(System.Int32));
+                newColumn6.DefaultValue = batchNumber;
+                table.Columns.Add(newColumn6);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return table;
+        }
+
+        /// <summary>
+        /// So in this Method we are inserting the data into the DestinationTableName we Defined
+        /// </summary>
+        /// <param name="finalData"></param>
+        private void SqlBulkInsert(DataTable finalData)
+        {
+            System.Data.SqlClient.SqlBulkCopy sqlBulk = new SqlBulkCopy(db.Database.Connection.ConnectionString);
+
+            sqlBulk.ColumnMappings.Add("SspId", "SspId");
+            sqlBulk.ColumnMappings.Add("SspAmount", "SspAmount");
+            sqlBulk.ColumnMappings.Add("Start Date", "EffectiveStartDate");
+            sqlBulk.ColumnMappings.Add("End Date", "EffectiveEndDate");
+            sqlBulk.ColumnMappings.Add("Operation", "Operation");
+            sqlBulk.ColumnMappings.Add("CompanyCode", "CompanyCode");
+            sqlBulk.ColumnMappings.Add("CreatedDateTime", "CreatedDateTime");
+            sqlBulk.ColumnMappings.Add("UpdatedDateTime", "UpdatedDateTime");
+            sqlBulk.ColumnMappings.Add("CreatedById", "CreatedById");
+            sqlBulk.ColumnMappings.Add("UpdatedById", "UpdatedById");
+            sqlBulk.ColumnMappings.Add("BatchNumber", "BatchNumber");
+
+            sqlBulk.DestinationTableName = "XSSPDimensions";
+
+            try
+            {
+                sqlBulk.WriteToServer(finalData);
+            }
+            catch (Exception ex)
+            {
+                var models = new GErrorLog { UserName = "RELY", Controller = "SSPDimensions", Method = "UploadPPM", ErrorDateTime = DateTime.UtcNow, StackTrace = ex.ToString(), SourceProject = "[Vodafone-RELY WebApi]" };
+                db.GErrorLogs.Add(models);
+                db.SaveChanges();
+            }
+        }
+        [HttpGet]
+        public IHttpActionResult GetById(string CompanyCode, int Id)
+        {
+            string Qry = "select lb.Id,lb.XStatus,lb.XBatchNumber,lb.XRecordCount,lb.XUploadStartDateTime,lbf.LbfFileName from XBatches lb " +
+                " join XBatchFiles lbf on  lb.id = lbf.LbfBatchId where lb.XBatchType='SSPDimensions' and lb.XCompanyCode = {0} and lb.Id={1}";
+            var xx = db.Database.SqlQuery<LBatchViewModelForRequestGrid>(Qry, CompanyCode, Id).FirstOrDefault();
+            return Ok(xx);
+        }
+
+        [HttpGet]
+        public IHttpActionResult DownloadRequestUploadErrors(string CompanyCode, int BatchNumber)
+        {
+            string Filename = null;
+            string Query = "select SspId as [Ssp Id],ValidationMessage as [Validation Message] from XSSPDimensions where CompanyCode = '" + CompanyCode + "' and BatchNumber = " + BatchNumber + " and ValidationMessage is not null";
+            DataSet ds = new DataSet();
+            DataTable dtPayee = Globals.GetDdatainDataTable(Query);
+            ds.Tables.Add(dtPayee);
+            ds.Tables[0].TableName = "XSSPDimensions";
+            Filename = BatchNumber + "_SSPDimensionsUploadErrors" + "_" + DateTime.UtcNow.ToString("ddMMyyyyHHmmss") + ".xlsx";
+            var TempPath = ConfigurationManager.AppSettings["LocalTempFileFolder"] + "/";
+            var OutPutMessage = Globals.ExportDataSetToExcel(ds, TempPath, Filename, "all text", "dd.mm.yyyy");
+
+            if (!string.IsNullOrEmpty(Filename))
+            {
+                string fullpath = TempPath + "\\" + Filename;
+                string localpath = fullpath;
+                string S3BucketReferenceDataFolder = ConfigurationManager.AppSettings["S3BucketTempUploadFolder"];
+                string S3TargetPath = "/" + CompanyCode.ToLower() + "/" + S3BucketReferenceDataFolder + "/" + Filename;
+                Globals.UploadFileToS3(localpath, S3TargetPath);
+            }
+            return Ok(Filename);
+        }
+        [HttpGet]
+        public IHttpActionResult UploadValidatedRequestBatch(string CompanyCode, int BatchNumber, string AspNetUserId, int LoggedinRoleId, string Workflow)
+        {
+            string Query = "exec SpUploadValidatedSSPDimensions {0},{1},{2},{3}";
+            db.Database.SqlQuery<List<Object>>(Query, CompanyCode, BatchNumber, AspNetUserId, LoggedinRoleId).FirstOrDefault();
+            return Ok();
+        }
+    }
+}

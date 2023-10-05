@@ -1,8 +1,12 @@
 ﻿<h3>Manage SSP Dimensions</h3>
 <a style="cursor:pointer" onclick="fnCreate();">Manage</a>
+&ensp;<a href="/SSPDimensions/Uploads">Upload</a>&ensp;     
+&nbsp; <i class="fa fa-download" aria-hidden="true" onclick="DownloadGenericGrid()" style="cursor:pointer;font-size:15px !important"></i>
+
 <div id="jqxGrid">
 </div>
-<br>&ensp;<br>
+<br>&ensp;
+<br>
 
 @Scripts.Render("~/bundles/jqxgridbundle")
 @Scripts.Render("~/bundles/jqueryval")
@@ -83,7 +87,7 @@
                     localizationobj.patterns = patterns;
                     return localizationobj;
                 }
-                
+
                 //Check whether the grid is already defined or not and ready for use.
                 var ready = $("#jqxGrid").jqxGrid('ready');
                 //if grid is alreday defined and ready for use, just update the grid. Otherwise, define the grid.
@@ -94,7 +98,6 @@
                     $('#jqxGrid').jqxGrid({
                         source: ParentdataAdapter,
                         width: '100%',
-                        height: '50%',
                         theme: 'bootstrap',
                         sortable: true,
                         columnsresize: true,
@@ -121,6 +124,12 @@
                 }
             }
         });
+    }
+    // Author: Bharat
+    // To Download SSP Dimension grid data
+
+    function DownloadGenericGrid() {
+        window.location.href = '/SSPDimensions/DownloadGridData';
     }
 
     //This method is called when User clicks on delete glymph in grid
