@@ -503,62 +503,107 @@ var  Validateelement = document.createElement("span");
 
 
 
-function FnClickSecondaryButtons(ActionName, WorkflowId, StepId, Source, TransactionId, GlobalComment, StepParticipantActionId,ActionUrl)
-{
+//function FnClickSecondaryButtons(ActionName, WorkflowId, StepId, Source, TransactionId, GlobalComment, StepParticipantActionId,ActionUrl)
+//{
+//    //replace \n characters in comments with @ as \n is being dropped on reaching to controller
+//    var Comments = GlobalComment.split('\n').join('@\n');
+//    GlobalComment = Comments;
+//    //code generalized
+//    var UrlString = "";
+//    if (ActionUrl.indexOf("UpdateActionStatus") > -1 || ActionUrl.indexOf("ResetPassword") > -1) {
+//        //UrlString = ActionUrl + "/" + TransactionId + "?ActionName=" + ActionName + "&TransactionId=" + TransactionId + "&Comments=" + GlobalComment + "&WorkflowId=" + WorkflowId + "&StepId=" + StepId + "&Source=" + Source + "&StepParticipantActionId=" + StepParticipantActionId;
+//        UrlString = ActionUrl + "?TransactionId=" + TransactionId + "&Comments=" + GlobalComment + "&Source=" + Source + "&StepParticipantActionId=" + StepParticipantActionId;
+//    }
+//    else {
+//        UrlString = ActionUrl + "/" + TransactionId + "?FormType=" + ActionName + "&Source=" + Source;
+//    }
+//    window.location.href = UrlString;
+//    /*
+//    switch (ActionName) {
+//        case "Download":
+//            window.location.href = '/GenericGrid/Download?TransactionId=' + TransactionId;
+//            break;
+
+//        case "Edit":
+//            window.location.href = '/GenericGrid/Edit?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&Source=' + Source + '&StepParticipantActionId=' + StepParticipantActionId;
+//            break;
+//        case "Review":
+//            window.location.href = '/GenericGrid/Review?TransactionId=' + TransactionId + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
+//            break;
+//        case "Cancel":
+//            if (confirm('Once cancelled this item will be permanently removed from workflow. Are you sure you want to proceed?')) {
+//               // window.location.href = '/GenericGrid/UpdateActionStatus?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
+//            }
+//            else {
+//                return;
+//            }
+//            //break;
+//        case "Approve":
+//        case "Suspend":
+//        case "Withdraw":
+//        case "Previous":
+//        case "SelfAssign":
+//        case "SendToRequester":
+//        case "Resume":
+//        case "SetCompleted":
+//        case "Duplicate":
+//        case "SendToStep"://new action added
+//                window.location.href = '/GenericGrid/UpdateActionStatus?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
+//                break;
+//        case "ResetPassword":
+//            window.location.href = '/Account/ResetPasswordViaAdmin?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
+//            break;
+//        case "Change":
+//            window.location.href = '/GenericGrid/Change?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&Source=' + Source + '&StepParticipantActionId=' + StepParticipantActionId;
+//            break;
+
+//        }
+//    */
+//}
+function FnClickSecondaryButtons(ActionName, WorkflowId, StepId, Source, TransactionId, GlobalComment, StepParticipantActionId, ActionUrl) {
     //replace \n characters in comments with @ as \n is being dropped on reaching to controller
     var Comments = GlobalComment.split('\n').join('@\n');
     GlobalComment = Comments;
     //code generalized
     var UrlString = "";
     if (ActionUrl.indexOf("UpdateActionStatus") > -1 || ActionUrl.indexOf("ResetPassword") > -1) {
-        //UrlString = ActionUrl + "/" + TransactionId + "?ActionName=" + ActionName + "&TransactionId=" + TransactionId + "&Comments=" + GlobalComment + "&WorkflowId=" + WorkflowId + "&StepId=" + StepId + "&Source=" + Source + "&StepParticipantActionId=" + StepParticipantActionId;
-        UrlString = ActionUrl + "?TransactionId=" + TransactionId + "&Comments=" + GlobalComment + "&Source=" + Source + "&StepParticipantActionId=" + StepParticipantActionId;
+        //UrlString = ActionUrl + "?TransactionId=" + TransactionId + "&Comments=" + GlobalComment + "&Source=" + Source + "&StepParticipantActionId=" + StepParticipantActionId;
+        var yourData = {
+            TransactionId: TransactionId.join(','),
+            Comments: GlobalComment,
+            Source: Source,
+            StepParticipantActionId: StepParticipantActionId
+        };
+        var loader; // Declare the loader variable outside the AJAX call
+        $.ajax({
+            url: ActionUrl,
+            type: "POST",
+            data: JSON.stringify(yourData),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            beforeSend: function () {
+                loader = $('<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;background-color:#F5F5F5;border-radius: 5px;"><div style="float: left; overflow: hidden; width: 32px; height: 32px;" class="jqx-grid-load"></div><span style="margin-top: 10px; float: left; display: block; margin-left: 5px;">Loading...</span></div>'); // Create the loader
+                $('body').append(loader); // Add the loader to the body
+                //alert('sending data using mass action');
+            },
+            success: function (response) {
+                loader.remove(); // Remove the specific loader
+                if (response.success) {
+                } else {
+
+                    alert(response.message);
+                }
+                if (response.redirectUrl) {
+                    window.location.href = response.redirectUrl;
+                }
+            }
+        });
     }
     else {
+        debugger;
         UrlString = ActionUrl + "/" + TransactionId + "?FormType=" + ActionName + "&Source=" + Source;
+        window.location.href = UrlString;
     }
-    window.location.href = UrlString;
-    /*
-    switch (ActionName) {
-        case "Download":
-            window.location.href = '/GenericGrid/Download?TransactionId=' + TransactionId;
-            break;
-       
-        case "Edit":
-            window.location.href = '/GenericGrid/Edit?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&Source=' + Source + '&StepParticipantActionId=' + StepParticipantActionId;
-            break;
-        case "Review":
-            window.location.href = '/GenericGrid/Review?TransactionId=' + TransactionId + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
-            break;
-        case "Cancel":
-            if (confirm('Once cancelled this item will be permanently removed from workflow. Are you sure you want to proceed?')) {
-               // window.location.href = '/GenericGrid/UpdateActionStatus?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
-            }
-            else {
-                return;
-            }
-            //break;
-        case "Approve":
-        case "Suspend":
-        case "Withdraw":
-        case "Previous":
-        case "SelfAssign":
-        case "SendToRequester":
-        case "Resume":
-        case "SetCompleted":
-        case "Duplicate":
-        case "SendToStep"://new action added
-                window.location.href = '/GenericGrid/UpdateActionStatus?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
-                break;
-        case "ResetPassword":
-            window.location.href = '/Account/ResetPasswordViaAdmin?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&StepParticipantActionId=' + StepParticipantActionId;
-            break;
-        case "Change":
-            window.location.href = '/GenericGrid/Change?ActionName=' + ActionName + '&TransactionId=' + TransactionId + '&Comments=' + GlobalComment + '&WorkflowId=' + WorkflowId + '&StepId=' + StepId + '&Source=' + Source + '&StepParticipantActionId=' + StepParticipantActionId;
-            break;
-             
-        }
-    */
 }
 
 

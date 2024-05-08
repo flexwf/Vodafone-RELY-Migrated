@@ -359,7 +359,7 @@
              var rowindexes = $(GridId).jqxGrid('getselectedrowindexes');
 
              console.log(rowindexes.length);
-             for (var i = 0; i < rowindexes.length - 1; i++)
+             for (var i = 0; i < rowindexes.length; i++)
              {
                  var data = $(GridId).jqxGrid('getrowdata', rowindexes[i]);
                  if (data != undefined) {

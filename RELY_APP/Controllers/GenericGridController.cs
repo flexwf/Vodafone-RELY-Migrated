@@ -290,12 +290,69 @@ namespace RELY_APP.Controllers
             return Json(ApiData, JsonRequestBehavior.AllowGet);
 
         }
-       
+
+        ////This method will be called when we click on any action in GenericGrid
+        //[HttpGet]
+        //[CustomAuthorize]
+        ////public ActionResult UpdateActionStatus(int WorkflowId, int StepId, string TransactionId, string ActionName, string Comments,int StepParticipantActionId)
+        //public ActionResult UpdateActionStatus(string TransactionId, string Comments, int StepParticipantActionId)
+        //{
+        //    Comments = Comments.Replace('@', '\n');//for newline character @ is being used in javascript. Replacing back it to newline character
+        //    int LoggedInUserId = Convert.ToInt32(Globals.GetSessionData("UserId"));
+        //    int LoggedInRoleId = Convert.ToInt32(Globals.GetSessionData("CurrentRoleId"));
+        //    string CompanyCode = Globals.GetSessionData("CompanyCode");
+        //    //Calculating WrkFlowId,StepId,ActionName from StepParticipantId
+        //    IWStepParticipantActionsRestClient WPARC = new WStepParticipantActionsRestClient();
+        //    var ParticipantActionData = WPARC.GetWFIdStepIdById(StepParticipantActionId);
+
+        //    var isAuthorized = Globals.CheckActionAuthorization(ParticipantActionData.ActionName, LoggedInRoleId, LoggedInUserId, ParticipantActionData.WorkFlowId, ParticipantActionData.StepId);
+        //    if (isAuthorized)
+        //    {
+        //        string WorkflowName = null;
+        //        try
+        //        {
+        //            if (String.IsNullOrEmpty(TransactionId))
+        //                return RedirectToAction("Index");
+        //            var TransactionArray = TransactionId.Split(',').ToList();
+        //            //foreach (var TranId in TransactionArray)
+        //            //{
+        //            //    var Id = Convert.ToInt32(TranId);
+
+        //                if (string.IsNullOrEmpty(Comments))
+        //                {
+        //                    Comments = "";
+        //                }
+        //                //WorkflowName = System.Web.HttpContext.Current.Session["Workflow"] as string;
+        //                //WFName is calculatedon the basis of ParticipantAction
+        //                WorkflowName = ParticipantActionData.WorkflowName;
+        //                RestClient.UpdateActionStatus(WorkflowName, TransactionId, CompanyCode, ParticipantActionData.ActionName, LoggedInUserId, Comments, LoggedInRoleId, string.Empty);
+        //            //}
+        //            //Product is not versioned any more.
+        //            if (ParticipantActionData.ActionName.Equals("Duplicate")) {
+        //                if (WorkflowName.Equals("LocalPobs"))
+        //                    @TempData["Message"] = "New version has been created and placed in Initial tab";
+        //                else if (WorkflowName.Equals("Products"))
+        //                    @TempData["Message"] = "New copy of Product(s) created with ProductCode appended with _dup# and placed in initial tab. Please remember to update Product Code as needed.";
+        //            }
+        //            return RedirectToAction("Index");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            TempData["Error"] = ex.Data["ErrorMessage"].ToString();
+        //            return RedirectToAction("Index");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        TempData["Error"] = "Sorry , You are not authorised to perform this action .Please contact L2 Admin";
+        //        //return View("UnAuthorized");
+        //        return RedirectToAction("Index");
+        //    }
+        //}
         //This method will be called when we click on any action in GenericGrid
-        [HttpGet]
+        //[HttpPost]
         [CustomAuthorize]
-        //public ActionResult UpdateActionStatus(int WorkflowId, int StepId, string TransactionId, string ActionName, string Comments,int StepParticipantActionId)
-        public ActionResult UpdateActionStatus(string TransactionId, string Comments, int StepParticipantActionId)
+        public JsonResult UpdateActionStatus(string TransactionId, string Comments, int StepParticipantActionId)
         {
             Comments = Comments.Replace('@', '\n');//for newline character @ is being used in javascript. Replacing back it to newline character
             int LoggedInUserId = Convert.ToInt32(Globals.GetSessionData("UserId"));
@@ -312,41 +369,42 @@ namespace RELY_APP.Controllers
                 try
                 {
                     if (String.IsNullOrEmpty(TransactionId))
-                        return RedirectToAction("Index");
+                        return Json(new { success = false, message = "Transaction is required.", redirectUrl = Url.Action("Index") });
+                    //return RedirectToAction("Index");
                     var TransactionArray = TransactionId.Split(',').ToList();
-                    //foreach (var TranId in TransactionArray)
-                    //{
-                    //    var Id = Convert.ToInt32(TranId);
 
-                        if (string.IsNullOrEmpty(Comments))
-                        {
-                            Comments = "";
-                        }
-                        //WorkflowName = System.Web.HttpContext.Current.Session["Workflow"] as string;
-                        //WFName is calculatedon the basis of ParticipantAction
-                        WorkflowName = ParticipantActionData.WorkflowName;
-                        RestClient.UpdateActionStatus(WorkflowName, TransactionId, CompanyCode, ParticipantActionData.ActionName, LoggedInUserId, Comments, LoggedInRoleId, string.Empty);
-                    //}
+                    if (string.IsNullOrEmpty(Comments))
+                    {
+                        Comments = "";
+                    }
+                    //WFName is calculatedon the basis of ParticipantAction
+                    WorkflowName = ParticipantActionData.WorkflowName;
+                    RestClient.UpdateActionStatus(WorkflowName, TransactionId, CompanyCode, ParticipantActionData.ActionName, LoggedInUserId, Comments, LoggedInRoleId, string.Empty);
+
                     //Product is not versioned any more.
-                    if (ParticipantActionData.ActionName.Equals("Duplicate")) {
+                    if (ParticipantActionData.ActionName.Equals("Duplicate"))
+                    {
                         if (WorkflowName.Equals("LocalPobs"))
                             @TempData["Message"] = "New version has been created and placed in Initial tab";
                         else if (WorkflowName.Equals("Products"))
                             @TempData["Message"] = "New copy of Product(s) created with ProductCode appended with _dup# and placed in initial tab. Please remember to update Product Code as needed.";
                     }
-                    return RedirectToAction("Index");
+                    //return RedirectToAction("Index");
+                    return Json(new { success = true, message = "Action status updated successfully.", redirectUrl = Url.Action("Index") });
                 }
                 catch (Exception ex)
                 {
                     TempData["Error"] = ex.Data["ErrorMessage"].ToString();
-                    return RedirectToAction("Index");
+                    //return RedirectToAction("Index");
+                    return Json(new { success = false, message = ex.Data["ErrorMessage"].ToString(), redirectUrl = Url.Action("Index") });
                 }
             }
             else
             {
                 TempData["Error"] = "Sorry , You are not authorised to perform this action .Please contact L2 Admin";
                 //return View("UnAuthorized");
-                return RedirectToAction("Index");
+                //return RedirectToAction("Index");
+                return Json(new { success = false, message = TempData["Error"].ToString(), redirectUrl = Url.Action("Index") });
             }
         }
 
